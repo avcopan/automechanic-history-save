@@ -68,14 +68,15 @@ To find the abstractions and initialize directories for running TorsScan, do thi
 ```
 (amenv) automech_abstr_init -r reactions-sample.csv
 ```
-To run abstractions 0, 1, 2, 3, 5, and 7 on node 0, do the following.
+To run abstractions 0, 1, 2, 3, 5, and 7 on node b444, do the following.
 ```
-(amenv) automech_abstr_run -n 0 -x 0-3 5 7 -c python /path/to/torsional_scan.py
+(amenv) automech_abstr_run -n b444 -x 0-3 5 7 cmd python /path/to/torsional_scan.py
 ```
 
 
-For a dry run, you could do something like the following instead
+Anything that comes after `cmd` will be run as a command in the abstraction job
+directory, so for a dry run you could do something like this instead.
 ```
-(amenv) automech_abstr_run -n 0 -x 0-3 5 7 -c cat input.dat
+(amenv) automech_abstr_run -n b444 -x 0-3 5 7 cmd ls -la
 ```
-which will run `cat input` in each directory.
+which will enter each of these directories and run `ls -la`.

@@ -2,6 +2,7 @@
 """ run reactions
 """
 
+import sys
 import os
 import subprocess
 import warnings
@@ -40,26 +41,29 @@ PARSER.add_argument('-x',
                     help="ranges of reaction indices to run")
 
 PARSER.add_argument('-n',
-                    '--node',
+                    '--nodes',
                     type=str,
                     default='0',
-                    help="node argument for TorsScan")
-
-PARSER.add_argument('-c',
-                    '--commands',
-                    type=str,
-                    default=['python', '/home/elliott/Packages/TorsScan/torsional_scan.py'],
                     nargs='+',
-                    help="commands to run TorsScan")
+                    help="one or more nodes for TorsScan")
 
-ARGS = vars(PARSER.parse_args())
+PARSER.add_argument('cmd <torsscan-arguments...>')
+
+if 'cmd' in sys.argv:
+    CMD_ARGNO = sys.argv.index('cmd')
+    AUTOMECH_ARGS = sys.argv[:CMD_ARGNO]
+    TORSSCAN_ARGS = sys.argv[CMD_ARGNO+1:]
+else:
+    AUTOMECH_ARGS = sys.argv
+
+ARGS = vars(PARSER.parse_args(AUTOMECH_ARGS))
 
 ABSTR_CSV = ARGS['abstractions_csv']
 TMP_FLE = ARGS['template_file']
 INP_NAME = ARGS['input_name']
 IDX_STRS = ARGS['reaction_indices']
-NODE = ARGS['node']
-CMDS = ARGS['commands']
+NODES = ', '.join(ARGS['nodes'])
+CMDS = TORSSCAN_ARGS
 
 TMP_STR = open(TMP_FLE).read()
 ABSTR_DF = pandas.read_csv(ABSTR_CSV)
@@ -87,10 +91,13 @@ for idx in IDXS:
     smrk = ABSTR_DF.at[idx, 'smirks']
     (q1h_smi, q2_smi), (q1_smi, q2h_smi) = automechanic.smiles.split_smirks(smrk)
     inp_str = TMP_STR.format(q1h_smi=q1h_smi, q2_smi=q2_smi, q1_smi=q1_smi,
-                             q2h_smi=q2h_smi, node=NODE)
+                             q2h_smi=q2h_smi, nodes=NODES)
     inp_path = os.path.join(path, INP_NAME)
     automechanic.io.write_file(inp_path, inp_str)
     os.chdir(path)
     print('@automechanic is entering {:s}...'.format(path))
-    subprocess.check_call(CMDS)
+    try:
+        subprocess.check_call(CMDS)
+    except Exception as err:
+        print("   TorsScan call failed with {:s}...".format(err))
     os.chdir(CWD)

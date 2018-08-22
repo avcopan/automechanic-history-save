@@ -46,9 +46,9 @@ def test__automech():
     subprocess.check_call(['automech_abstr_run',
                            '-a', abstr_csv_path,
                            '-t', tmp_file_path,
-                           '-n', '0',
+                           '-n', 'b444', 'b445',
                            '-x', '0-3', '5', '7-9', '17',
-                           '-c', 'cat', 'input.dat'])
+                           'cmd', 'ls', '-la'])
     shutil.rmtree(tmp_path)
 
 

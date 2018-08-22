@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+""" find abstraction reactions and generate TorsScan inputs
+"""
+
+import os
+import warnings
+warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+import pandas
+import argparse
+from argparse import ArgumentDefaultsHelpFormatter as Formatter
+import from_qtc.obtools
+import automechanic.io
+
+PARSER = argparse.ArgumentParser(formatter_class=Formatter)
+
+PARSER.add_argument('-r',
+                    '--reactions_csv',
+                    type=str,
+                    default='reactions.csv',
+                    help="csv file with 'smirks' column")
+
+PARSER.add_argument('-s',
+                    '--species_csv',
+                    type=str,
+                    default='species.csv',
+                    help="csv with 'smiles' and 'path' columns")
+
+PARSER.add_argument('-R',
+                    '--reactions_csv_out',
+                    type=str,
+                    default='reactions.csv',
+                    help="[output] csv file with 'smirks' and 'type' column")
+
+PARSER.add_argument('-A',
+                    '--abstractions_csv_out',
+                    type=str,
+                    default='abstractions.csv',
+                    help="[output] csv file with 'smirks' and 'path' columns'")
+
+PARSER.add_argument('-D',
+                    '--abstr_dir',
+                    type=str,
+                    default='abstrs',
+                    help="[output] directory for abstraction jobs")
+
+ARGS = vars(PARSER.parse_args())
+
+SPC_CSV = ARGS['species_csv']
+RXN_CSV = ARGS['reactions_csv']
+RXN_CSV_OUT = ARGS['reactions_csv_out']
+ABSTR_CSV_OUT = ARGS['abstractions_csv_out']
+ABSTR_DIR = ARGS['abstr_dir']
+
+ABSTR_DIR = os.path.abspath(ABSTR_DIR)
+
+SPC_DF = pandas.read_csv(SPC_CSV)
+RXN_DF = pandas.read_csv(RXN_CSV)
+
+RXN_DF_OUT = automechanic.io.find_potential_hydrogen_abstractions(
+    rxn_df=RXN_DF
+)
+
+RXN_DF_OUT.to_csv(RXN_CSV_OUT)
+
+RXN_DF_OUT, ABSTR_DF_OUT = automechanic.io.initialize_hydrogen_abstractions(
+    rxn_df=RXN_DF_OUT,
+    spc_df=SPC_DF,
+    abstr_dir=ABSTR_DIR,
+    smi2fname=lambda smi: from_qtc.obtools.get_smiles_filename(smi) + '.xyz',
+    smrk2dname=from_qtc.obtools.get_smiles_filename
+)
+
+RXN_DF_OUT.to_csv(RXN_CSV_OUT)
+ABSTR_DF_OUT.to_csv(ABSTR_CSV_OUT)

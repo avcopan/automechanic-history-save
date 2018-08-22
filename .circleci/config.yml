@@ -1,0 +1,48 @@
+version: 2
+jobs:
+    build-ubuntu:
+        docker:
+            - image: circleci/buildpack-deps:18.04
+        environment:
+            CONDA=$HOME/miniconda
+        steps:
+            - checkout
+            - run: 
+                name: Create conda environment
+                command: |
+                    echo 'export CONDA=$HOME/miniconda2' >> $BASH_ENV
+                    echo 'export PATH=$CONDA/bin:$PATH' >> $BASH_ENV
+                    source $BASH_ENV
+                    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+                    bash Miniconda2-latest-Linux-x86_64.sh -b -p $CONDA
+                    conda config --set always_yes yes
+                    conda update conda
+                    conda create -n amenv -c openbabel openbabel python=2
+                    conda install -n amenv pip cmake
+            - run:
+                name: Install
+                command: |
+                    source activate amenv
+                    pip install numpy pandas future
+                    pip install flake8 pylint pytest pytest-cov  # for tests
+                    # install pyx2z
+                    git clone --recurse-submodules https://github.com/PACChem/x2z
+                    cd x2z
+                    cmake . -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
+                    make install
+                    cd ..
+                    # install automechanic
+                    pip install .
+            - run:
+                name: Run tests
+                command: |
+                    source activate amenv
+                    cd tests/
+                    pytest -v --cov=automechanic .
+                    flake8 --exit-zero automechanic
+                    pylint --exit-zero --extension-pkg-whitelist=pyx2z --disable=superfluous-parens automechanic
+workflows:
+    version: 2
+    build-all:
+        jobs:
+            - build-ubuntu

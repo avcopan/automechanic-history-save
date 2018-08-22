@@ -7,27 +7,28 @@ The following instructions will work for Miniconda on Linux.
 ```
 export CONDA=$HOME/miniconda2
 export PATH=$CONDA/bin:$PATH
+unset PYTHONPATH
 wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
 bash Miniconda2-latest-Linux-x86_64.sh -b -p $CONDA
 conda update conda
 ```
 
 Now create a conda environment for `automechanic` as follows.
+Make sure you have relatively recent C/C++ compilers before proceeding.
 ```
-conda create -n amenv -c openbabel openbabel python=2
-conda install -n amenv pip cmake
+conda create -n amenv pip cmake python=2
 source activate amenv
+(amenv) conda install -c openbabel openbabel
 (amenv) pip install numpy pandas future pytest
-(amenv) conda install gcc_linux-64 gxx_linux-64
 ```
 (The `(amenv)` indicates that you are running the command in this environment.)
 The last step is only necessary if your system compilers are old.
 
 Next, install `x2z` as follows.
 ```
-(amenv) git clone --recurse-submodules https://github.com/PACChem/x2z
+(amenv) git clone --recurse-submodules https://github.com/PACChem/x2z  # for git version < 2.13 use --recursive
 (amenv) cd x2z
-(amenv) cmake . -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
+(amenv) cmake . -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 (amenv) make install
 ```
 
@@ -40,7 +41,7 @@ You can uninstall it later with `pip uninstall automechanic`.
 
 To test your installation, run the tests as follows.
 ```
-(amenv) pip install automechanic/tests
+(amenv) pytest automechanic/tests -v
 ```
 
 ## How to run the example
@@ -52,7 +53,7 @@ where `species-in.csv` is a CSV file with columns `species` and `smiles`
 listing the CHEMKIN species name and smiles string for each species in
 the mechanism.
 ```
-automech_init -m mechanism.txt -s species-in.csv
+(amenv) automech_init -m mechanism.txt -s species-in.csv
 ```
 This will generate geometries for all species in `geoms/` which you can
 replace with your own structures if you wish.  It will also generate a file
@@ -65,16 +66,16 @@ For testing purposes, I have provided a reduced set of sample reactions in
 `reactions-sample.csv`.
 To find the abstractions and initialize directories for running TorsScan, do this:
 ```
-automech_abstr_init -r reactions-sample.csv
+(amenv) automech_abstr_init -r reactions-sample.csv
 ```
 To run abstractions 0, 1, 2, 3, 5, and 7 on node 0, do the following.
 ```
-automech_abstr_run -n 0 -x 0-3 5 7 -c python /path/to/torsional_scan.py
+(amenv) automech_abstr_run -n 0 -x 0-3 5 7 -c python /path/to/torsional_scan.py
 ```
 
 
 For a dry run, you could do something like the following instead
 ```
-automech_abstr_run -n 0 -x 0-3 5 7 -c cat input.dat
+(amenv) automech_abstr_run -n 0 -x 0-3 5 7 -c cat input.dat
 ```
 which will run `cat input` in each directory.

@@ -9,7 +9,7 @@ Manual species input
 ============
 Reactant list (SMILES): {q1h:s}, {q2:s}
 Product  list (SMILES): {q1:s}, {q2h:s}
-Reaction type:  Abstraction
+Reaction type: Abstraction
 Reactant well (true or findgeom): True
 Product  well (true or findgeom): True
 ==============
@@ -22,8 +22,6 @@ Use input xyz: True
              logfilename.log - makes torsscan parse out xyz)
  
 Use xyz as (start-starting geometry, 0-level0 geometry): start
-Select reac1 angles: 3, 2
-Select prod1 angles: 1, 4
 
 ==============
 BLUES options   
@@ -60,7 +58,7 @@ Irc            :               :
 =============
 THERMO options
 =============
-Perform all thermochemistry? (default true): true
+Perform all thermochemistry? (default true): false
 Precomputed heat of formation (hf0kreac1, hf0kreac2, hf0kTS1, ... in kcal): false
 Anharmonic (0 for level0 theory, 1 for level1 theory, false for off): false
 Overwrite anharmonic: false

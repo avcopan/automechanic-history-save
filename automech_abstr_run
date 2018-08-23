@@ -19,7 +19,7 @@ PARSER.add_argument('-a',
                     '--abstractions_csv',
                     type=str,
                     default='abstractions.csv',
-                    help="csv file with 'smirks' and 'path' columns'")
+                    help="csv file with 'reaction_id' and 'path' columns'")
 
 PARSER.add_argument('-t',
                     '--template_file',
@@ -88,10 +88,12 @@ else:
 CWD = os.getcwd()
 for idx in IDXS:
     path = ABSTR_DF.at[idx, 'path']
-    smrk = ABSTR_DF.at[idx, 'smirks']
-    (q1h_smi, q2_smi), (q1_smi, q2h_smi) = automechanic.smiles.split_smirks(smrk)
-    inp_str = TMP_STR.format(q1h_smi=q1h_smi, q2_smi=q2_smi, q1_smi=q1_smi,
-                             q2h_smi=q2h_smi, nodes=NODES)
+    rid = ABSTR_DF.at[idx, 'reaction_id']
+    rct_sids, prd_sids = automechanic.strid.split_reaction_identifier(rid)
+    q1h_sid, q2_sid = rct_sids
+    q1_sid, q2h_sid = prd_sids
+    inp_str = TMP_STR.format(q1h=q1h_sid, q2=q2_sid, q1=q1_sid, q2h=q2h_sid,
+                             nodes=NODES)
     inp_path = os.path.join(path, INP_NAME)
     automechanic.io.write_file(inp_path, inp_str)
     os.chdir(path)

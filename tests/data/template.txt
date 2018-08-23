@@ -7,8 +7,8 @@ Parse all: True
 ============
 Manual species input
 ============
-Reactant list (SMILES): {q1h_smi:s}, {q2_smi:s}
-Product  list (SMILES): {q1_smi:s}, {q2h_smi:s}
+Reactant list (SMILES): {q1h:s}, {q2:s}
+Product  list (SMILES): {q1:s}, {q2h:s}
 Reaction type:  Abstraction
 Reactant well (true or findgeom): True
 Product  well (true or findgeom): True

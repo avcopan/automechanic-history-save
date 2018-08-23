@@ -5,11 +5,12 @@ import sys
 import subprocess
 from future.moves.itertools import filterfalse
 import pandas
-from . import smiles
+from . import strid
 from . import dotxyz
 from . import pchemkin
+from . import geom
 from . import geomlib
-from . import smileslib
+from . import stridlib
 from .timeout import TimeoutError
 
 
@@ -21,23 +22,24 @@ def write_file(fpath, contents, mode='w'):
     fle.close()
 
 
-def write_geometries(spc_df, geom_dir, smi2fname):
+def write_geometries(spc_df, path, sid2fname):
     """ write geometries to .xyz files
     """
-    assert isinstance(spc_df, pandas.DataFrame) and 'smiles' in spc_df
+    assert isinstance(spc_df, pandas.DataFrame) and 'species_id' in spc_df
 
     if 'path' not in spc_df:
         spc_df['path'] = None
 
-    if not os.path.exists(geom_dir):
-        os.makedirs(geom_dir)
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     for idx, row in spc_df.iterrows():
-        smi = row['smiles']
-        fname = smi2fname(smi)
-        fpath = os.path.join(geom_dir, fname)
+        sid = row['species_id']
+        fname = sid2fname(sid)
+        fpath = os.path.join(path, fname)
         if not os.path.exists(fpath):
-            write_file(fpath, contents=smiles.xyz_string(smi))
+            dxyz = strid.xyz_string(sid)
+            write_file(fpath, contents=dxyz)
         if spc_df.at[idx, 'path'] is None:
             spc_df.at[idx, 'path'] = fpath
 
@@ -47,18 +49,18 @@ def write_geometries(spc_df, geom_dir, smi2fname):
 def read_geometries(spc_df):
     """ read geometries from .xyz files
     """
-    assert (isinstance(spc_df, pandas.DataFrame) and 'smiles' in spc_df
+    assert (isinstance(spc_df, pandas.DataFrame) and 'species_id' in spc_df
             and 'path' in spc_df)
 
     mgeo_dct = {}
 
     for idx, row in spc_df.iterrows():
-        smi = row['smiles']
+        sid = row['species_id']
         fpath = row['path']
         assert os.path.exists(fpath)
         dxyz = open(fpath).read()
         mgeo = dotxyz.geometry(dxyz)
-        mgeo_dct[smi] = mgeo
+        mgeo_dct[sid] = mgeo
 
     return mgeo_dct
 
@@ -66,7 +68,7 @@ def read_geometries(spc_df):
 def parse_mechanism(mech_str, spc_df, excl=('OHV', 'CHV')):
     """ parse the mechanism in a CHEMKIN file
     """
-    smi_dct = dict(zip(spc_df['species'], spc_df['smiles']))
+    sid_dct = dict(zip(spc_df['species'], spc_df['species_id']))
 
     def _contains_species(spc_lst):
         def __yes(rxn):
@@ -82,22 +84,23 @@ def parse_mechanism(mech_str, spc_df, excl=('OHV', 'CHV')):
     incl_lp_rxns = list(filterfalse(contains_excluded, lp_rxns))
     incl_fo_rxns = list(filterfalse(contains_excluded, fo_rxns))
 
-    def _to_smirks(rxn):
-        rspcs, pspcs = rxn
-        rsmis = [smi_dct[spc] for spc in rspcs]
-        psmis = [smi_dct[spc] for spc in pspcs]
-        smrk = smiles.make_smirks(rsmis, psmis)
-        return smrk
+    def _to_rid(rxn):
+        rct_spcs, prd_spcs = rxn
+        rct_sids = tuple(map(sid_dct.__getitem__, rct_spcs))
+        prd_sids = tuple(map(sid_dct.__getitem__, prd_spcs))
+        rid = strid.reaction_identifier(rct_sids, prd_sids)
+        return rid
 
-    pi_smrks = list(map(_to_smirks, incl_pi_rxns))
-    lp_smrks = list(map(_to_smirks, incl_lp_rxns))
-    fo_smrks = list(map(_to_smirks, incl_fo_rxns))
+    pi_rids = list(map(_to_rid, incl_pi_rxns))
+    lp_rids = list(map(_to_rid, incl_lp_rxns))
+    fo_rids = list(map(_to_rid, incl_fo_rxns))
 
-    pi_df = pandas.DataFrame({'smirks': pi_smrks})
-    lp_df = pandas.DataFrame({'smirks': lp_smrks})
-    fo_df = pandas.DataFrame({'smirks': fo_smrks})
+    pi_df = pandas.DataFrame({'reaction_id': pi_rids})
+    lp_df = pandas.DataFrame({'reaction_id': lp_rids})
+    fo_df = pandas.DataFrame({'reaction_id': fo_rids})
     rxn_df = pandas.concat([pi_df, lp_df, fo_df],
-                           keys=['press_indep', 'low_p', 'falloff'])
+                           keys=['press_indep', 'low_p', 'falloff'],
+                           names=['pressure dependence', ''])
     return rxn_df
 
 
@@ -105,28 +108,29 @@ def find_potential_hydrogen_abstractions(rxn_df):
     """ find potential hydrogen abstractions
     """
     print('finding potential hydrogen abstractions by formula...')
-    assert isinstance(rxn_df, pandas.DataFrame) and 'smirks' in rxn_df
+    assert isinstance(rxn_df, pandas.DataFrame) and 'reaction_id' in rxn_df
 
     if 'maybe_abstr' not in rxn_df:
         rxn_df['maybe_abstr'] = None
 
-    rxn_df = rxn_df.rename(columns={"smirks": "orig_smirks"})
-    rxn_df['smirks'] = None
+    rxn_df = rxn_df.rename(columns={"reaction_id": "orig_reaction_id"})
+    rxn_df['reaction_id'] = None
 
     for idx, row in rxn_df.iterrows():
-        orig_smrk = row['orig_smirks']
+        orig_rid = row['orig_reaction_id']
         sys.stdout.flush()
-        smrk = smileslib.match_hydrogen_abstraction_formula(orig_smrk)
-        if smrk:
+        rid = stridlib.match_hydrogen_abstraction_formula(orig_rid)
+        if rid:
             rxn_df.at[idx, 'maybe_abstr'] = True
         else:
-            smrk = orig_smrk
-        rxn_df.at[idx, 'smirks'] = smrk
+            rid = orig_rid
+            rxn_df.at[idx, 'maybe_abstr'] = False
+        rxn_df.at[idx, 'reaction_id'] = rid
     return rxn_df
 
 
-def initialize_hydrogen_abstractions(rxn_df, spc_df, abstr_dir, smi2fname,
-                                     smrk2dname):
+def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
+                                     rid2dname):
     """ find hydrogen abstractions in the reaction database
     """
     print('reading geometries from .xyz files...')
@@ -137,21 +141,22 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, abstr_dir, smi2fname,
     if 'abstr_exception' not in rxn_df:
         rxn_df['abstr_exception'] = None
 
-    if not os.path.exists(abstr_dir):
-        os.makedirs(abstr_dir)
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-    abstr_df = pandas.DataFrame(columns=['smirks', 'path'])
+    abstr_df = pandas.DataFrame(columns=['reaction_id', 'path'])
 
     print('looping over potential hydrogen abstractions...')
     for idx, row in rxn_df.iterrows():
         if rxn_df.at[idx, 'maybe_abstr']:
-            smrk = row['smirks']
-            print('reaction {:d}: {:s}'.format(idx, smrk))
-            rsmis, psmis = smiles.split_smirks(smrk)
-            rmgeos = tuple(mgeo_dct[smi] for smi in rsmis)
-            pmgeos = tuple(mgeo_dct[smi] for smi in psmis)
+            rid = row['reaction_id']
+            print('reaction {:d}: {:s}'.format(idx, rid))
+            rct_sids, prd_sids = strid.split_reaction_identifier(rid)
+            rct_mgeos = tuple(mgeo_dct[sid] for sid in rct_sids)
+            prd_mgeos = tuple(mgeo_dct[sid] for sid in prd_sids)
+
             try:
-                abstr = geomlib.find_hydrogen_abstraction(rmgeos, pmgeos)
+                abstr = geomlib.find_hydrogen_abstraction(rct_mgeos, prd_mgeos)
             except RuntimeError as err:
                 rxn_df.at[idx, 'abstr_exception'] = 'RuntimeError'
                 print('  abstraction finder failed: {:s}'.format(str(err)))
@@ -160,15 +165,14 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, abstr_dir, smi2fname,
                 rxn_df.at[idx, 'abstr_exception'] = 'TimeoutError'
                 print('  abstraction finder failed: {:s}'.format(str(err)))
                 continue
+
             if abstr:
                 print('  found hydrogen abstraction...')
                 rxn_df.at[idx, 'type'] = 'abstraction'
                 forw, back = abstr
+
                 (q1h_mgeo, q1h_idx), (q2_mgeo, q2_idx) = forw
                 (q1_mgeo, _), (q2h_mgeo, _) = back
-
-                q1h_smi, q2_smi = rsmis
-                q1_smi, q2h_smi = psmis
 
                 try:
                     q1h_dxyz = geomlib.abstractee_xyz_string(q1h_mgeo, q1h_idx)
@@ -179,32 +183,34 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, abstr_dir, smi2fname,
                     continue
 
                 q2_dxyz = geomlib.abstractor_xyz_string(q2_mgeo, q2_idx)
-                q1_dxyz = smiles.xyz_string(q1_smi)
-                q2h_dxyz = smiles.xyz_string(q2h_smi)
+                q1_dxyz = geom.xyz_string(q1_mgeo)
+                q2h_dxyz = geom.xyz_string(q2h_mgeo)
 
-                rxn_dname = smrk2dname(smrk)
-                rxn_path = os.path.join(abstr_dir, rxn_dname)
+                dname = rid2dname(rid)
+                dpath = os.path.join(path, dname)
 
-                if not os.path.exists(rxn_path):
-                    os.makedirs(rxn_path)
+                if not os.path.exists(dpath):
+                    os.makedirs(dpath)
 
-                q1h_fname = smi2fname(q1h_smi)
-                q2_fname = smi2fname(q2_smi)
-                q1_fname = smi2fname(q1_smi)
-                q2h_fname = smi2fname(q2h_smi)
+                q1h_sid, q2_sid = rct_sids
+                q1_sid, q2h_sid = prd_sids
+                q1h_fname = sid2fname(q1h_sid)
+                q2h_fname = sid2fname(q2h_sid)
+                q1_fname = sid2fname(q1_sid)
+                q2_fname = sid2fname(q2_sid)
 
                 print('  writing xyz files...')
-                q1h_fpath = os.path.join(rxn_path, q1h_fname)
-                q2_fpath = os.path.join(rxn_path, q2_fname)
-                q1_fpath = os.path.join(rxn_path, q1_fname)
-                q2h_fpath = os.path.join(rxn_path, q2h_fname)
+                q1h_fpath = os.path.join(dpath, q1h_fname)
+                q2h_fpath = os.path.join(dpath, q2h_fname)
+                q2_fpath = os.path.join(dpath, q2_fname)
+                q1_fpath = os.path.join(dpath, q1_fname)
 
                 write_file(q1h_fpath, q1h_dxyz)
-                write_file(q2_fpath, q2_dxyz)
-                write_file(q1_fpath, q1_dxyz)
                 write_file(q2h_fpath, q2h_dxyz)
+                write_file(q1_fpath, q1_dxyz)
+                write_file(q2_fpath, q2_dxyz)
 
-                abstr_df = abstr_df.append({'smirks': smrk, 'path': rxn_path},
+                abstr_df = abstr_df.append({'reaction_id': rid, 'path': dpath},
                                            ignore_index=True)
 
     return rxn_df, abstr_df

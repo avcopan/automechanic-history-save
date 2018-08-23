@@ -66,9 +66,9 @@ RXN_DF_OUT.to_csv(RXN_CSV_OUT)
 RXN_DF_OUT, ABSTR_DF_OUT = automechanic.io.initialize_hydrogen_abstractions(
     rxn_df=RXN_DF_OUT,
     spc_df=SPC_DF,
-    abstr_dir=ABSTR_DIR,
-    smi2fname=lambda smi: from_qtc.obtools.get_smiles_filename(smi) + '.xyz',
-    smrk2dname=from_qtc.obtools.get_smiles_filename
+    path=ABSTR_DIR,
+    sid2fname=lambda sid: from_qtc.obtools.get_smiles_filename(sid) + '.xyz',
+    rid2dname=from_qtc.obtools.get_smiles_filename
 )
 
 RXN_DF_OUT.to_csv(RXN_CSV_OUT)

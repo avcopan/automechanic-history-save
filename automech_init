@@ -23,13 +23,13 @@ PARSER.add_argument('-s',
                     '--species_csv',
                     type=str,
                     default='species.csv',
-                    help="csv with 'smiles' column")
+                    help="csv with 'species_id' column")
 
 PARSER.add_argument('-S',
                     '--species_csv_out',
                     type=str,
                     default='species.csv',
-                    help="[output] csv with 'smiles' and 'path' columns")
+                    help="[output] csv with 'species_id' and 'path' columns")
 
 PARSER.add_argument('-x',
                     '--exclude_species',
@@ -48,7 +48,7 @@ PARSER.add_argument('-R',
                     '--reactions_csv_out',
                     type=str,
                     default='reactions.csv',
-                    help="[output] csv file with 'smirks' column")
+                    help="[output] csv file with 'reaction_id' column")
 
 ARGS = vars(PARSER.parse_args())
 
@@ -67,8 +67,8 @@ print("Generating missing .xyz files for species...")
 
 SPC_DF_OUT = automechanic.io.write_geometries(
     spc_df=SPC_DF,
-    geom_dir=GEOM_DIR,
-    smi2fname=lambda smi: from_qtc.obtools.get_smiles_filename(smi) + '.xyz'
+    path=GEOM_DIR,
+    sid2fname=lambda sid: from_qtc.obtools.get_smiles_filename(sid) + '.xyz'
 )
 
 print("Writing paths to species .xyz files to {:s}".format(SPC_CSV_OUT))
@@ -83,6 +83,6 @@ RXN_DF_OUT = automechanic.io.parse_mechanism(
     excl=EXCL
 )
 
-print("Writing reaction SMIRKS to {:s}".format(RXN_CSV_OUT))
+print("Writing reactions to {:s}".format(RXN_CSV_OUT))
 
 RXN_DF_OUT.to_csv(RXN_CSV_OUT)

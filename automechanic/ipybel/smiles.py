@@ -4,6 +4,14 @@ import numpy
 import pybel
 
 
+def canonicalize(smi):
+    """ canonical smiles string
+    """
+    pbmol = _pybel_molecule(smi)
+    can_smi = pbmol.write('can').strip()
+    return can_smi
+
+
 def xyz_string(smi):
     """ XYZ string of the atoms in a SMILES string
 

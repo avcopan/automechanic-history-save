@@ -7,26 +7,14 @@ import pyx2z
 def graph(mgeo, res=0):
     """ molecule graph of a cartesian geometry
     """
-    x2zms = _pyx2z_molec_struct(mgeo)
-    natms = x2zms.size()
-    atms, _ = zip(*mgeo)
-    bnds = frozenset()
-    for i in range(natms):
-        for j in range(i):
-            order = x2zms.bond_order(i, j, res)
-            if order > 0:
-                bnd = frozenset([i, j])
-                bnds |= frozenset([(bnd, order)])
-    mgrph = (atms, bnds)
-    return mgrph
+    mgrphs = resonance_graphs(mgeo)
+    return mgrphs[res]
 
 
 def number_of_resonance_graphs(mgeo):
     """ number of resonances
     """
-    x2zms = _pyx2z_molec_struct(mgeo)
-    nrncs = x2zms.resonance_count()
-    return nrncs
+    return len(resonance_graphs(mgeo))
 
 
 def resonance_graphs(mgeo):
@@ -46,6 +34,7 @@ def resonance_graphs(mgeo):
                     bnd = frozenset([i, j])
                     bnds |= frozenset([(bnd, order)])
         mgrphs.append((atms, bnds))
+
     return tuple(mgrphs)
 
 

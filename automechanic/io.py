@@ -1,16 +1,13 @@
 """ messy I/O based drivers and functions
 """
 import os
-import sys
 from future.moves.itertools import filterfalse
 import pandas
 from . import strid
 from . import dotxyz
 from . import pchemkin
-from . import geom
-from . import geomlib
 from . import stridlib
-from .timeout import TimeoutError
+from . import iohelp
 
 
 def write_file(fpath, contents, mode='w'):
@@ -103,31 +100,6 @@ def parse_mechanism(mech_str, spc_df, excl=('OHV', 'CHV')):
     return rxn_df
 
 
-def find_potential_hydrogen_abstractions(rxn_df):
-    """ find potential hydrogen abstractions
-    """
-    print('finding potential hydrogen abstractions by formula...')
-    assert isinstance(rxn_df, pandas.DataFrame) and 'reaction_id' in rxn_df
-
-    if 'maybe_abstr' not in rxn_df:
-        rxn_df['maybe_abstr'] = None
-
-    rxn_df = rxn_df.rename(columns={"reaction_id": "orig_reaction_id"})
-    rxn_df['reaction_id'] = None
-
-    for idx, row in rxn_df.iterrows():
-        orig_rid = row['orig_reaction_id']
-        sys.stdout.flush()
-        rid = stridlib.match_hydrogen_abstraction_formula(orig_rid)
-        if rid:
-            rxn_df.at[idx, 'maybe_abstr'] = True
-        else:
-            rid = orig_rid
-            rxn_df.at[idx, 'maybe_abstr'] = False
-        rxn_df.at[idx, 'reaction_id'] = rid
-    return rxn_df
-
-
 def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
                                      rid2dname):
     """ find hydrogen abstractions in the reaction database
@@ -147,48 +119,29 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
 
     print('looping over potential hydrogen abstractions...')
     for idx, row in rxn_df.iterrows():
-        if rxn_df.at[idx, 'maybe_abstr']:
-            rid = row['reaction_id']
+        rid = row['reaction_id']
+        match_rid = stridlib.match_hydrogen_abstraction_formula(rid)
+        if not match_rid:
+            rxn_df.at[idx, 'maybe_abstr'] = False
+        else:
+            rid = match_rid
             print('reaction {:d}: {:s}'.format(idx, rid))
 
-            rct_sids, prd_sids = strid.split_reaction_identifier(rid)
-            q1h_sid, q2_sid = rct_sids
-            q1_sid, q2h_sid = prd_sids
-
-            q1h_mgeo = mgeo_dct[q1h_sid]
-            q2_mgeo = mgeo_dct[q2_sid]
-            q1_mgeo = mgeo_dct[q1_sid]
-            q2h_mgeo = mgeo_dct[q2h_sid]
+            rxn_df.at[idx, 'reaction_id'] = rid
+            rxn_df.at[idx, 'maybe_abstr'] = True
 
             try:
-                idxs = geomlib.find_hydrogen_abstraction(q1h_mgeo, q2_mgeo,
-                                                         q1_mgeo, q2h_mgeo)
-            except RuntimeError as err:
-                rxn_df.at[idx, 'abstr_exception'] = 'RuntimeError'
-                print('  abstraction finder failed: {:s}'.format(str(err)))
-                continue
-            except TimeoutError as err:
-                rxn_df.at[idx, 'abstr_exception'] = 'TimeoutError'
-                print('  abstraction finder failed: {:s}'.format(str(err)))
+                dxyzs = iohelp.find_abstraction(rid, mgeo_dct)
+            except Exception as err:
+                ename = type(err).__name__
+                emsg = err.message
+                rxn_df.at[idx, 'abstr_exception'] = ename
+                print('  {:s}: {:s}'.format(ename, emsg))
                 continue
 
-            if idxs:
+            if dxyzs:
                 print('  found hydrogen abstraction...')
                 rxn_df.at[idx, 'type'] = 'abstraction'
-
-                q1h_idx, q2_idx, _, _ = idxs
-
-                try:
-                    q1h_dxyz = geomlib.abstractee_xyz_string(q1h_mgeo, q1h_idx)
-                except ValueError as err:
-                    rxn_df.at[idx, 'abstr_exception'] = 'ValueError'
-                    print('  failed to generate abstractee xyz: {:s}'
-                          .format(str(err)))
-                    continue
-
-                q2_dxyz = geomlib.abstractor_xyz_string(q2_mgeo, q2_idx)
-                q1_dxyz = geom.xyz_string(q1_mgeo)
-                q2h_dxyz = geom.xyz_string(q2h_mgeo)
 
                 dname = rid2dname(rid)
                 dpath = os.path.join(path, dname)
@@ -196,16 +149,15 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
                 if not os.path.exists(dpath):
                     os.makedirs(dpath)
 
-                q1h_fname = sid2fname(q1h_sid)
-                q2_fname = sid2fname(q2_sid)
-                q1_fname = sid2fname(q1_sid)
-                q2h_fname = sid2fname(q2h_sid)
+                (q1h_sid, q2_sid), (q1_sid, q2h_sid) = (
+                        strid.split_reaction_identifier(rid))
+                q1h_dxyz, q2_dxyz, q1_dxyz, q2h_dxyz = dxyzs
 
                 print('  writing xyz files...')
-                q1h_fpath = os.path.join(dpath, q1h_fname)
-                q2_fpath = os.path.join(dpath, q2_fname)
-                q1_fpath = os.path.join(dpath, q1_fname)
-                q2h_fpath = os.path.join(dpath, q2h_fname)
+                q1h_fpath = os.path.join(dpath, sid2fname(q1h_sid))
+                q2_fpath = os.path.join(dpath, sid2fname(q2_sid))
+                q1_fpath = os.path.join(dpath, sid2fname(q1_sid))
+                q2h_fpath = os.path.join(dpath, sid2fname(q2h_sid))
 
                 write_file(q1h_fpath, q1h_dxyz)
                 write_file(q2_fpath, q2_dxyz)

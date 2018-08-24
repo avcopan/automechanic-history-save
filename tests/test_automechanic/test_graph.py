@@ -228,6 +228,40 @@ def test__isomorphism():
         assert graph.permute_atoms(mgrph, iso) == pmt_mgrph
 
 
+def test__multibond_opening_resonances():
+    """ test graph.multibond_opening_resonances
+    """
+    mgrph1 = (('C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H',
+               'H'),
+              frozenset([(frozenset([0, 6]), 1), (frozenset([8, 2]), 1),
+                         (frozenset([1, 2]), 1), (frozenset([1, 7]), 1),
+                         (frozenset([3, 4]), 1), (frozenset([9, 3]), 1),
+                         (frozenset([2, 3]), 2), (frozenset([0, 5]), 1),
+                         (frozenset([0, 1]), 2), (frozenset([10, 4]), 1),
+                         (frozenset([4, 12]), 1), (frozenset([11, 4]), 1)]))
+    mgrph2 = (('C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H',
+               'H'),
+              frozenset([(frozenset([0, 6]), 1), (frozenset([8, 2]), 1),
+                         (frozenset([1, 2]), 1), (frozenset([1, 7]), 1),
+                         (frozenset([3, 4]), 1), (frozenset([9, 3]), 1),
+                         (frozenset([2, 3]), 1), (frozenset([0, 5]), 1),
+                         (frozenset([0, 1]), 2), (frozenset([10, 4]), 1),
+                         (frozenset([4, 12]), 1), (frozenset([11, 4]), 1)]))
+    mgrph3 = (('C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H',
+               'H'),
+              frozenset([(frozenset([0, 6]), 1), (frozenset([8, 2]), 1),
+                         (frozenset([1, 2]), 1), (frozenset([1, 7]), 1),
+                         (frozenset([3, 4]), 1), (frozenset([9, 3]), 1),
+                         (frozenset([2, 3]), 2), (frozenset([0, 5]), 1),
+                         (frozenset([0, 1]), 1), (frozenset([10, 4]), 1),
+                         (frozenset([4, 12]), 1), (frozenset([11, 4]), 1)]))
+
+    print graph.multibond_opening_resonances(mgrph1)
+    assert (set(graph.multibond_opening_resonances(mgrph1))
+            == {mgrph1, mgrph2, mgrph3})
+
+
 if __name__ == '__main__':
     test__isomorphism()
     test__isomorphic()
+    test__multibond_opening_resonances()

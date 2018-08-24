@@ -3,9 +3,6 @@
 """
 
 import os
-import warnings
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 import pandas
 import argparse
 from argparse import ArgumentDefaultsHelpFormatter as Formatter
@@ -57,14 +54,8 @@ ABSTR_DIR = os.path.abspath(ABSTR_DIR)
 SPC_DF = pandas.read_csv(SPC_CSV)
 RXN_DF = pandas.read_csv(RXN_CSV)
 
-RXN_DF_OUT = automechanic.io.find_potential_hydrogen_abstractions(
-    rxn_df=RXN_DF
-)
-
-RXN_DF_OUT.to_csv(RXN_CSV_OUT)
-
 RXN_DF_OUT, ABSTR_DF_OUT = automechanic.io.initialize_hydrogen_abstractions(
-    rxn_df=RXN_DF_OUT,
+    rxn_df=RXN_DF,
     spc_df=SPC_DF,
     path=ABSTR_DIR,
     sid2fname=lambda sid: from_qtc.obtools.get_smiles_filename(sid) + '.xyz',

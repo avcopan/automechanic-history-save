@@ -55,6 +55,24 @@ def bond_orders(mgrph):
     return bdct
 
 
+def multibond_opening_resonances(mgrph):
+    """ X=Y <-> X.-Y. resonances
+    """
+    atms = atoms(mgrph)
+    bdct = bond_orders(mgrph)
+
+    multi_bnds = {key for key, typ in bdct.items() if typ > 1}
+
+    res_mgrphs = [mgrph]
+    for bnd in multi_bnds:
+        res_bdct = bdct.copy()
+        res_bdct[bnd] -= 1
+        res_bnds = frozenset(res_bdct.items())
+        res_mgrphs.append((atms, res_bnds))
+
+    return tuple(res_mgrphs)
+
+
 def radical_sites(mgrph):
     """ radical sites of a molecular graph
     """
@@ -372,24 +390,13 @@ def _formula(iterable):
 
 
 if __name__ == '__main__':
-    MGRPH = (('C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H',
-              'H', 'H', 'H', 'H'),
-             frozenset([(frozenset([0, 6]), 1), (frozenset([4, 15]), 1),
-                        (frozenset([3, 12]), 1), (frozenset([4, 14]), 1),
-                        (frozenset([0, 7]), 1), (frozenset([16, 4]), 1),
-                        (frozenset([1, 4]), 1), (frozenset([9, 2]), 1),
-                        (frozenset([0, 5]), 1), (frozenset([1, 3]), 1),
-                        (frozenset([8, 2]), 1), (frozenset([3, 11]), 1),
-                        (frozenset([0, 1]), 1), (frozenset([3, 13]), 1),
-                        (frozenset([10, 2]), 1), (frozenset([1, 2]), 1)]))
-    MGRPH_ = (('C', 'C', 'C', 'H', 'H', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H',
-               'H', 'H', 'H', 'H'),
-              frozenset([(frozenset([2, 4]), 1), (frozenset([1, 2]), 1),
-                         (frozenset([1, 6]), 1), (frozenset([6, 15]), 1),
-                         (frozenset([11, 5]), 1), (frozenset([1, 5]), 1),
-                         (frozenset([0, 9]), 1), (frozenset([6, 14]), 1),
-                         (frozenset([2, 3]), 1), (frozenset([13, 6]), 1),
-                         (frozenset([0, 7]), 1), (frozenset([12, 5]), 1),
-                         (frozenset([10, 5]), 1), (frozenset([8, 0]), 1),
-                         (frozenset([16, 2]), 1), (frozenset([0, 1]), 1)]))
-    print isomorphism(MGRPH, MGRPH_)
+    MGRPH = (('C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H'),
+             frozenset([(frozenset([0, 6]), 1), (frozenset([8, 2]), 1),
+                        (frozenset([1, 2]), 1), (frozenset([1, 7]), 1),
+                        (frozenset([3, 4]), 1), (frozenset([9, 3]), 1),
+                        (frozenset([2, 3]), 2), (frozenset([0, 5]), 1),
+                        (frozenset([0, 1]), 2), (frozenset([10, 4]), 1),
+                        (frozenset([4, 12]), 1), (frozenset([11, 4]), 1)]))
+    print len(multibond_opening_resonances(MGRPH))
+    print multibond_opening_resonances(
+        (('O', 'O'), frozenset([(frozenset([0, 1]), 2)])))

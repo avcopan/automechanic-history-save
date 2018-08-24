@@ -1,34 +1,23 @@
 """ a library of specialized geom functions
 """
 from itertools import product
-from .geom import formula
 from .geom import graph
 from .geom import resonance_graphs
 from .graph import atom_neighborhood_indices
-from .formlib import abstraction_argsort as formula_abstraction_argsort
 from .graphlib import abstraction_indices as graph_abstraction_indices
 
 
-def find_hydrogen_abstraction(rct_mgeos, prd_mgeos):
-    """ find hydrogen abstraction, if there is one
+def find_hydrogen_abstraction(r1h_mgeo, r2_mgeo, p1_mgeo, p2h_mgeo):
+    """ find hydrogen abstraction for a pre-sorted reaction
     """
-    abstr = None
-    rct_fmls = tuple(map(formula, rct_mgeos))
-    prd_fmls = tuple(map(formula, prd_mgeos))
-    abstr_srt = formula_abstraction_argsort(rct_fmls, prd_fmls)
-    if abstr_srt:
-        rct_posns, prd_posns = abstr_srt
-        q1h_mgeo, q2_mgeo = (rct_mgeos[posn] for posn in rct_posns)
-        q1_mgeo, q2h_mgeo = (prd_mgeos[posn] for posn in prd_posns)
-        idxs1 = abstraction_indices(q1h_mgeo, q1_mgeo)
-        idxs2 = abstraction_indices(q2h_mgeo, q2_mgeo)
-        if idxs1 and idxs2:
-            q1h_idx, q1_idx = idxs1
-            q2h_idx, q2_idx = idxs2
-            forw = ((q1h_mgeo, q1h_idx), (q2_mgeo, q2_idx))
-            back = ((q2h_mgeo, q2h_idx), (q1_mgeo, q1_idx))
-            abstr = (forw, back)
-    return abstr
+    idxs = None
+    idxs1 = abstraction_indices(r1h_mgeo, p1_mgeo)
+    idxs2 = abstraction_indices(p2h_mgeo, r2_mgeo)
+    if idxs1 and idxs2:
+        q1h_idx, q1_idx = idxs1
+        q2h_idx, q2_idx = idxs2
+        idxs = (q1h_idx, q2_idx, q1_idx, q2h_idx)
+    return idxs
 
 
 def abstraction_indices(qh_mgeo, q_mgeo):

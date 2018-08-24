@@ -1,0 +1,15 @@
+name: amenv
+channels:
+    - openbabel
+dependencies:
+    - python=2.7
+    - openbabel
+    - pip:
+        - numpy
+        - pandas
+        - pytest
+        - pytest-cov
+        - future
+        - flake8
+        - pylint
+    - cmake

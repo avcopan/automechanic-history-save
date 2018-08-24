@@ -2,7 +2,6 @@
 """
 import os
 import sys
-import subprocess
 from future.moves.itertools import filterfalse
 import pandas
 from . import strid
@@ -151,12 +150,19 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
         if rxn_df.at[idx, 'maybe_abstr']:
             rid = row['reaction_id']
             print('reaction {:d}: {:s}'.format(idx, rid))
+
             rct_sids, prd_sids = strid.split_reaction_identifier(rid)
-            rct_mgeos = tuple(mgeo_dct[sid] for sid in rct_sids)
-            prd_mgeos = tuple(mgeo_dct[sid] for sid in prd_sids)
+            q1h_sid, q2_sid = rct_sids
+            q1_sid, q2h_sid = prd_sids
+
+            q1h_mgeo = mgeo_dct[q1h_sid]
+            q2_mgeo = mgeo_dct[q2_sid]
+            q1_mgeo = mgeo_dct[q1_sid]
+            q2h_mgeo = mgeo_dct[q2h_sid]
 
             try:
-                abstr = geomlib.find_hydrogen_abstraction(rct_mgeos, prd_mgeos)
+                idxs = geomlib.find_hydrogen_abstraction(q1h_mgeo, q2_mgeo,
+                                                         q1_mgeo, q2h_mgeo)
             except RuntimeError as err:
                 rxn_df.at[idx, 'abstr_exception'] = 'RuntimeError'
                 print('  abstraction finder failed: {:s}'.format(str(err)))
@@ -166,13 +172,11 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
                 print('  abstraction finder failed: {:s}'.format(str(err)))
                 continue
 
-            if abstr:
+            if idxs:
                 print('  found hydrogen abstraction...')
                 rxn_df.at[idx, 'type'] = 'abstraction'
-                forw, back = abstr
 
-                (q1h_mgeo, q1h_idx), (q2_mgeo, q2_idx) = forw
-                (q1_mgeo, _), (q2h_mgeo, _) = back
+                q1h_idx, q2_idx, _, _ = idxs
 
                 try:
                     q1h_dxyz = geomlib.abstractee_xyz_string(q1h_mgeo, q1h_idx)
@@ -192,23 +196,21 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
                 if not os.path.exists(dpath):
                     os.makedirs(dpath)
 
-                q1h_sid, q2_sid = rct_sids
-                q1_sid, q2h_sid = prd_sids
                 q1h_fname = sid2fname(q1h_sid)
-                q2h_fname = sid2fname(q2h_sid)
-                q1_fname = sid2fname(q1_sid)
                 q2_fname = sid2fname(q2_sid)
+                q1_fname = sid2fname(q1_sid)
+                q2h_fname = sid2fname(q2h_sid)
 
                 print('  writing xyz files...')
                 q1h_fpath = os.path.join(dpath, q1h_fname)
-                q2h_fpath = os.path.join(dpath, q2h_fname)
                 q2_fpath = os.path.join(dpath, q2_fname)
                 q1_fpath = os.path.join(dpath, q1_fname)
+                q2h_fpath = os.path.join(dpath, q2h_fname)
 
                 write_file(q1h_fpath, q1h_dxyz)
-                write_file(q2h_fpath, q2h_dxyz)
-                write_file(q1_fpath, q1_dxyz)
                 write_file(q2_fpath, q2_dxyz)
+                write_file(q1_fpath, q1_dxyz)
+                write_file(q2h_fpath, q2h_dxyz)
 
                 abstr_df = abstr_df.append({'reaction_id': rid, 'path': dpath},
                                            ignore_index=True)

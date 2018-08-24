@@ -13,36 +13,25 @@ bash Miniconda2-latest-Linux-x86_64.sh -b -p $CONDA
 conda update conda
 ```
 
-Now create a conda environment for `automechanic` as follows.
+Now you can install `automechanic` as follows.
 Make sure you have relatively recent C/C++ compilers before proceeding.
 ```
-conda create -n amenv pip cmake python=2
+git clone https://github.com/PACChem/automechanic
+git clone --recursive https://github.com/PACChem/x2z  # for git>2.13 use --recurse-submodules
+conda env create -f automechanic/environment.yml
 source activate amenv
-(amenv) conda install -c openbabel openbabel
-(amenv) pip install numpy pandas future pytest
-```
-(The `(amenv)` indicates that you are running the command in this environment.)
-The last step is only necessary if your system compilers are old.
-
-Next, install `x2z` as follows.
-```
-(amenv) git clone --recurse-submodules https://github.com/PACChem/x2z  # for git version < 2.13 use --recursive
 (amenv) cd x2z
 (amenv) cmake . -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 (amenv) make install
-```
-
-Finally install `automechanic` into the environment.
-```
-(amenv) git clone https://github.com/PACChem/automechanic
+(amenv) cd ..
 (amenv) pip install automechanic/
 ```
-You can uninstall it later with `pip uninstall automechanic`.
 
 To test your installation, run the tests as follows.
 ```
 (amenv) pytest automechanic/tests -v
 ```
+
 
 ## How to run the example
 
@@ -68,15 +57,16 @@ To find the abstractions and initialize directories for running TorsScan, do thi
 ```
 (amenv) automech_abstr_init -r reactions-sample.csv
 ```
-To run abstractions 0, 1, 2, 3, 5, and 7 on node b444, do the following.
+To run a given set of abstractions with TorsScan you can use the `automech_abstr_run`
+command.
+A dry run would look as follows
 ```
-(amenv) automech_abstr_run -n b444 -x 0-3 5 7 cmd python /path/to/torsional_scan.py
+(amenv) automech_abstr_run -n b444 b445 -x 0-3 5 7 cmd ls -la
 ```
-
-
-Anything that comes after `cmd` will be run as a command in the abstraction job
-directory, so for a dry run you could do something like this instead.
+which will create inputs for abstractions 0, 1, 2, 3, 5, and 7 to run on nodes b444 and b445,
+enter each job directory and run the command `ls -la`.
+Anything that comes after `cmd` will be run as a command in the job directory, so an actual
+run would look as follows.
 ```
-(amenv) automech_abstr_run -n b444 -x 0-3 5 7 cmd ls -la
+(amenv) automech_abstr_run -n <node list> -x <abstraction id ranges> cmd python /path/to/torsional_scan.py
 ```
-which will enter each of these directories and run `ls -la`.

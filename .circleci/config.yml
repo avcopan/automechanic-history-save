@@ -17,14 +17,11 @@ jobs:
                     bash Miniconda2-latest-Linux-x86_64.sh -b -p $CONDA
                     conda config --set always_yes yes
                     conda update conda
-                    conda create -n amenv -c openbabel openbabel python=2
-                    conda install -n amenv pip cmake
+                    conda env create -f environment.yml
             - run:
                 name: Install
                 command: |
                     source activate amenv
-                    pip install numpy pandas future
-                    pip install flake8 pylint pytest pytest-cov  # for tests
                     # install pyx2z
                     git clone --recurse-submodules https://github.com/PACChem/x2z
                     cd x2z

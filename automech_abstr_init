@@ -49,8 +49,6 @@ RXN_CSV_OUT = ARGS['reactions_csv_out']
 ABSTR_CSV_OUT = ARGS['abstractions_csv_out']
 ABSTR_DIR = ARGS['abstr_dir']
 
-ABSTR_DIR = os.path.abspath(ABSTR_DIR)
-
 SPC_DF = pandas.read_csv(SPC_CSV)
 RXN_DF = pandas.read_csv(RXN_CSV)
 

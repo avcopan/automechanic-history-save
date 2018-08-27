@@ -42,7 +42,7 @@ No. MC  sampling points: 5
 Scan interval (degrees): 360
 No. of steps on the PES: 12
 Multidim scan (0, 1, 2, 3D, or auto): 2
-Extra estoktp.dat lines: resIRC
+Extra estoktp.dat lines:
 ------------------------------------------------ 
    Module      :    Program    :      Theory
 ------------------------------------------------

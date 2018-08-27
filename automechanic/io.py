@@ -26,6 +26,9 @@ def write_geometries(spc_df, path, sid2fname):
     if 'path' not in spc_df:
         spc_df['path'] = None
 
+    if 'abs_path' not in spc_df:
+        spc_df['abs_path'] = None
+
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -38,6 +41,7 @@ def write_geometries(spc_df, path, sid2fname):
             write_file(fpath, contents=dxyz)
         if spc_df.at[idx, 'path'] is None:
             spc_df.at[idx, 'path'] = fpath
+            spc_df.at[idx, 'abs_path'] = os.path.abspath(fpath)
 
     return spc_df
 
@@ -107,6 +111,11 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
     print('reading geometries from .xyz files...')
     mgeo_dct = read_geometries(spc_df)
 
+
+    if 'path' not in spc_df:
+        spc_df['path'] = None
+    if 'abs_path' not in spc_df:
+        spc_df['abs_path'] = None
     if 'type' not in rxn_df:
         rxn_df['type'] = None
     if 'abstr_exception' not in rxn_df:
@@ -164,7 +173,8 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
                 write_file(q1_fpath, q1_dxyz)
                 write_file(q2h_fpath, q2h_dxyz)
 
-                abstr_df = abstr_df.append({'reaction_id': rid, 'path': dpath},
-                                           ignore_index=True)
+                abstr_df = abstr_df.append({'reaction_id': rid, 'path': dpath,
+                                            'abs_path': os.path.abspath(dpath)
+                                            }, ignore_index=True)
 
     return rxn_df, abstr_df

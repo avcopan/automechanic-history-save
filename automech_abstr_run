@@ -5,10 +5,15 @@
 import sys
 import os
 import subprocess
-import pandas
 import argparse
 from argparse import ArgumentDefaultsHelpFormatter as Formatter
+import logging
+import pandas
 import automechanic.io
+
+logging.basicConfig(
+        format='%(message)s', filename='abstr_run.log', filemode='w',
+        level=logging.INFO)
 
 PARSER = argparse.ArgumentParser(formatter_class=Formatter)
 
@@ -94,9 +99,10 @@ for idx in IDXS:
     inp_path = os.path.join(path, INP_NAME)
     automechanic.io.write_file(inp_path, inp_str)
     os.chdir(path)
-    print('@automechanic is entering {:s}...'.format(path))
+    logging.info('entering {:s}...'.format(path))
+    logging.info('  running command {:s}'.format(' '.join(CMDS)))
     try:
         subprocess.check_call(CMDS)
     except Exception as err:
-        print("   TorsScan call failed with {:s}...".format(err))
+        logging.info('  TorsScan call failed with {:s}...'.format(err))
     os.chdir(CWD)

@@ -104,5 +104,5 @@ for idx in IDXS:
     try:
         subprocess.check_call(CMDS)
     except Exception as err:
-        logging.info('  TorsScan call failed with {:s}...'.format(err))
+        logging.info('  TorsScan call failed:    {:s}\n'.format(err))
     os.chdir(CWD)

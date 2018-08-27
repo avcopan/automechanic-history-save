@@ -57,7 +57,6 @@ GEOM_DIR = ARGS['geom_dir']
 RXN_CSV_OUT = ARGS['reactions_csv_out']
 
 MECH_STR = open(MECH_FLE).read()
-GEOM_DIR = os.path.abspath(GEOM_DIR)
 SPC_DF = pandas.read_csv(SPC_CSV)
 
 print("Generating missing .xyz files for species...")

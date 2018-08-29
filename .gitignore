@@ -104,7 +104,7 @@ venv.bak/
 .mypy_cache/
 
 # swap files
-.swp
+*.swp
 
 # directories created by scripts
 database/
@@ -117,3 +117,4 @@ example/abstrs
 example/geoms
 tmp/
 example-copy/
+init.log*

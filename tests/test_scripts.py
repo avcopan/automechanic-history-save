@@ -7,6 +7,37 @@ import shutil
 
 PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_PATH = os.path.join(PATH, 'data')
+BUTANE_PATH = os.path.join(PATH, '../examples/butane')
+
+
+def test__automech__butane_from_rmg():
+    """ test the automech script
+    """
+    tmp_path = tempfile.mkdtemp()
+
+    rmg_mech_json = os.path.join(BUTANE_PATH, 'mechanism.json')
+    subprocess.check_call(['automech', 'init',
+                           '-j', rmg_mech_json,
+                           '-P', tmp_path,
+                           '-S', 'species.csv',
+                           '-R', 'reactions.csv',
+                           '-G', 'geoms'])
+
+
+def test__automech__butane_from_chemkin():
+    """ test the automech script
+    """
+    tmp_path = tempfile.mkdtemp()
+
+    chemkin_mech_txt = os.path.join(BUTANE_PATH, 'mechanism.txt')
+    spc_csv = os.path.join(BUTANE_PATH, 'species.csv')
+    subprocess.check_call(['automech', 'init',
+                           '-m', chemkin_mech_txt,
+                           '-s', spc_csv,
+                           '-P', tmp_path,
+                           '-S', 'species.csv',
+                           '-R', 'reactions.csv',
+                           '-G', 'geoms'])
 
 
 def test__automech():
@@ -53,4 +84,5 @@ def test__automech():
 
 
 if __name__ == '__main__':
-    test__automech()
+    test__automech__butane_from_rmg()
+    test__automech__butane_from_chemkin()

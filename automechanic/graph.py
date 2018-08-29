@@ -55,22 +55,24 @@ def bond_orders(mgrph):
     return bdct
 
 
+def multibond_keys(mgrph):
+    """ bond keys for multibonds in the graph
+    """
+    bdct = bond_orders(mgrph)
+    mbnd_bkeys = tuple(key for key, typ in bdct.items() if typ > 1)
+    return mbnd_bkeys
+
+
 def multibond_opening_resonances(mgrph):
     """ X=Y <-> X.-Y. resonances
     """
-    atms = atoms(mgrph)
-    bdct = bond_orders(mgrph)
+    mbnd_bkeys = multibond_keys(mgrph)
 
-    multi_bnds = {key for key, typ in bdct.items() if typ > 1}
+    res_mgrphs = (mgrph,)
+    res_mgrphs += tuple(increment_bond_order(mgrph, idx1, idx2, incr=-1)
+                        for idx1, idx2 in mbnd_bkeys)
 
-    res_mgrphs = [mgrph]
-    for bnd in multi_bnds:
-        res_bdct = bdct.copy()
-        res_bdct[bnd] -= 1
-        res_bnds = frozenset(res_bdct.items())
-        res_mgrphs.append((atms, res_bnds))
-
-    return tuple(res_mgrphs)
+    return res_mgrphs
 
 
 def radical_sites(mgrph):

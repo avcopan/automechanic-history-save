@@ -111,7 +111,6 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
     print('reading geometries from .xyz files...')
     mgeo_dct = read_geometries(spc_df)
 
-
     if 'path' not in spc_df:
         spc_df['path'] = None
     if 'abs_path' not in spc_df:
@@ -168,10 +167,12 @@ def initialize_hydrogen_abstractions(rxn_df, spc_df, path, sid2fname,
                 q1_fpath = os.path.join(dpath, sid2fname(q1_sid))
                 q2h_fpath = os.path.join(dpath, sid2fname(q2h_sid))
 
-                write_file(q1h_fpath, q1h_dxyz)
-                write_file(q2_fpath, q2_dxyz)
                 write_file(q1_fpath, q1_dxyz)
                 write_file(q2h_fpath, q2h_dxyz)
+
+                # write the reactant .xyz files second
+                write_file(q1h_fpath, q1h_dxyz)
+                write_file(q2_fpath, q2_dxyz)
 
                 abstr_df = abstr_df.append({'reaction_id': rid, 'path': dpath,
                                             'abs_path': os.path.abspath(dpath)

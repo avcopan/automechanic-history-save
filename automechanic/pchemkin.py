@@ -3,14 +3,12 @@
 import re
 from functools import partial
 from .parse import WHITESPACES
-from .parse import LINE
 from .parse import PLUS
 from .parse import OPEN_PAREN
 from .parse import CLOSE_PAREN
 from .parse import escape
 from .parse import maybe
 from .parse import one_of_these
-from .parse import zero_or_more
 from .parse import repeat_range
 from .parse import capture
 from .parse import named_capture
@@ -41,6 +39,43 @@ def find_species(mech_str):
     species_block = _find_chemkin_block(mech_str, 'SPECIES')
     species = species_block.split()
     return species
+
+
+def reaction_identifier(rxn, sid_dct):
+    """ get a reaction identifier from a CHEMKIN reaction
+    """
+    rid = None
+
+    rcts, prds = rxn
+    spcs = set(rcts) | set(prds)
+    if spcs < set(sid_dct):
+        rct_str = ''.join(map(sid_dct.__getitem__, rcts))
+        prd_str = ''.join(map(sid_dct.__getitem__, prds))
+        rid = rct_str + '>>' + prd_str
+
+    return rid
+
+
+def mechanism_reaction_identifiers(mech_str, sid_dct):
+    """ IDs for reactions in the mechanism
+    """
+    species = _long_to_short(map(escape, find_species(mech_str)))
+    pi_rxn_pattern = _pressure_independent_reaction_pattern(species)
+    lp_rxn_pattern = _low_pressure_reaction_pattern(species)
+    fo_rxn_pattern = _falloff_reaction_pattern(species)
+
+    reactions_block = _find_chemkin_block(mech_str, 'REACTIONS')
+
+    _split = partial(_split_reaction, species=species)
+    _rid = partial(reaction_identifier, sid_dct=sid_dct)
+    pi_rids = list(
+        map(_rid, map(_split, re.findall(pi_rxn_pattern, reactions_block))))
+    lp_rids = list(
+        map(_rid, map(_split, re.findall(lp_rxn_pattern, reactions_block))))
+    fo_rids = list(
+        map(_rid, map(_split, re.findall(fo_rxn_pattern, reactions_block))))
+
+    return pi_rids, lp_rids, fo_rids
 
 
 def find_reactions(mech_str):
@@ -104,14 +139,13 @@ def _falloff_reaction_pattern(species):
 
 
 def _find_chemkin_block(mech_str, name):
-    lines_nongreedy = zero_or_more(LINE, greedy=False)
-    head = r'^\s*{:s}\s*$'.format(name.upper())
-    body = named_capture(lines_nongreedy, name='block')
-    foot = r'^\s*END\s*$'
+    head = name
+    body = named_capture(r'.*?', name='block')
+    foot = 'END'
     block = head + body + foot
 
     clean_mech_str = remove_comments(mech_str)
-    match = re.search(block, clean_mech_str, re.MULTILINE)
+    match = re.search(block, clean_mech_str, re.MULTILINE | re.DOTALL)
     assert match
     gdct = match.groupdict()
     block = gdct['block']

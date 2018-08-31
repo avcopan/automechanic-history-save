@@ -2,6 +2,7 @@
 """
 import re
 from functools import partial
+from .strid import reaction_identifier as reaction_identifier_from_strids
 from .parse import WHITESPACES
 from .parse import PLUS
 from .parse import OPEN_PAREN
@@ -47,11 +48,11 @@ def reaction_identifier(rxn, sid_dct):
     rid = None
 
     rcts, prds = rxn
-    spcs = set(rcts) | set(prds)
-    if spcs < set(sid_dct):
-        rct_str = ''.join(map(sid_dct.__getitem__, rcts))
-        prd_str = ''.join(map(sid_dct.__getitem__, prds))
-        rid = rct_str + '>>' + prd_str
+
+    if set(rcts + prds) < set(sid_dct):
+        rct_sids = tuple(map(sid_dct.__getitem__, rcts))
+        prd_sids = tuple(map(sid_dct.__getitem__, prds))
+        rid = reaction_identifier_from_strids(rct_sids, prd_sids)
 
     return rid
 

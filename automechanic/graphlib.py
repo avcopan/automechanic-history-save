@@ -40,8 +40,8 @@ def addition_indices(x_mgrph, y_mgrph, xy_mgrph):
             iso = isomorphism(xy_mgrph, xy_mgrph_)
             if iso:
                 natms_x = len(atoms(x_mgrph))
-                xy_idx1 = int(iso[x_idx])
-                xy_idx2 = int(iso[natms_x + y_idx])
-                idxs = (x_idx, y_idx, xy_idx1, xy_idx2)
+                xy_idx_x = int(iso[x_idx])
+                xy_idx_y = int(iso[natms_x + y_idx])
+                idxs = (x_idx, y_idx, xy_idx_x, xy_idx_y)
 
     return idxs

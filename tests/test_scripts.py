@@ -19,14 +19,6 @@ def test__automech__natgas_from_rmg():
     subprocess.check_call(['automech', 'init',
                            '-j', rmg_mech_json,
                            '-P', tmp_path])
-    subprocess.check_call(['automech', 'abstractions', 'init',
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'reactions.csv'),
-                           '-P', os.path.join(tmp_path, 'abstractions')])
-    subprocess.check_call(['automech', 'additions', 'init',
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'reactions.csv'),
-                           '-P', os.path.join(tmp_path, 'additions')])
 
 
 def test__automech__syngas_from_chemkin():
@@ -46,6 +38,10 @@ def test__automech__syngas_from_chemkin():
                            '-s', os.path.join(tmp_path, 'species.csv'),
                            '-r', os.path.join(tmp_path, 'reactions.csv'),
                            '-P', os.path.join(tmp_path, 'additions')])
+    subprocess.check_call(['automech', 'migrations', 'init',
+                           '-s', os.path.join(tmp_path, 'species.csv'),
+                           '-r', os.path.join(tmp_path, 'reactions.csv'),
+                           '-P', os.path.join(tmp_path, 'migrations')])
     subprocess.check_call(['automech', 'abstractions', 'run',
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'abstraction.txt'),
@@ -66,6 +62,17 @@ def test__automech__syngas_from_chemkin():
                            '-b', os.path.join(tmp_path, 'additions',
                                               'reactions.csv'),
                            '-P', os.path.join(tmp_path, 'additions'),
+                           '-y', 'nodes:d',
+                           'cmd', 'ls'])
+    subprocess.check_call(['automech', 'migrations', 'run',
+                           '-t', os.path.join(TEMPLATE_PATH,
+                                              'migration.txt'),
+                           '-s', os.path.join(tmp_path, 'species.csv'),
+                           '-r', os.path.join(tmp_path, 'migrations',
+                                              'reactions.csv'),
+                           '-b', os.path.join(tmp_path, 'migrations',
+                                              'reactions.csv'),
+                           '-P', os.path.join(tmp_path, 'migrations'),
                            '-y', 'nodes:d',
                            'cmd', 'ls'])
 

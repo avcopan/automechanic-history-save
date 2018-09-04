@@ -11,7 +11,15 @@ def smiles(geom):
     return smi
 
 
-def xyz_string(geom):
+def _pybel_molecule(geom):
+    """ pybel.Molecule object of a cartesian geometry
+    """
+    dxyz = _xyz_string(geom)
+    pbmol = pybel.readstring('xyz', dxyz)
+    return pbmol
+
+
+def _xyz_string(geom):
     """ .xyz format string of a cartesian geometry
     """
     natms = len(geom)
@@ -19,11 +27,3 @@ def xyz_string(geom):
     for asymb, xyz in geom:
         dxyz += '{:s} {:s} {:s} {:s}\n'.format(asymb, *map(repr, xyz))
     return dxyz
-
-
-def _pybel_molecule(geom):
-    """ pybel.Molecule object of a cartesian geometry
-    """
-    dxyz = xyz_string(geom)
-    pbmol = pybel.readstring('xyz', dxyz)
-    return pbmol

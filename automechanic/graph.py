@@ -1,6 +1,7 @@
 """ graph functions
 """
 from functools import partial
+from itertools import product
 from itertools import permutations
 from more_itertools import unique_everseen
 import numpy
@@ -177,7 +178,7 @@ def atom_free_electrons(mgrph, idx):
     return vlnc - bcnt
 
 
-def disjoint_union(mgrph1, mgrph2):
+def union(mgrph1, mgrph2):
     """ combine two graphs into one
     """
     atms = atoms(mgrph1) + atoms(mgrph2)
@@ -210,37 +211,9 @@ def bind(mgrph1, mgrph2, idx1, idx2, order=1):
     """ bind molecule graphs
     """
     shifted_idx2 = idx2 + len(atoms(mgrph1))
-    mgrph = disjoint_union(mgrph1, mgrph2)
+    mgrph = union(mgrph1, mgrph2)
     mgrph = increment_bond_order(mgrph, idx1, shifted_idx2, incr=order)
     return mgrph
-
-
-def _other_vertex(bkey, idx):
-    ret_idx, = bkey - frozenset([idx])
-    return ret_idx
-
-
-def _shift_bond_keys(bnds, shift):
-    if not bnds:
-        ret_bnds = frozenset()
-    else:
-        bkeys, btyps = _bond_keys_and_types(bnds)
-        frsts, scnds = _unzip_bond_keys(bkeys)
-        ret_frsts = numpy.add(frsts, shift)
-        ret_scnds = numpy.add(scnds, shift)
-        ret_bkeys = map(frozenset, zip(ret_frsts, ret_scnds))
-        ret_bnds = frozenset(zip(ret_bkeys, btyps))
-    return ret_bnds
-
-
-def _bond_keys_and_types(bnds):
-    bkeys, btyps = zip(*bnds) if bnds else ((), ())
-    return bkeys, btyps
-
-
-def _unzip_bond_keys(bkeys):
-    frsts, scnds = zip(*bkeys) if bkeys else ((), ())
-    return frsts, scnds
 
 
 def isomorphic(mgrph1, mgrph2):
@@ -275,49 +248,65 @@ def permute_atoms(mgrph, pmt):
     return ret_atms, ret_bnds
 
 
-@timeout(20)
-def _isomorphism1(mgrph, target_mgrph):
-    """ are these graphs isomorphic? (slow)
+def forward_abstraction_indices(qh_mgrph, q_mgrph):
+    """ find abstraction indices
     """
-    iso = None
-    if formula(mgrph) == formula(target_mgrph):
-        natms = len(atoms(target_mgrph))
-        for pmt in permutations(range(natms)):
-            pmt_mgrph = permute_atoms(mgrph, pmt)
-            if pmt_mgrph == target_mgrph:
-                iso = pmt
-                break
-    return iso
+    idxs = None
+    for idx in radical_sites(q_mgrph):
+        qh_mgrph_ = bind_atom(q_mgrph, idx, 'H')
+        iso = isomorphism(qh_mgrph, qh_mgrph_)
+        if iso:
+            qh_idx = int(iso[-1])
+            q_idx = int(idx)
+            idxs = (qh_idx, q_idx)
+    return idxs
 
 
-@timeout(20)
-def _isomorphism2(mgrph, target_mgrph):
-    """ are these graphs isomorphic? (slightly faster)
+def addition_indices(x_mgrph, y_mgrph, xy_mgrph):
+    """ find addition indices
     """
-    iso = None
-    if formula(mgrph) == formula(target_mgrph):
-        r_srt = numpy.argsort(atoms(mgrph))
-        t_srt = numpy.argsort(atoms(target_mgrph))
-        r_mgrph = permute_atoms(mgrph, r_srt)
-        t_mgrph = permute_atoms(target_mgrph, t_srt)
+    idxs = None
 
-        atms = atoms(r_mgrph)
-        idxs_by_atm = [[i for i, a in enumerate(atms) if a == atm]
-                       for atm in unique_everseen(atms)]
+    x_idxs = radical_sites(x_mgrph)
+    y_bkeys = multibond_keys(y_mgrph)
+    for x_idx, y_bkey in product(x_idxs, y_bkeys):
+        for y_idx, y_idx_other in permutations(y_bkey):
+            y_open_mgrph = increment_bond_order(
+                y_mgrph, y_idx, y_idx_other, incr=-1)
+            xy_mgrph_ = bind(x_mgrph, y_open_mgrph, x_idx, y_idx)
+            iso = isomorphism(xy_mgrph, xy_mgrph_)
+            if iso:
+                natms_x = len(atoms(x_mgrph))
+                xy_idx_x = int(iso[x_idx])
+                xy_idx_y = int(iso[natms_x + y_idx])
+                idxs = (x_idx, y_idx, xy_idx_x, xy_idx_y)
 
-        for pmt in _flat_product_permutations(*idxs_by_atm):
-            p_mgrph = permute_atoms(r_mgrph, pmt)
-            if p_mgrph == t_mgrph:
-                srt_iso = pmt
-                iso = compose(inverse(t_srt), srt_iso, r_srt)
-                break
-    return iso
-
-
-def _argsort(seq):
-    return tuple(sorted(range(len(seq)), key=seq.__getitem__))
+    return idxs
 
 
+def migration_indices(r_mgrph, p_mgrph):
+    """ find migration indices
+    """
+    idxs = None
+
+    r_idxs = radical_sites(r_mgrph)
+    p_idxs = radical_sites(p_mgrph)
+
+    for r_idx, p_idx in product(r_idxs, p_idxs):
+        r_mgrph_ = bind_atom(r_mgrph, r_idx, 'H')
+        p_mgrph_ = bind_atom(p_mgrph, p_idx, 'H')
+        iso = isomorphism(r_mgrph_, p_mgrph_)
+        if iso:
+            r_idx_h = int(iso[-1])
+            r_idx_a = int(r_idx)
+            p_idx_h = int(inverse(iso)[-1])
+            p_idx_a = int(p_idx)
+            idxs = (r_idx_h, r_idx_a, p_idx_h, p_idx_a)
+
+    return idxs
+
+
+# helper functions
 @timeout(20)
 def _isomorphism3(mgrph, target_mgrph, max_order=15):
     """ are these graphs isomorphic? (slightly faster)
@@ -345,6 +334,38 @@ def _isomorphism3(mgrph, target_mgrph, max_order=15):
                     iso = compose(inverse(t_srt), srt_iso, r_srt)
                     break
     return iso
+
+
+def _other_vertex(bkey, idx):
+    ret_idx, = bkey - frozenset([idx])
+    return ret_idx
+
+
+def _shift_bond_keys(bnds, shift):
+    if not bnds:
+        ret_bnds = frozenset()
+    else:
+        bkeys, btyps = _bond_keys_and_types(bnds)
+        frsts, scnds = _unzip_bond_keys(bkeys)
+        ret_frsts = numpy.add(frsts, shift)
+        ret_scnds = numpy.add(scnds, shift)
+        ret_bkeys = map(frozenset, zip(ret_frsts, ret_scnds))
+        ret_bnds = frozenset(zip(ret_bkeys, btyps))
+    return ret_bnds
+
+
+def _bond_keys_and_types(bnds):
+    bkeys, btyps = zip(*bnds) if bnds else ((), ())
+    return bkeys, btyps
+
+
+def _unzip_bond_keys(bkeys):
+    frsts, scnds = zip(*bkeys) if bkeys else ((), ())
+    return frsts, scnds
+
+
+def _argsort(seq):
+    return tuple(sorted(range(len(seq)), key=seq.__getitem__))
 
 
 def _flat_product_permutations(*seqs):

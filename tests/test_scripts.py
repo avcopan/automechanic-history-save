@@ -7,37 +7,48 @@ import shutil
 
 PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_PATH = os.path.join(PATH, 'data')
-BUTANE_PATH = os.path.join(PATH, '../examples/butane')
+NATGAS_PATH = os.path.join(PATH, '../examples/natgas')
+SYNGAS_PATH = os.path.join(PATH, '../examples/syngas')
 
 
-def test__automech__butane_from_rmg():
+def test__automech__natgas_from_rmg():
     """ test the automech script
     """
     tmp_path = tempfile.mkdtemp()
 
-    rmg_mech_json = os.path.join(BUTANE_PATH, 'mechanism.json')
+    rmg_mech_json = os.path.join(NATGAS_PATH, 'mechanism.json')
     subprocess.check_call(['automech', 'init',
                            '-j', rmg_mech_json,
-                           '-P', tmp_path,
-                           '-S', 'species.csv',
-                           '-R', 'reactions.csv',
-                           '-G', 'geoms'])
+                           '-P', tmp_path])
+    subprocess.check_call(['automech', 'abstractions', 'init',
+                           '-s', os.path.join(tmp_path, 'species.csv'),
+                           '-r', os.path.join(tmp_path, 'reactions.csv'),
+                           '-P', os.path.join(tmp_path, 'abstractions')])
+    subprocess.check_call(['automech', 'additions', 'init',
+                           '-s', os.path.join(tmp_path, 'species.csv'),
+                           '-r', os.path.join(tmp_path, 'reactions.csv'),
+                           '-P', os.path.join(tmp_path, 'additions')])
 
 
-def test__automech__butane_from_chemkin():
+def test__automech__syngas_from_chemkin():
     """ test the automech script
     """
     tmp_path = tempfile.mkdtemp()
 
-    chemkin_mech_txt = os.path.join(BUTANE_PATH, 'mechanism.txt')
-    spc_csv = os.path.join(BUTANE_PATH, 'species.csv')
+    chemkin_mech_txt = os.path.join(SYNGAS_PATH, 'mechanism.txt')
+    spc_csv = os.path.join(SYNGAS_PATH, 'species.csv')
     subprocess.check_call(['automech', 'init',
                            '-m', chemkin_mech_txt,
                            '-s', spc_csv,
-                           '-P', tmp_path,
-                           '-S', 'species.csv',
-                           '-R', 'reactions.csv',
-                           '-G', 'geoms'])
+                           '-P', tmp_path])
+    subprocess.check_call(['automech', 'abstractions', 'init',
+                           '-s', os.path.join(tmp_path, 'species.csv'),
+                           '-r', os.path.join(tmp_path, 'reactions.csv'),
+                           '-P', os.path.join(tmp_path, 'abstractions')])
+    subprocess.check_call(['automech', 'additions', 'init',
+                           '-s', os.path.join(tmp_path, 'species.csv'),
+                           '-r', os.path.join(tmp_path, 'reactions.csv'),
+                           '-P', os.path.join(tmp_path, 'additions')])
 
 
 def test__automech():
@@ -84,5 +95,5 @@ def test__automech():
 
 
 if __name__ == '__main__':
-    test__automech__butane_from_rmg()
-    test__automech__butane_from_chemkin()
+    test__automech__natgas_from_rmg()
+    test__automech__syngas_from_chemkin()

@@ -3,12 +3,14 @@
 from itertools import permutations
 from .strid import reaction_identifier
 from .strid import split_reaction_identifier
-from .geom import graph
-from .graph import atom_neighborhood_indices
-from .form import subtract as subtract_formulas
 from .strid import formula as formula_from_strid
-from .geomlib import addition_indices as addition_indices_from_geometries
-from .geomlib import abstraction_indices as abstraction_indices_from_geometries
+from .form import subtract as subtract_formulas
+from .geom import graph
+from .geom import xyz_string
+from .geom import addition_indices
+from .geom import abstraction_indices
+from .geom import migration_indices
+from .graph import atom_neighborhood_indices
 
 
 def addition_candidate(rid):
@@ -23,7 +25,14 @@ def abstraction_candidate(rid):
     return bool(_sorted_abstraction_candidate(rid))
 
 
-def addition_indices(rid, mgeo_dct):
+def migration_candidate(rid):
+    """ identify migration candidate, based on some loose criteria
+    """
+    rct_sids, prd_sids = split_reaction_identifier(rid)
+    return len(rct_sids) == len(prd_sids) == 1
+
+
+def addition(rid, mgeo_dct):
     """ sorted reaction ID with abstraction indices (or None)
     """
     addtn = None
@@ -32,13 +41,13 @@ def addition_indices(rid, mgeo_dct):
         rct_mgeos, prd_mgeos = _reaction_geometries(can_rid, mgeo_dct)
         x_mgeo, y_mgeo = rct_mgeos
         xy_mgeo, = prd_mgeos
-        idxs = addition_indices_from_geometries(x_mgeo, y_mgeo, xy_mgeo)
+        idxs = addition_indices(x_mgeo, y_mgeo, xy_mgeo)
         if idxs:
             addtn = (can_rid, idxs)
     return addtn
 
 
-def abstraction_indices(rid, mgeo_dct):
+def abstraction(rid, mgeo_dct):
     """ sorted reaction ID with abstraction indices (or None)
     """
     abstr = None
@@ -47,11 +56,24 @@ def abstraction_indices(rid, mgeo_dct):
         rct_mgeos, prd_mgeos = _reaction_geometries(can_rid, mgeo_dct)
         q1h_mgeo, q2_mgeo = rct_mgeos
         q1_mgeo, q2h_mgeo = prd_mgeos
-        idxs = abstraction_indices_from_geometries(q1h_mgeo, q2_mgeo,
-                                                   q1_mgeo, q2h_mgeo)
+        idxs = abstraction_indices(q1h_mgeo, q2_mgeo, q1_mgeo, q2h_mgeo)
         if idxs:
             abstr = (can_rid, idxs)
     return abstr
+
+
+def migration(rid, mgeo_dct):
+    """ (trivially) sorted reaction ID with migration indices (or None)
+    """
+    mgrtn = None
+    if migration_candidate(rid):
+        rct_mgeos, prd_mgeos = _reaction_geometries(rid, mgeo_dct)
+        r_mgeo, = rct_mgeos
+        p_mgeo, = prd_mgeos
+        idxs = migration_indices(r_mgeo, p_mgeo)
+        if idxs:
+            mgrtn = (rid, idxs)
+    return mgrtn
 
 
 def addition_xyz_strings(rid, idxs, mgeo_dct):
@@ -60,8 +82,8 @@ def addition_xyz_strings(rid, idxs, mgeo_dct):
     dxyz_dct = None
     (x_sid, y_sid), (xy_sid,) = split_reaction_identifier(rid)
     (x_mgeo, y_mgeo), (xy_mgeo,) = _reaction_geometries(rid, mgeo_dct)
-    x_idx, y_idx = idxs
-    xy_dxyz = _labeled_xyz_string(xy_mgeo, {})
+    x_idx, y_idx, _, _ = idxs
+    xy_dxyz = xyz_string(xy_mgeo, {})
     x_dxyz = _addition_xyz_string_x(x_mgeo, x_idx)
     y_dxyz = _addition_xyz_string_y(y_mgeo, y_idx)
 
@@ -78,9 +100,9 @@ def abstraction_xyz_strings(rid, idxs, mgeo_dct):
     (q1h_sid, q2_sid), (q1_sid, q2h_sid) = split_reaction_identifier(rid)
     (q1h_mgeo, q2_mgeo), (q1_mgeo, q2h_mgeo) = _reaction_geometries(rid,
                                                                     mgeo_dct)
-    q1h_idx, q2_idx = idxs
-    q1_dxyz = _labeled_xyz_string(q1_mgeo, {})
-    q2h_dxyz = _labeled_xyz_string(q2h_mgeo, {})
+    q1h_idx, q2_idx, _, _ = idxs
+    q1_dxyz = xyz_string(q1_mgeo, {})
+    q2h_dxyz = xyz_string(q2h_mgeo, {})
 
     q1h_dxyz = _abstraction_xyz_string_q1h(q1h_mgeo, q1h_idx)
     q2_dxyz = _abstraction_xyz_string_q2(q2_mgeo, q2_idx)
@@ -88,6 +110,24 @@ def abstraction_xyz_strings(rid, idxs, mgeo_dct):
     if q1h_dxyz:
         dxyz_dct = {q1_sid: q1_dxyz, q2h_sid: q2h_dxyz,
                     q1h_sid: q1h_dxyz, q2_sid: q2_dxyz}
+
+    return dxyz_dct
+
+
+def migration_xyz_strings(rid, idxs, mgeo_dct):
+    """ TorsScan xyz strings for a migration reaction
+    """
+    dxyz_dct = None
+    (r_sid,), (p_sid,) = split_reaction_identifier(rid)
+    (r_mgeo,), (p_mgeo,) = _reaction_geometries(rid, mgeo_dct)
+
+    r_idx_h, r_idx_a, _, _ = idxs
+
+    p_dxyz = xyz_string(p_mgeo, {})
+    r_dxyz = _migration_xyz_string(r_mgeo, r_idx_h, r_idx_a)
+
+    if r_dxyz:
+        dxyz_dct = {p_sid: p_dxyz, r_sid: r_dxyz}
 
     return dxyz_dct
 
@@ -107,6 +147,16 @@ def abstraction_input_string(rid, tmp_str, tmp_kevyal_dct):
     """
     (q1h_sid, q2_sid), (q1_sid, q2h_sid) = split_reaction_identifier(rid)
     sub_dct = {'q1h': q1h_sid, 'q2': q2_sid, 'q1': q1_sid, 'q2h': q2h_sid}
+    sub_dct.update(tmp_kevyal_dct)
+    inp_str = tmp_str.format(**sub_dct)
+    return inp_str
+
+
+def migration_input_string(rid, tmp_str, tmp_kevyal_dct):
+    """ TorsScan input for migration reaction
+    """
+    (r_sid,), (p_sid,) = split_reaction_identifier(rid)
+    sub_dct = {'r': r_sid, 'p': p_sid}
     sub_dct.update(tmp_kevyal_dct)
     inp_str = tmp_str.format(**sub_dct)
     return inp_str
@@ -151,7 +201,7 @@ def _reaction_geometries(rid, mgeo_dct):
 
 
 def _addition_xyz_string_y(mgeo, y_idx):
-    dxyz = _labeled_xyz_string(mgeo, {y_idx: 4})
+    dxyz = xyz_string(mgeo, {y_idx: 4})
     return dxyz
 
 
@@ -165,7 +215,7 @@ def _addition_xyz_string_x(mgeo, x_idx):
     idxs = next(_2chainz, None)
     if idxs:
         xn1_idx, xn2_idx = idxs
-        dxyz = _labeled_xyz_string(mgeo, {x_idx: 2, xn1_idx: 1, xn2_idx: 3})
+        dxyz = xyz_string(mgeo, {x_idx: 2, xn1_idx: 1, xn2_idx: 3})
     return dxyz
 
 
@@ -179,11 +229,16 @@ def _abstraction_xyz_string_q2(mgeo, q_idx):
     return _addition_xyz_string_y(mgeo=mgeo, y_idx=q_idx)
 
 
-def _labeled_xyz_string(mgeo, lbl_dct):
-    natms = len(mgeo)
-    dxyz = '{:d}\n\n'.format(natms)
-    for idx, (asymb, xyz) in enumerate(mgeo):
-        if idx in lbl_dct:
-            dxyz += '{:s} '.format(repr(lbl_dct[idx]))
-        dxyz += '{:s} {:s} {:s} {:s}\n'.format(asymb, *map(repr, xyz))
+def _migration_xyz_string(mgeo, h_idx, a_idx):
+    dxyz = None
+    mgrph = graph(mgeo)
+    _2chainz = ((an1_idx, an2_idx)
+                for an1_idx in atom_neighborhood_indices(mgrph, a_idx)
+                for an2_idx in atom_neighborhood_indices(mgrph, an1_idx)
+                if an2_idx != a_idx
+                and an2_idx not in atom_neighborhood_indices(mgrph, h_idx))
+    idxs = next(_2chainz, None)
+    if idxs:
+        an1_idx, an2_idx = idxs
+        dxyz = xyz_string(mgeo, {h_idx: 1, a_idx: 2, an1_idx: 3, an2_idx: 4})
     return dxyz

@@ -46,16 +46,3 @@ def geometry(dxyz):
         warnings.warn("\nThis .xyz file is inconsistent: {:s}".format(dxyz))
 
     return tuple(mgeo)
-
-
-if __name__ == '__main__':
-    DXYZ = """4
-
-C          1.19654        0.06238        0.04613
-C          0.71372        0.14642       -1.19256
-C          2.10909        0.13478       -1.02095
-H          1.86300        0.00588        0.87893
-H          0.64110        0.21855       -2.25578
-    """
-    print geometry(DXYZ)
-    print repr(DXYZ)

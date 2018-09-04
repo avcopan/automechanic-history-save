@@ -1,63 +1,185 @@
 """ helpers for the io module
 """
-from .geom import graph
-from .geom import xyz_string
-from .graph import atom_neighborhood_indices
+from itertools import permutations
+from .strid import reaction_identifier
 from .strid import split_reaction_identifier
-from .geomlib import abstraction_indices as geom_abstraction_indices
-from .stridlib import match_hydrogen_abstraction_formula
+from .geom import graph
+from .graph import atom_neighborhood_indices
+from .form import subtract as subtract_formulas
+from .strid import formula as formula_from_strid
+from .geomlib import addition_indices as addition_indices_from_geometries
+from .geomlib import abstraction_indices as abstraction_indices_from_geometries
 
 
-def find_abstraction(rid, mgeo_dct):
+def addition_candidate(rid):
+    """ identify addition candidates, based on some loose criteria
     """
+    return bool(_sorted_addition_candidates(rid))
+
+
+def abstraction_candidate(rid):
+    """ identify abstraction candidates, based on some loose criteria
     """
-    dxyzs = None
+    return bool(_sorted_abstraction_candidate(rid))
 
-    if match_hydrogen_abstraction_formula(rid):
-        (q1h_sid, q2_sid), (q1_sid, q2h_sid) = split_reaction_identifier(rid)
 
-        q1h_mgeo, q2_mgeo, q1_mgeo, q2h_mgeo = map(
-            mgeo_dct.__getitem__, [q1h_sid, q2_sid, q1_sid, q2h_sid])
-
-        idxs = geom_abstraction_indices(q1h_mgeo, q2_mgeo, q1_mgeo, q2h_mgeo)
-
+def addition_indices(rid, mgeo_dct):
+    """ sorted reaction ID with abstraction indices (or None)
+    """
+    addtn = None
+    can_rids = _sorted_addition_candidates(rid)
+    for can_rid in can_rids:
+        rct_mgeos, prd_mgeos = _reaction_geometries(can_rid, mgeo_dct)
+        x_mgeo, y_mgeo = rct_mgeos
+        xy_mgeo, = prd_mgeos
+        idxs = addition_indices_from_geometries(x_mgeo, y_mgeo, xy_mgeo)
         if idxs:
-            q1h_idx, q2_idx, _, _ = idxs
-
-            q1h_dxyz = abstractee_xyz_string(q1h_mgeo, q1h_idx)
-            q2_dxyz = abstractor_xyz_string(q2_mgeo, q2_idx)
-            q1_dxyz = xyz_string(q1_mgeo)
-            q2h_dxyz = xyz_string(q2h_mgeo)
-
-            dxyzs = q1h_dxyz, q2_dxyz, q1_dxyz, q2h_dxyz
-
-    return dxyzs
+            addtn = (can_rid, idxs)
+    return addtn
 
 
-def abstractor_xyz_string(q_mgeo, q_idx):
-    """ .xyz string with a '4' in front X*...H-Y-Z
+def abstraction_indices(rid, mgeo_dct):
+    """ sorted reaction ID with abstraction indices (or None)
     """
-    dxyz = _xyz_string_with_labels(q_mgeo, lbl_dct={q_idx: 4})
+    abstr = None
+    can_rid = _sorted_abstraction_candidate(rid)
+    if can_rid:
+        rct_mgeos, prd_mgeos = _reaction_geometries(can_rid, mgeo_dct)
+        q1h_mgeo, q2_mgeo = rct_mgeos
+        q1_mgeo, q2h_mgeo = prd_mgeos
+        idxs = abstraction_indices_from_geometries(q1h_mgeo, q2_mgeo,
+                                                   q1_mgeo, q2h_mgeo)
+        if idxs:
+            abstr = (can_rid, idxs)
+    return abstr
+
+
+def addition_xyz_strings(rid, idxs, mgeo_dct):
+    """ TorsScan xyz strings for an addition reaction
+    """
+    dxyz_dct = None
+    (x_sid, y_sid), (xy_sid,) = split_reaction_identifier(rid)
+    (x_mgeo, y_mgeo), (xy_mgeo,) = _reaction_geometries(rid, mgeo_dct)
+    x_idx, y_idx = idxs
+    xy_dxyz = _labeled_xyz_string(xy_mgeo, {})
+    x_dxyz = _addition_xyz_string_x(x_mgeo, x_idx)
+    y_dxyz = _addition_xyz_string_y(y_mgeo, y_idx)
+
+    if x_dxyz:
+        dxyz_dct = {xy_sid: xy_dxyz, x_sid: x_dxyz, y_sid: y_dxyz}
+
+    return dxyz_dct
+
+
+def abstraction_xyz_strings(rid, idxs, mgeo_dct):
+    """ TorsScan xyz strings for an abstraction reaction
+    """
+    dxyz_dct = None
+    (q1h_sid, q2_sid), (q1_sid, q2h_sid) = split_reaction_identifier(rid)
+    (q1h_mgeo, q2_mgeo), (q1_mgeo, q2h_mgeo) = _reaction_geometries(rid,
+                                                                    mgeo_dct)
+    q1h_idx, q2_idx = idxs
+    q1_dxyz = _labeled_xyz_string(q1_mgeo, {})
+    q2h_dxyz = _labeled_xyz_string(q2h_mgeo, {})
+
+    q1h_dxyz = _abstraction_xyz_string_q1h(q1h_mgeo, q1h_idx)
+    q2_dxyz = _abstraction_xyz_string_q2(q2_mgeo, q2_idx)
+
+    if q1h_dxyz:
+        dxyz_dct = {q1_sid: q1_dxyz, q2h_sid: q2h_dxyz,
+                    q1h_sid: q1h_dxyz, q2_sid: q2_dxyz}
+
+    return dxyz_dct
+
+
+def addition_input_string(rid, tmp_str, tmp_kevyal_dct):
+    """ TorsScan input for addition reaction
+    """
+    (x_sid, y_sid), (xy_sid,) = split_reaction_identifier(rid)
+    sub_dct = {'x': x_sid, 'y': y_sid, 'xy': xy_sid}
+    sub_dct.update(tmp_kevyal_dct)
+    inp_str = tmp_str.format(**sub_dct)
+    return inp_str
+
+
+def abstraction_input_string(rid, tmp_str, tmp_kevyal_dct):
+    """ TorsScan input for abstraction reaction
+    """
+    (q1h_sid, q2_sid), (q1_sid, q2h_sid) = split_reaction_identifier(rid)
+    sub_dct = {'q1h': q1h_sid, 'q2': q2_sid, 'q1': q1_sid, 'q2h': q2h_sid}
+    sub_dct.update(tmp_kevyal_dct)
+    inp_str = tmp_str.format(**sub_dct)
+    return inp_str
+
+
+def _sorted_addition_candidates(rid):
+    can_rids = ()
+    prd_sids, rct_sids = sorted(split_reaction_identifier(rid), key=len)
+    if len(rct_sids) == 2 and len(prd_sids) == 1:
+        xy_sid, = prd_sids
+        can_rids = tuple(reaction_identifier((x_sid, y_sid), (xy_sid,))
+                         for x_sid, y_sid in permutations(rct_sids))
+    return can_rids
+
+
+def _sorted_abstraction_candidate(rid):
+    can_rid = None
+    rct_sids, prd_sids = split_reaction_identifier(rid)
+    if len(rct_sids) == len(prd_sids) == 2:
+        itr = (
+            reaction_identifier((r1_sid, r2_sid), (p1_sid, p2_sid))
+            for r1_sid, r2_sid in permutations(rct_sids)
+            for p1_sid, p2_sid in permutations(prd_sids)
+            if _matches_abstraction_formula(r1_sid, r2_sid, p1_sid, p2_sid))
+        can_rid = next(itr, None)
+    return can_rid
+
+
+def _matches_abstraction_formula(r1_sid, r2_sid, p1_sid, p2_sid):
+    r1_fml, r2_fml, p1_fml, p2_fml = map(
+        formula_from_strid, (r1_sid, r2_sid, p1_sid, p2_sid))
+    match = (subtract_formulas(p1_fml, r1_fml) == {'H': -1} and
+             subtract_formulas(p2_fml, r2_fml) == {'H': +1})
+    return match
+
+
+def _reaction_geometries(rid, mgeo_dct):
+    rct_sids, prd_sids = split_reaction_identifier(rid)
+    rct_mgeos = tuple(map(mgeo_dct.__getitem__, rct_sids))
+    prd_mgeos = tuple(map(mgeo_dct.__getitem__, prd_sids))
+    return rct_mgeos, prd_mgeos
+
+
+def _addition_xyz_string_y(mgeo, y_idx):
+    dxyz = _labeled_xyz_string(mgeo, {y_idx: 4})
     return dxyz
 
 
-def abstractee_xyz_string(qh_mgeo, qh_idx):
-    """ .xyz string with '2', '1', '3' in front X...H*-Y*-Z*
-    """
-    if len(qh_mgeo) < 3:
-        raise ValueError("Too few atoms to form abstractee .xyz string")
-    qh_mgrph = graph(qh_mgeo)
-    y_idx = next(iter(atom_neighborhood_indices(qh_mgrph, qh_idx)))
-    z_idx = next(i for i in atom_neighborhood_indices(qh_mgrph, y_idx)
-                 if i != qh_idx)
-    dxyz = _xyz_string_with_labels(qh_mgeo,
-                                   lbl_dct={qh_idx: 2, y_idx: 1, z_idx: 3})
+def _addition_xyz_string_x(mgeo, x_idx):
+    dxyz = None
+    mgrph = graph(mgeo)
+    _2chainz = ((xn1_idx, xn2_idx)
+                for xn1_idx in atom_neighborhood_indices(mgrph, x_idx)
+                for xn2_idx in atom_neighborhood_indices(mgrph, xn1_idx)
+                if xn2_idx != x_idx)
+    idxs = next(_2chainz, None)
+    if idxs:
+        xn1_idx, xn2_idx = idxs
+        dxyz = _labeled_xyz_string(mgeo, {x_idx: 2, xn1_idx: 1, xn2_idx: 3})
     return dxyz
 
 
-def _xyz_string_with_labels(mgeo, lbl_dct):
-    """
-    """
+def _abstraction_xyz_string_q1h(mgeo, h_idx):
+    # these functions happen to be the same
+    return _addition_xyz_string_x(mgeo=mgeo, x_idx=h_idx)
+
+
+def _abstraction_xyz_string_q2(mgeo, q_idx):
+    # these functions happen to be the same
+    return _addition_xyz_string_y(mgeo=mgeo, y_idx=q_idx)
+
+
+def _labeled_xyz_string(mgeo, lbl_dct):
     natms = len(mgeo)
     dxyz = '{:d}\n\n'.format(natms)
     for idx, (asymb, xyz) in enumerate(mgeo):
@@ -65,38 +187,3 @@ def _xyz_string_with_labels(mgeo, lbl_dct):
             dxyz += '{:s} '.format(repr(lbl_dct[idx]))
         dxyz += '{:s} {:s} {:s} {:s}\n'.format(asymb, *map(repr, xyz))
     return dxyz
-
-
-if __name__ == '__main__':
-    RID = 'C=CC_m1.[OH]_m2>>[CH2]C(O)C_m1'
-
-    R1_SID = 'C=CC_m1'
-    R2_SID = '[OH]_m2'
-    P_SID = '[CH2]C(O)C_m1'
-
-    R1_MGEO = (('C', (0.999749614329, 0.0815463557276, -0.05313151319214)),
-               ('C', (0.2941554428798, -0.1333084924908, 1.06457863301)),
-               ('C', (-1.198418794122, -0.141000266906, 1.104594274387)),
-               ('H', (0.50843512849, 0.2642722240302, -1.003700339629)),
-               ('H', (2.084674708630, 0.0790932629613, -0.040370798372)),
-               ('H', (0.817176204583, -0.313348598161, 2.00117588120)),
-               ('H', (-1.559370502273, -1.112686909705, 1.454564921229)),
-               ('H', (-1.559370055401, 0.631682276162, 1.789879903006)),
-               ('H', (-1.63349683031, 0.0486453884978, 0.1180237523367)))
-    R2_MGEO = (('O', (0.952632526586, -0.0627316796020, 0.0080078583889)),
-               ('H', (1.892440257233, -0.0627316796020, 0.0080078583889)))
-    P_MGEO = (('C', (0.977343848365, -0.0764188131994, 0.13889740679)),
-              ('H', (0.4624939859419, -1.02959411007, 0.155086468595)),
-              ('H', (0.4440163978138, 0.783646033730, 0.528720307800)),
-              ('C', (2.455537814018, -0.01753155811344, -0.002585548076801)),
-              ('O', (2.853647414718, -0.998191131877, -0.945748607211)),
-              ('C', (2.93814855121, 1.339952372503, -0.48915762596)),
-              ('H', (2.921436713659, -0.251407370808, 0.959743143408)),
-              ('H', (2.55606620911, -1.86222435081, -0.612788411425)),
-              ('H', (2.608102938152, 2.147148597200, 0.172659593754)),
-              ('H', (4.03290647398, 1.356511004561, -0.532775456763)),
-              ('H', (2.58295049411, 1.55110745037, -1.504509980310)))
-
-    MGEO_DCT = {R1_SID: R1_MGEO,
-                R2_SID: R2_MGEO,
-                P_SID: P_MGEO}

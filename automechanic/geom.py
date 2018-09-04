@@ -7,10 +7,6 @@ from .ipyx2z.geom import resonance_graphs
 from .ipyx2z.geom import radical_sites
 
 
-def lewis_resonance_graphs(mgeo):
-    mgrphs = resonance_graphs(mgeo)
-
-
 def atoms(mgeo):
     """ the atoms in this cartesian geometry
     """

@@ -17,7 +17,7 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
     """
     def _decorator(func):
 
-        def _handle_timeout(signum, frame):
+        def _handle_timeout(*_args, **_kwargs):
             raise TimeoutError(error_message)
 
         def _wrapper(*args, **kwargs):

@@ -37,7 +37,7 @@ jobs:
                     cd tests/
                     pytest -v --cov=automechanic .
                     flake8 --exit-zero automechanic
-                    pylint --exit-zero --extension-pkg-whitelist=pyx2z --disable=superfluous-parens automechanic
+                    pylint --rcfile=../.pylintrc automechanic
 workflows:
     version: 2
     build-all:

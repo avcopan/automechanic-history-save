@@ -1,0 +1,9 @@
+[MASTER]
+extension-pkg-whitelist=
+    pyx2z
+disable=
+    too-many-locals,
+    too-many-arguments,
+    too-many-statements,
+    broad-except,
+    redefined-builtin

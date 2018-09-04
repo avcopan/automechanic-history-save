@@ -1,6 +1,5 @@
 """ SMILES-based interface to PyBel
 """
-import numpy
 import pybel
 
 

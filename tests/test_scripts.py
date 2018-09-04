@@ -3,10 +3,9 @@
 import os
 import subprocess
 import tempfile
-import shutil
 
 PATH = os.path.dirname(os.path.realpath(__file__))
-DATA_PATH = os.path.join(PATH, 'data')
+TEMPLATE_PATH = os.path.join(PATH, '../examples/templates')
 NATGAS_PATH = os.path.join(PATH, '../examples/natgas')
 SYNGAS_PATH = os.path.join(PATH, '../examples/syngas')
 
@@ -35,11 +34,9 @@ def test__automech__syngas_from_chemkin():
     """
     tmp_path = tempfile.mkdtemp()
 
-    chemkin_mech_txt = os.path.join(SYNGAS_PATH, 'mechanism.txt')
-    spc_csv = os.path.join(SYNGAS_PATH, 'species.csv')
     subprocess.check_call(['automech', 'init',
-                           '-m', chemkin_mech_txt,
-                           '-s', spc_csv,
+                           '-m', os.path.join(SYNGAS_PATH, 'mechanism.txt'),
+                           '-s', os.path.join(SYNGAS_PATH, 'species.csv'),
                            '-P', tmp_path])
     subprocess.check_call(['automech', 'abstractions', 'init',
                            '-s', os.path.join(tmp_path, 'species.csv'),
@@ -49,51 +46,29 @@ def test__automech__syngas_from_chemkin():
                            '-s', os.path.join(tmp_path, 'species.csv'),
                            '-r', os.path.join(tmp_path, 'reactions.csv'),
                            '-P', os.path.join(tmp_path, 'additions')])
-
-
-def test__automech():
-    """ test the automech_init script
-    """
-    mech_file_path = os.path.join(DATA_PATH, 'mechanism.txt')
-    spc_csv_path = os.path.join(DATA_PATH, 'species.csv')
-    tmp_path = tempfile.mkdtemp()
-    spc_csv_out_path = os.path.join(tmp_path, 'species.csv')
-    geom_dir_path = os.path.join(tmp_path, 'geom')
-    rxn_csv_out_path = os.path.join(tmp_path, 'reactions.csv')
-    subprocess.check_call(['automech_init',
-                           '-m', mech_file_path,
-                           '-s', spc_csv_path,
-                           '-S', spc_csv_out_path,
-                           '-G', geom_dir_path,
-                           '-x', 'OHV', 'CHV',
-                           '-R', rxn_csv_out_path])
-
-    """ test the automech_abstr_init script
-    """
-    rxn_csv_path = os.path.join(DATA_PATH, 'reactions-sample.csv')
-    spc_csv_path = spc_csv_out_path
-    abstr_csv_out_path = os.path.join(tmp_path, 'abstractions.csv')
-    abstr_dir_path = os.path.join(tmp_path, 'abstr')
-    subprocess.check_call(['automech_abstr_init',
-                           '-r', rxn_csv_path,
-                           '-s', spc_csv_path,
-                           '-R', rxn_csv_out_path,
-                           '-A', abstr_csv_out_path,
-                           '-D', abstr_dir_path])
-
-    """ test the automech_abstr_run script
-    """
-    abstr_csv_path = abstr_csv_out_path
-    tmp_file_path = os.path.join(DATA_PATH, 'template.txt')
-    subprocess.check_call(['automech_abstr_run',
-                           '-a', abstr_csv_path,
-                           '-t', tmp_file_path,
-                           '-n', 'b444', 'b445',
-                           '-x', '0-3', '5', '7-9', '17',
-                           'cmd', 'ls', '-la'])
-    shutil.rmtree(tmp_path)
+    subprocess.check_call(['automech', 'abstractions', 'run',
+                           '-t', os.path.join(TEMPLATE_PATH,
+                                              'abstraction.txt'),
+                           '-s', os.path.join(tmp_path, 'species.csv'),
+                           '-r', os.path.join(tmp_path, 'abstractions',
+                                              'reactions.csv'),
+                           '-b', os.path.join(tmp_path, 'abstractions',
+                                              'reactions.csv'),
+                           '-P', os.path.join(tmp_path, 'additions'),
+                           '-y', 'nodes:d',
+                           'cmd', 'ls'])
+    subprocess.check_call(['automech', 'additions', 'run',
+                           '-t', os.path.join(TEMPLATE_PATH,
+                                              'addition.txt'),
+                           '-s', os.path.join(tmp_path, 'species.csv'),
+                           '-r', os.path.join(tmp_path, 'additions',
+                                              'reactions.csv'),
+                           '-b', os.path.join(tmp_path, 'additions',
+                                              'reactions.csv'),
+                           '-P', os.path.join(tmp_path, 'additions'),
+                           '-y', 'nodes:d',
+                           'cmd', 'ls'])
 
 
 if __name__ == '__main__':
-    test__automech__natgas_from_rmg()
     test__automech__syngas_from_chemkin()

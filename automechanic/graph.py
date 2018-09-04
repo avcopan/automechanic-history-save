@@ -355,12 +355,12 @@ def _flat_product_permutations(*seqs):
 
 
 def _product(*iterables, **kwargs):
-    if len(iterables) == 0:
+    if not iterables:
         yield ()
     else:
         iterables = iterables * kwargs.get('repeat', 1)
-        it = iterables[0]
-        for item in it() if callable(it) else iter(it):
+        iterable = iterables[0]
+        for item in iterable() if callable(iterable) else iter(iterable):
             for items in _product(*iterables[1:]):
                 yield (item, ) + items
 
@@ -389,16 +389,3 @@ def _change_indices(bnds, idx_dct):
 def _formula(iterable):
     items = tuple(iterable)
     return tuple((item, items.count(item)) for item in sorted(set(items)))
-
-
-if __name__ == '__main__':
-    MGRPH = (('C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H'),
-             frozenset([(frozenset([0, 6]), 1), (frozenset([8, 2]), 1),
-                        (frozenset([1, 2]), 1), (frozenset([1, 7]), 1),
-                        (frozenset([3, 4]), 1), (frozenset([9, 3]), 1),
-                        (frozenset([2, 3]), 2), (frozenset([0, 5]), 1),
-                        (frozenset([0, 1]), 2), (frozenset([10, 4]), 1),
-                        (frozenset([4, 12]), 1), (frozenset([11, 4]), 1)]))
-    print len(multibond_opening_resonances(MGRPH))
-    print multibond_opening_resonances(
-        (('O', 'O'), frozenset([(frozenset([0, 1]), 2)])))

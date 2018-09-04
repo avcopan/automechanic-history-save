@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter as Formatter
 import logging
 import from_qtc.obtools
-import automechanic.io2
+import automechanic.io
 
 
 def main(argv):
@@ -63,7 +63,7 @@ def abstractions_init(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io2.abstractions_init(
+        automechanic.io.abstractions_init(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             rxn_csv=os.path.join(
@@ -88,7 +88,7 @@ def additions_init(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io2.additions_init(
+        automechanic.io.additions_init(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             rxn_csv=os.path.join(
@@ -113,7 +113,7 @@ def abstractions_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io2.abstractions_run(
+        automechanic.io.abstractions_run(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -144,7 +144,7 @@ def additions_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io2.additions_run(
+        automechanic.io.additions_run(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -209,7 +209,7 @@ def init(argv):
             return from_qtc.obtools.get_smiles_filename(sid) + '.xyz'
 
         if args['rmg_mech_json']:
-            automechanic.io2.init_from_rmg(
+            automechanic.io.init_from_rmg(
                 rmg_mech_json=os.path.join(
                     locator.working_directory, args['rmg_mech_json']),
                 spc_csv_out=args['species_csv_out'],
@@ -217,7 +217,7 @@ def init(argv):
                 logger=logger
             )
         elif args['chemkin_mech_txt'] and args['species_csv']:
-            automechanic.io2.init_from_chemkin(
+            automechanic.io.init_from_chemkin(
                 chemkin_mech_txt=os.path.join(
                     locator.working_directory, args['chemkin_mech_txt']),
                 spc_csv=os.path.join(
@@ -230,7 +230,7 @@ def init(argv):
             raise ValueError("Needs --chemkin_mech_txt and --spc_csv or "
                              "--rmg_mech_json")
 
-        automechanic.io2.init_geometries(
+        automechanic.io.init_geometries(
             spc_csv=args['species_csv_out'],
             spc_csv_out=args['species_csv_out'],
             geom_dir=args['geom_dir'],
@@ -378,7 +378,7 @@ def _helpless_parser(prog):
 
 
 def _logger(log_file_name, log_level=logging.INFO, print_out=False):
-    log_file_name = automechanic.io2.timestamp_if_exists(log_file_name)
+    log_file_name = automechanic.io.timestamp_if_exists(log_file_name)
 
     logger = logging.getLogger()
     logger.setLevel(log_level)

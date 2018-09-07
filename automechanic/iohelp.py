@@ -4,6 +4,7 @@ from itertools import permutations
 from .strid import reaction_identifier
 from .strid import split_reaction_identifier
 from .strid import formula as formula_from_strid
+from .strid import number_of_atoms as number_of_atoms_from_strid
 from .form import subtract as subtract_formulas
 from .geom import graph
 from .geom import xyz_string
@@ -177,11 +178,18 @@ def _sorted_abstraction_candidate(rid):
     rct_sids, prd_sids = split_reaction_identifier(rid)
     if len(rct_sids) == len(prd_sids) == 2:
         itr = (
-            reaction_identifier((r1_sid, r2_sid), (p1_sid, p2_sid))
+            (r1_sid, r2_sid, p1_sid, p2_sid)
             for r1_sid, r2_sid in permutations(rct_sids)
             for p1_sid, p2_sid in permutations(prd_sids)
             if _matches_abstraction_formula(r1_sid, r2_sid, p1_sid, p2_sid))
-        can_rid = next(itr, None)
+        sids = next(itr, None)
+        if sids:
+            q1h_sid, q2_sid, q1_sid, q2h_sid = sids
+            if (number_of_atoms_from_strid(q1h_sid) < 3 and
+                    number_of_atoms_from_strid(q2h_sid) >= 3):
+                q1_sid, q2_sid = q2_sid, q1_sid
+                q1h_sid, q2h_sid = q2h_sid, q1h_sid
+            can_rid = reaction_identifier((q1h_sid, q2_sid), (q1_sid, q2h_sid))
     return can_rid
 
 

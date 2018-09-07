@@ -43,15 +43,12 @@ def read_file(fpath):
     return open(fpath).read()
 
 
-def init_geometries(spc_csv, spc_csv_out, geom_dir, sid2fname,
-                    logger):
+def fill_species_geometries(spc_df, geom_dir, sid2fname, logger):
     """ initialize species geometries
     """
     from .strid import xyz_string
 
     logger.info("Initializing species geometries")
-
-    spc_df = pandas.read_csv(spc_csv)
 
     assert 'species_id' in spc_df
 
@@ -72,8 +69,7 @@ def init_geometries(spc_csv, spc_csv_out, geom_dir, sid2fname,
                          .format(sid, fpath))
         spc_df.at[idx, 'path'] = fpath
 
-    logger.info("Writing species .xyz paths to {:s}".format(spc_csv_out))
-    spc_df.to_csv(spc_csv_out, index=False)
+    return spc_df
 
 
 def geometries(spc_csv):
@@ -92,13 +88,14 @@ def geometries(spc_csv):
     return mgeo_dct
 
 
-def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, logger):
+def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, sid2fname,
+                  logger):
     """ initialize the mechanism from RMG's JSON file
     """
     from .prmg import mechanism_species_identifiers
     from .prmg import mechanism_reaction_identifiers
-    from .prmg import mechanism_uncertainties
-    from .prmg import mechanism_sensitivities
+    # from .prmg import mechanism_uncertainties
+    # from .prmg import mechanism_sensitivities
     from .prmg import mechanism_importance_values
 
     logger.info("Parsing RMG mechanism JSON file")
@@ -108,16 +105,17 @@ def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, logger):
 
     sids = mechanism_species_identifiers(mech_rxn_dcts)
     rids = mechanism_reaction_identifiers(mech_rxn_dcts)
-    ucrts = mechanism_uncertainties(mech_rxn_dcts)
-    stvts = mechanism_sensitivities(mech_rxn_dcts)
+    # ucrts = mechanism_uncertainties(mech_rxn_dcts)
+    # stvts = mechanism_sensitivities(mech_rxn_dcts)
     ipvls = mechanism_importance_values(mech_rxn_dcts)
 
     spc_df = pandas.DataFrame({'species_id': sids})
     rxn_df = pandas.DataFrame({'reaction_id': rids,
-                               'uncertainty': ucrts,
-                               'sensitivity': stvts,
+                               # 'uncertainty': ucrts,
+                               # 'sensitivity': stvts,
                                'rmg_value': ipvls})
 
+    spc_df = fill_species_geometries(spc_df, geom_dir, sid2fname, logger)
     logger.info("Writing species to {:s}".format(spc_csv_out))
     spc_df.to_csv(spc_csv_out, index=False)
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
@@ -125,32 +123,57 @@ def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, logger):
 
 
 def init_from_chemkin(chemkin_mech_txt, spc_csv, spc_csv_out, rxn_csv_out,
-                      logger):
+                      geom_dir, sid2fname, logger):
     """ initialize the mechanism from a CHEMKIN file
     """
-    from .pchemkin import mechanism_reaction_identifiers
+    from .strid import reaction_identifier
+    from .pchemkin import reactions_without_em
+    from .pchemkin import reactions_with_em
+    from .pchemkin import reactions_with_parentheses_em
 
     logger.info("Parsing CHEMKIN mechanism text file")
 
     mech_str = open(chemkin_mech_txt).read()
     spc_df = pandas.read_csv(spc_csv)
-
     sid_dct = dict(zip(spc_df['species'], spc_df['species_id']))
 
-    pi_rids, lp_rids, fo_rids = mechanism_reaction_identifiers(mech_str,
-                                                               sid_dct)
+    pi_rxns = reactions_without_em(mech_str)
+    lp_rxns = reactions_with_em(mech_str)
+    fo_rxns = reactions_with_parentheses_em(mech_str)
 
-    pi_df = pandas.DataFrame({'reaction_id': pi_rids})
-    lp_df = pandas.DataFrame({'reaction_id': lp_rids})
-    fo_df = pandas.DataFrame({'reaction_id': fo_rids})
-    rxn_df = pandas.concat([pi_df, lp_df, fo_df],
-                           keys=['press_indep', 'low_p', 'falloff'],
-                           names=['pressure_dependence', ''])
+    rxns = pi_rxns + lp_rxns + fo_rxns
+    pdeps = ([None] * len(pi_rxns) +
+             ['low_p'] * len(lp_rxns) +
+             ['falloff'] * len(fo_rxns))
 
+    rxn_rows = []
+    mis_rows = []
+    for rxn, pdep in zip(rxns, pdeps):
+        rcts, prds = rxn
+        if set(rcts) | set(prds) < set(sid_dct):
+            rct_sids = map(sid_dct.__getitem__, rcts)
+            prd_sids = map(sid_dct.__getitem__, prds)
+            rid = reaction_identifier(rct_sids, prd_sids)
+            logger.info("Found reaction {:s} with pressure dependence {:s}"
+                        .format(rid, str(pdep)))
+            rxn_rows.append((rid, pdep))
+        else:
+            fake_rid = reaction_identifier(rcts, prds)
+            logger.info("Reactants or products for {:s} are not in species CSV"
+                        .format(fake_rid))
+            mis_rows.append((fake_rid, pdep))
+
+    spc_df = fill_species_geometries(spc_df, geom_dir, sid2fname, logger)
     logger.info("Writing species to {:s}".format(spc_csv_out))
     spc_df.to_csv(spc_csv_out, index=False)
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
+    columns = ('reaction_id', 'press_dependence')
+    rxn_df = pandas.DataFrame(rxn_rows, columns=columns)
     rxn_df.to_csv(rxn_csv_out, index=False)
+    logger.info("Writing missed reactions to {:s}".format(rxn_csv_out))
+    columns = ('reaction_id', 'press_dependence')
+    mis_df = pandas.DataFrame(mis_rows, columns=columns)
+    mis_df.to_csv('missed.csv', index=False)
 
 
 def reactions_initializer(cls, is_candidate, reaction, idx_col_names):
@@ -171,7 +194,14 @@ def reactions_initializer(cls, is_candidate, reaction, idx_col_names):
         for idx, rid in rxn_df['reaction_id'].iteritems():
             if is_candidate(rid):
                 logger.info('reaction {:d}: {:s}'.format(idx, rid))
-                rxn = reaction(rid, mgeo_dct)
+
+                err = None
+                try:
+                    rxn = reaction(rid, mgeo_dct)
+                except Exception as err:
+                    logger.info('  exception: {:s}!'.format(str(err)))
+                    rxn = None
+
                 if rxn:
                     new_rid, idxs = rxn
 
@@ -185,7 +215,7 @@ def reactions_initializer(cls, is_candidate, reaction, idx_col_names):
 
                     rxn_rows.append((new_rid,) + idxs)
                 else:
-                    can_rows.append((rid,))
+                    can_rows.append((rid, err))
 
         logger.info("Writing {:s} reactions to {:s}"
                     .format(cls, os.path.abspath(rxn_csv_out)))
@@ -195,7 +225,8 @@ def reactions_initializer(cls, is_candidate, reaction, idx_col_names):
 
         logger.info("Writing left-over candidates to {:s}"
                     .format(os.path.abspath(can_csv_out)))
-        can_df_out = pandas.DataFrame(can_rows, columns=('reaction_id',))
+        columns = ('reaction_id', 'exception')
+        can_df_out = pandas.DataFrame(can_rows, columns=columns)
         can_df_out.to_csv(can_csv_out, index=False)
 
         logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
@@ -298,6 +329,44 @@ def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
                 os.chdir(owd)
 
     return _run
+
+
+def abstractions_divide(key, dir1, dir2, rxn_csv, rxn_csv_out, logger):
+    """ split reactions by key
+    """
+    from .strid import is_radical_radical
+    from .strid import is_spin_balanced
+
+    if key == 'rad-rad':
+        meets_condition_ = is_radical_radical
+    elif key == 'high-spin':
+        meets_condition_ = is_spin_balanced
+    else:
+        raise ValueError("Unrecognized divide key: {:s}".format(key))
+
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+    rxn_df[key] = map(meets_condition_, rxn_df['reaction_id'])
+    rxn_df1 = rxn_df[rxn_df[key]].drop(columns=key)
+    rxn_df2 = rxn_df[~rxn_df[key]].drop(columns=key)
+
+    rxn_csv1_out = os.path.join(dir1, rxn_csv_out)
+    logger.info("Writing in-category reactions to {:s}"
+                .format(rxn_csv1_out))
+    if not os.path.exists(dir1):
+        os.mkdir(dir1)
+    rxn_df1.to_csv(rxn_csv1_out)
+
+    rxn_csv2_out = os.path.join(dir2, rxn_csv_out)
+    logger.info("Writing out-of-category reactions to {:s}"
+                .format(rxn_csv2_out))
+    if not os.path.exists(dir2):
+        os.mkdir(dir2)
+    rxn_df2.to_csv(rxn_csv2_out)
+
+    logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
+    timestamp_if_exists(rxn_csv)
+    rxn_df.to_csv(rxn_csv, index=False)
 
 
 def abstractions_init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger):

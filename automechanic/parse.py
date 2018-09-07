@@ -1,8 +1,12 @@
 """ generic regexes for the `re` module
 """
+from re import search
+from re import finditer
 from re import escape
+from re import MULTILINE
 
 
+# pattern makers
 def maybe(pattern):
     """ a pattern that may or may not be present
 
@@ -92,20 +96,63 @@ def one_of_these(patterns):
     return r'(?:{:s})'.format('|'.join(patterns))
 
 
+# finders
+def group_dictionary(pattern, string, flags=MULTILINE):
+    """ return the group dictionary for an `re` search
+
+    :param pattern: an `re` pattern with a named capture
+    :type pattern: str
+    :param string: a string
+    :type string: str
+
+    :rtype: str
+    """
+    gdct = None
+    match = search(pattern, string, flags=flags)
+    if match and match.groupdict():
+        gdct = match.groupdict()
+    return gdct
+
+
+def group_lists(pattern, string, flags=MULTILINE):
+    """ return group lists for all matches in an `re` finditer
+
+    :param pattern: an `re` pattern with a named capture
+    :type pattern: str
+    :param string: a string
+    :type string: str
+
+    :rtype: str
+    """
+    glsts = [match.groups()
+             for match in finditer(pattern, string, flags=flags)]
+    return glsts
+
+
+ANY_CHAR = r'[\s\S]'
+
+NEWLINE = r'\n'
+NON_NEWLINE = r'[^\n]'
+
+WHITESPACE = r'[ \t]'
+
+UPPERCASE_LETTER = r'[A-Z]'
+LETTER = r'[a-zA-Z]'
+
+DIGIT = r'[0-9]'
+INTEGER = one_or_more(DIGIT)
+
+PERIOD = escape('.')
+PLUS = escape('+')
+MINUS = escape('-')
+SIGN = one_of_these([PLUS, MINUS])
+UNSIGNED_FLOAT = one_of_these(
+    [zero_or_more(DIGIT) + PERIOD + one_or_more(DIGIT),
+     one_or_more(DIGIT) + PERIOD + zero_or_more(DIGIT)])
+FLOAT = maybe(SIGN) + UNSIGNED_FLOAT
+
 STRING_START = r'\A'
 STRING_END = r'\Z'
 LINE_START = r'^'
 LINE_END = r'$'
-PERIOD = escape('.')
-PLUS = escape('+')
-MINUS = escape('-')
-OPEN_PAREN = escape('(')
-CLOSE_PAREN = escape(')')
 LINE = r'^.*\n'
-WHITESPACE = r'[ \t]'
-WHITESPACES = one_or_more(WHITESPACE)
-DIGIT = r'[0-9]'
-INTEGER = one_or_more(DIGIT)
-FLOAT = maybe(MINUS) + one_or_more(DIGIT) + PERIOD + one_or_more(DIGIT)
-UPPERCASE_LETTER = r'[A-Z]'
-LETTER = r'[a-zA-Z]'

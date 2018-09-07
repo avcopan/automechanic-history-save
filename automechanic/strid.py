@@ -4,6 +4,10 @@ from .ipybel.smiles import number_of_atoms as number_of_atoms_from_smiles
 from .ipybel.smiles import formula as formula_from_smiles
 from .ipybel.smiles import geometry as geometry_from_smiles
 from .ipybel.smiles import xyz_string as xyz_string_from_smiles
+from .parse import DIGIT
+from .parse import one_or_more
+from .parse import named_capture
+from .parse import group_dictionary
 
 
 def smiles(sid):
@@ -11,6 +15,21 @@ def smiles(sid):
     """
     smi = sid.split('_')[0]
     return smi
+
+
+def multiplicity(sid):
+    """ multiplicity from a species ID
+    """
+    mult_pattern = '_m' + named_capture(one_or_more(DIGIT), name='mult')
+    gdct = group_dictionary(mult_pattern, sid)
+    mult = int(gdct['mult'])
+    return mult
+
+
+def spin_count(sid):
+    """ 2 * S = multiplicity - 1
+    """
+    return multiplicity(sid) - 1
 
 
 def formula(sid):
@@ -61,3 +80,27 @@ def split_reaction_identifier(rid):
     rct_sids = tuple(rct_str.split('.'))
     prd_sids = tuple(prd_str.split('.'))
     return (rct_sids, prd_sids)
+
+
+def reaction_spin_counts(rid):
+    """ multiplicities of reactions and products
+    """
+    rct_sids, prd_sids = split_reaction_identifier(rid)
+    rct_mults = tuple(map(spin_count, rct_sids))
+    prd_mults = tuple(map(spin_count, prd_sids))
+    return (rct_mults, prd_mults)
+
+
+def is_radical_radical(rid):
+    """ determine if this is a radical-radical abstraction
+    """
+    ret = any((all(sct > 0 for sct in scts) and len(scts) > 1)
+              for scts in reaction_spin_counts(rid))
+    return ret
+
+
+def is_spin_balanced(rid):
+    """ determine if this reaction has equal total spin on both sides
+    """
+    rct_scts, prd_scts = reaction_spin_counts(rid)
+    return sum(rct_scts) == sum(prd_scts)

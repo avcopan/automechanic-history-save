@@ -1,8 +1,7 @@
 """ .xyz-based functions
 """
-import warnings
 import re
-from .parse import WHITESPACES
+from .parse import WHITESPACE
 from .parse import INTEGER
 from .parse import STRING_START
 from .parse import LINE_START
@@ -10,7 +9,10 @@ from .parse import LINE_END
 from .parse import LETTER
 from .parse import FLOAT
 from .parse import maybe
+from .parse import one_or_more
 from .parse import named_capture
+
+WHITESPACES = one_or_more(WHITESPACE)
 
 
 def number_of_atoms(dxyz):
@@ -43,6 +45,6 @@ def geometry(dxyz):
         mgeo.append((asymb, xyz))
 
     if len(mgeo) != natms:
-        warnings.warn("\nThis .xyz file is inconsistent: {:s}".format(dxyz))
+        raise ValueError("\nThis .xyz file is inconsistent: {:s}".format(dxyz))
 
     return tuple(mgeo)

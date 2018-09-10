@@ -3,7 +3,7 @@
 import pybel
 
 
-def canonicalize(smi):
+def canonical(smi):
     """ canonical smiles string
     """
     pbmol = _pybel_molecule(smi)

@@ -1,8 +1,12 @@
 """ helpers for the io module
 """
+from itertools import chain
 from itertools import permutations
+import pandas
+from more_itertools import unique_everseen
 from .strid import reaction_identifier
 from .strid import split_reaction_identifier
+from .strid import canonical_reaction_identifier
 from .strid import formula as formula_from_strid
 from .strid import number_of_atoms as number_of_atoms_from_strid
 from .form import subtract as subtract_formulas
@@ -12,6 +16,43 @@ from .geom import addition_indices
 from .geom import abstraction_indices
 from .geom import migration_indices
 from .graph import atom_neighborhood_indices
+
+
+def merge_reaction_dataframes(rxn_df1, rxn_df2):
+    """ ugly function to merge reaction dataframes with 'reaction_id' columns
+    """
+    assert all('reaction_id' in df for df in (rxn_df1, rxn_df2))
+    can_rid_iter1 = map(canonical_reaction_identifier,
+                        rxn_df1['reaction_id'])
+    can_rid_iter2 = map(canonical_reaction_identifier,
+                        rxn_df2['reaction_id'])
+    rxn_keys1 = list(frozenset(map(frozenset, split_reaction_identifier(rid)))
+                     for rid in can_rid_iter1)
+    rxn_keys2 = list(frozenset(map(frozenset, split_reaction_identifier(rid)))
+                     for rid in can_rid_iter2)
+
+    rxn_keys = set(rxn_keys1) | set(rxn_keys2)
+    rows = []
+    for rxn_key in rxn_keys:
+        row = {}
+        if rxn_key in rxn_keys1:
+            idx1 = rxn_keys1.index(rxn_key)
+            row1 = {key: val for key, val in rxn_df1.iloc[idx1].items()
+                    if not pandas.isna(val)}
+            row.update(row1)
+        if rxn_key in rxn_keys2:
+            idx2 = rxn_keys2.index(rxn_key)
+            row2 = {key: val for key, val in rxn_df2.iloc[idx2].items()
+                    if not pandas.isna(val)}
+            row.update(row2)
+        assert row
+        rows.append(row)
+
+    rxn_df = pandas.DataFrame(rows)
+    cols = [col for col in unique_everseen(chain(rxn_df1.columns,
+                                                 rxn_df2.columns))
+            if col in rxn_df]
+    return rxn_df[cols]
 
 
 def addition_candidate(rid):

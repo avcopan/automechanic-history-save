@@ -18,11 +18,59 @@ def main(argv):
         cmd='automech',
         subcmd_dct={
             'init': init,
+            'database': database_main,
             'additions': additions_main,
             'abstractions': abstractions_main,
             'migrations': migrations_main
         }
     )
+
+
+def database_main(argv):
+    """ main function for database operations
+    """
+    _route_subcommand(
+        argv=argv,
+        cmd='automech databse',
+        subcmd_dct={
+            'merge': database_merge
+        }
+    )
+
+
+def database_merge(argv):
+    """ merge reaction csv files
+    """
+    parser = _default_parser(prog='automech database merge',
+                             log_file_name='merge.log')
+    parser.add_argument('reactions_csv_paths',
+                        type=str,
+                        nargs='+',
+                        default='reactions.csv',
+                        help="[i] csv file with 'reaction_id' column")
+    parser.add_argument('-R',
+                        '--reactions_csv_out',
+                        type=str,
+                        default='reactions.csv',
+                        help="[o] csv file with 'reaction_id' column")
+    _get_help(parser, argv)
+    args = vars(parser.parse_args(argv))
+
+    with _ChangeDirectory(args['prefix']) as locator:
+        logger = _logger(
+            log_file_name=args['log_file_name'],
+            log_level=args['log_level'],
+            print_out=args['print_out']
+        )
+
+        rxn_csv_lst = [os.path.join(locator.working_directory, rxn_csv_path)
+                       for rxn_csv_path in args['reactions_csv_paths']]
+
+        automechanic.io.database_merge(
+            rxn_csv_lst=rxn_csv_lst,
+            rxn_csv_out=args['reactions_csv_out'],
+            logger=logger
+        )
 
 
 def additions_main(argv):

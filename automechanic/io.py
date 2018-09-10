@@ -5,6 +5,7 @@ import time
 import json
 import subprocess
 from functools import partial
+from functools import reduce
 import pandas
 from .iohelp import addition
 from .iohelp import addition_candidate
@@ -18,6 +19,7 @@ from .iohelp import migration
 from .iohelp import migration_candidate
 from .iohelp import migration_xyz_strings
 from .iohelp import migration_input_string
+from .iohelp import merge_reaction_dataframes
 
 
 def timestamp_if_exists(fpath):
@@ -86,6 +88,20 @@ def geometries(spc_csv):
     mgeos = map(geometry, dxyzs)
     mgeo_dct = dict(zip(sids, mgeos))
     return mgeo_dct
+
+
+def database_merge(rxn_csv_lst, rxn_csv_out, logger):
+    """ merge reactions databases
+    """
+    rxn_dfs = []
+    for rxn_csv in rxn_csv_lst:
+        logger.info("Reading in {:s}".format(rxn_csv))
+        rxn_dfs.append(pandas.read_csv(rxn_csv))
+
+    logger.info("Merging data frames...")
+    rxn_df_out = reduce(merge_reaction_dataframes, rxn_dfs)
+    logger.info("Writing reactions to {:s}".format(rxn_csv_out))
+    rxn_df_out.to_csv(rxn_csv_out, index=False)
 
 
 def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, sid2fname,

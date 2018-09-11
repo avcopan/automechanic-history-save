@@ -132,7 +132,7 @@ def abstractions_init(argv):
             rxn_csv=os.path.join(
                 locator.working_directory, args['reactions_csv']),
             rxn_csv_out=args['reactions_csv_out'],
-            can_csv_out=args['candidates_csv_out'],
+            cdt_csv_out=args['candidates_csv_out'],
             logger=logger
         )
 
@@ -156,7 +156,7 @@ def additions_init(argv):
             rxn_csv=os.path.join(
                 locator.working_directory, args['reactions_csv']),
             rxn_csv_out=args['reactions_csv_out'],
-            can_csv_out=args['candidates_csv_out'],
+            cdt_csv_out=args['candidates_csv_out'],
             logger=logger
         )
 
@@ -180,7 +180,7 @@ def migrations_init(argv):
             rxn_csv=os.path.join(
                 locator.working_directory, args['reactions_csv']),
             rxn_csv_out=args['reactions_csv_out'],
-            can_csv_out=args['candidates_csv_out'],
+            cdt_csv_out=args['candidates_csv_out'],
             logger=logger
         )
 

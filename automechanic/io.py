@@ -5,7 +5,6 @@ import time
 import json
 import subprocess
 from functools import partial
-from functools import reduce
 import pandas
 from .iohelp import addition
 from .iohelp import addition_candidate
@@ -19,7 +18,6 @@ from .iohelp import migration
 from .iohelp import migration_candidate
 from .iohelp import migration_xyz_strings
 from .iohelp import migration_input_string
-from .iohelp import merge_reaction_dataframes
 
 
 def timestamp_if_exists(fpath):
@@ -90,28 +88,13 @@ def geometries(spc_csv):
     return mgeo_dct
 
 
-def database_merge(rxn_csv_lst, rxn_csv_out, logger):
-    """ merge reactions databases
-    """
-    rxn_dfs = []
-    for rxn_csv in rxn_csv_lst:
-        logger.info("Reading in {:s}".format(rxn_csv))
-        rxn_dfs.append(pandas.read_csv(rxn_csv))
-
-    logger.info("Merging data frames...")
-    rxn_df_out = reduce(merge_reaction_dataframes, rxn_dfs)
-    logger.info("Writing reactions to {:s}".format(rxn_csv_out))
-    rxn_df_out.to_csv(rxn_csv_out, index=False)
-
-
 def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, sid2fname,
                   logger):
     """ initialize the mechanism from RMG's JSON file
     """
     from .prmg import mechanism_species_identifiers
     from .prmg import mechanism_reaction_identifiers
-    # from .prmg import mechanism_uncertainties
-    # from .prmg import mechanism_sensitivities
+    from .prmg import mechanism_sensitivities
     from .prmg import mechanism_importance_values
 
     logger.info("Parsing RMG mechanism JSON file")
@@ -121,14 +104,12 @@ def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, sid2fname,
 
     sids = mechanism_species_identifiers(mech_rxn_dcts)
     rids = mechanism_reaction_identifiers(mech_rxn_dcts)
-    # ucrts = mechanism_uncertainties(mech_rxn_dcts)
-    # stvts = mechanism_sensitivities(mech_rxn_dcts)
+    stvts = mechanism_sensitivities(mech_rxn_dcts)
     ipvls = mechanism_importance_values(mech_rxn_dcts)
 
     spc_df = pandas.DataFrame({'species_id': sids})
     rxn_df = pandas.DataFrame({'reaction_id': rids,
-                               # 'uncertainty': ucrts,
-                               # 'sensitivity': stvts,
+                               'sensitivity': stvts,
                                'rmg_value': ipvls})
 
     spc_df = fill_species_geometries(spc_df, geom_dir, sid2fname, logger)
@@ -197,7 +178,7 @@ def reactions_initializer(cls, is_candidate, reaction, idx_col_names):
     """
     assert cls in ('abstraction', 'addition', 'migration')
 
-    def _init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger):
+    def _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
         logger.info("Reading in {:s}".format(rxn_csv))
         rxn_df = pandas.read_csv(rxn_csv)
 
@@ -206,7 +187,7 @@ def reactions_initializer(cls, is_candidate, reaction, idx_col_names):
 
         logger.info("Iterating over candidates")
         rxn_rows = []
-        can_rows = []
+        cdt_rows = []
         for idx, rid in rxn_df['reaction_id'].iteritems():
             if is_candidate(rid):
                 logger.info('reaction {:d}: {:s}'.format(idx, rid))
@@ -231,7 +212,7 @@ def reactions_initializer(cls, is_candidate, reaction, idx_col_names):
 
                     rxn_rows.append((new_rid,) + idxs)
                 else:
-                    can_rows.append((rid, err))
+                    cdt_rows.append((rid, err))
 
         logger.info("Writing {:s} reactions to {:s}"
                     .format(cls, os.path.abspath(rxn_csv_out)))
@@ -240,10 +221,10 @@ def reactions_initializer(cls, is_candidate, reaction, idx_col_names):
         rxn_df_out.to_csv(rxn_csv_out, index=False)
 
         logger.info("Writing left-over candidates to {:s}"
-                    .format(os.path.abspath(can_csv_out)))
+                    .format(os.path.abspath(cdt_csv_out)))
         columns = ('reaction_id', 'exception')
-        can_df_out = pandas.DataFrame(can_rows, columns=columns)
-        can_df_out.to_csv(can_csv_out, index=False)
+        cdt_df_out = pandas.DataFrame(cdt_rows, columns=columns)
+        cdt_df_out.to_csv(cdt_csv_out, index=False)
 
         logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
         timestamp_if_exists(rxn_csv)
@@ -385,7 +366,7 @@ def abstractions_divide(key, dir1, dir2, rxn_csv, rxn_csv_out, logger):
     rxn_df.to_csv(rxn_csv, index=False)
 
 
-def abstractions_init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger):
+def abstractions_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
     """ initialize abstraction reactions
     """
     _init = reactions_initializer(
@@ -394,10 +375,10 @@ def abstractions_init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger):
         reaction=abstraction,
         idx_col_names=('q1h_idx', 'q2_idx', 'q1_idx', 'q2h_idx')
     )
-    return _init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger)
+    return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
 
 
-def additions_init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger):
+def additions_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
     """ initialize addition reactions
     """
     _init = reactions_initializer(
@@ -406,10 +387,10 @@ def additions_init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger):
         reaction=addition,
         idx_col_names=('x_idx', 'y_idx', 'xy_idx_x', 'xy_idx_y')
     )
-    return _init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger)
+    return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
 
 
-def migrations_init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger):
+def migrations_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
     """ initialize migration reactions
     """
     _init = reactions_initializer(
@@ -418,7 +399,7 @@ def migrations_init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger):
         reaction=migration,
         idx_col_names=('r_idx_h', 'r_idx_a', 'p_idx_h', 'p_idx_a')
     )
-    return _init(spc_csv, rxn_csv, rxn_csv_out, can_csv_out, logger)
+    return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
 
 
 def abstractions_run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,

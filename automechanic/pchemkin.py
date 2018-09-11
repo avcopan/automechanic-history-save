@@ -18,10 +18,11 @@ from .parse import NON_NEWLINE
 from .parse import NEWLINE
 from .parse import FLOAT
 from .parse import SIGN
-from .parse import DIGIT
+from .parse import INTEGER
+from .parse import STRING_START
 
 
-WHITESPACES = one_or_more(WHITESPACE)
+WHITESPACES = one_or_more(WHITESPACE, greedy=False)
 ARROW = maybe(escape('<')) + escape('=') + maybe(escape('>'))
 PADDED_PLUS = maybe(WHITESPACES) + PLUS + maybe(WHITESPACES)
 PADDED_ARROW = maybe(WHITESPACES) + ARROW + maybe(WHITESPACES)
@@ -168,6 +169,38 @@ def thermo_common_temperatures(mech_str):
     return _thermo(mech_str, 'temp_md')
 
 
+def reaction_strings(mech_str):
+    """ all reaction strings in a CHEMKIN file string
+
+    :param mech_str: CHEMKIN file contents
+    :type mech_str: str
+
+    :returns: reactions
+    :rtype: list
+    """
+    specs = species(mech_str)
+    reag_pattern = _reagent_multiplet_pattern(specs)
+    reac_pattern = _reaction_pattern_any(reag_pattern)
+    reac_block_str = reactions_block(mech_str)
+    return re.findall(reac_pattern, reac_block_str)
+
+
+def reactions(mech_str):
+    """ all reactions in a CHEMKIN file string
+
+    :param mech_str: CHEMKIN file contents
+    :type mech_str: str
+
+    :returns: reactions
+    :rtype: list
+    """
+    specs = species(mech_str)
+    reag_pattern = _reagent_multiplet_pattern(specs)
+    reac_pattern = _reaction_pattern_any(reag_pattern)
+    reacs = _reactions(mech_str, reac_pattern, specs)
+    return reacs
+
+
 def reactions_without_em(mech_str):
     """ pressure-inependent reactions in a CHEMKIN file string
 
@@ -178,9 +211,8 @@ def reactions_without_em(mech_str):
     :rtype: list
     """
     specs = species(mech_str)
-    reagent = _reagent_pattern(specs)
-    reagents = reagent + repeat_range(PADDED_PLUS + reagent, 0, 2)
-    reac_pattern = reagents + PADDED_ARROW + reagents
+    reag_pattern = _reagent_multiplet_pattern(specs)
+    reac_pattern = _reaction_pattern_without_em(reag_pattern)
     reacs = _reactions(mech_str, reac_pattern, specs)
     return reacs
 
@@ -195,9 +227,8 @@ def reactions_with_em(mech_str):
     :rtype: list
     """
     specs = species(mech_str)
-    reagent = _reagent_pattern(specs)
-    reagents = reagent + maybe(PADDED_PLUS + reagent) + PADDED_PLUS + PADDED_EM
-    reac_pattern = reagents + PADDED_ARROW + reagents
+    reag_pattern = _reagent_multiplet_pattern(specs)
+    reac_pattern = _reaction_pattern_with_em(reag_pattern)
     reacs = _reactions(mech_str, reac_pattern, specs)
     return reacs
 
@@ -212,27 +243,70 @@ def reactions_with_parentheses_em(mech_str):
     :rtype: list
     """
     specs = species(mech_str)
-    reagent = _reagent_pattern(specs)
-    reagents = (reagent + maybe(PADDED_PLUS + reagent)
-                + escape('(') + PADDED_PLUS + PADDED_EM + escape(')'))
-    reac_pattern = reagents + PADDED_ARROW + reagents
+    reag_pattern = _reagent_multiplet_pattern(specs)
+    reac_pattern = _reaction_pattern_with_parentheses_em(reag_pattern)
     reacs = _reactions(mech_str, reac_pattern, specs)
     return reacs
 
 
+def _reaction_pattern_any(reag_pattern):
+    reac_pattern = one_of_these([
+        _reaction_pattern_with_parentheses_em(reag_pattern),
+        _reaction_pattern_with_em(reag_pattern),
+        _reaction_pattern_without_em(reag_pattern)])
+    return reac_pattern
+
+
+def _reaction_pattern_without_em(reag_pattern):
+    reagents = reag_pattern + repeat_range(PADDED_PLUS + reag_pattern, 0, 2)
+    reac_pattern = reagents + PADDED_ARROW + reagents
+    return reac_pattern
+
+
+def _reaction_pattern_with_em(reag_pattern):
+    reagents = (reag_pattern + maybe(PADDED_PLUS + reag_pattern) + PADDED_PLUS
+                + PADDED_EM)
+    reac_pattern = reagents + PADDED_ARROW + reagents
+    return reac_pattern
+
+
+def _reaction_pattern_with_parentheses_em(reag_pattern):
+    reagents = (reag_pattern + maybe(PADDED_PLUS + reag_pattern)
+                + escape('(') + PADDED_PLUS + PADDED_EM + escape(')'))
+    reac_pattern = reagents + PADDED_ARROW + reagents
+    return reac_pattern
+
+
 def _reactions(mech_str, reac_pattern, specs):
     reac_block_str = reactions_block(mech_str)
-    reacs = tuple(_split_reaction(reac_str, specs)
-                  for reac_str in re.findall(reac_pattern, reac_block_str))
+    reac_strs = re.findall(reac_pattern, reac_block_str)
+    reacs = tuple(_split_reaction(reac_str, specs) for reac_str in reac_strs)
     return reacs
 
 
 def _split_reaction(reac_str, specs):
-    reagent = capture(_reagent_pattern(specs))
-    reactant_str, product_str = re.split(PADDED_ARROW, reac_str)
-    reactants = tuple(re.findall(reagent, reactant_str))
-    products = tuple(re.findall(reagent, product_str))
+    nreag_pattern = capture(_reagent_multiplet_pattern(specs))
+    rstr, pstr = re.split(PADDED_ARROW, reac_str)
+    reactant_multiplets = tuple(map(_split_reagent_multiplet,
+                                    re.findall(nreag_pattern, rstr)))
+    product_multiplets = tuple(map(_split_reagent_multiplet,
+                                   re.findall(nreag_pattern, pstr)))
+    reactants = sum((cnt * (spec,) for cnt, spec in reactant_multiplets), ())
+    products = sum((cnt * (spec,) for cnt, spec in product_multiplets), ())
     return reactants, products
+
+
+def _split_reagent_multiplet(reag_str):
+    count_pattern = STRING_START + maybe(capture(INTEGER))
+    count_pattern_ = named_capture(count_pattern, name='count')
+    gdct = group_dictionary(count_pattern_, reag_str)
+    count = int(gdct['count']) if gdct['count'] else 1
+    name = re.sub(count_pattern, '', reag_str)
+    return count, name
+
+
+def _reagent_multiplet_pattern(specs):
+    return maybe(INTEGER) + _reagent_pattern(specs)
 
 
 def _reagent_pattern(specs):
@@ -249,9 +323,9 @@ def _thermo(mech_str, key):
     assert key in ('temp_lo', 'temp_hi', 'temp_md', 'cfts_lo', 'cfts_hi')
 
     specs = species(mech_str)
-    reagent = _reagent_pattern(specs)
+    reagent = _reagent_multiplet_pattern(specs)
     maybe_spaces = maybe(WHITESPACES)
-    exp = FLOAT + one_of_these(['E', 'e']) + maybe(SIGN) + one_or_more(DIGIT)
+    exp = FLOAT + one_of_these(['E', 'e']) + maybe(SIGN) + INTEGER
 
     thermo_pattern = maybe_spaces.join(
         [capture(reagent), WHITESPACE, one_or_more(NON_NEWLINE),

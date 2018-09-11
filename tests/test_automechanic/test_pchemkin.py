@@ -7,6 +7,15 @@ PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_PATH = os.path.join(PATH, 'data')
 
 
+def test__reactions():
+    """ test pchemkin.reactions
+    """
+    mech_fpath = os.path.join(DATA_PATH, 'heptane_mechanism.txt')
+    mech_str = open(mech_fpath).read()
+    reacs = pchemkin.reactions_without_em(mech_str)
+    assert len(reacs) == 4
+
+
 def test__remove_comments():
     """ test pchemkin.remove_comments
     """
@@ -173,6 +182,4 @@ def test__thermo_functions():
 
 
 if __name__ == '__main__':
-    test__block()
-    test__species()
-    test__thermo_functions()
+    test__reactions()

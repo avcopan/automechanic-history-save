@@ -6,11 +6,11 @@
 !      An updated experimental and kinetic modeling study of n-heptane oxidation      !
 !                                                                                     !
 !           Kuiwen Zhang 1, Colin Banyon 1, John Bugler 1, Henry J. Curran 1*         !
-!            Anne Rodriguez,2 Olivier Herbinet,2 FrÃ©dÃ©rique Battin-Leclerc2           !
+!            Anne Rodriguez,2 Olivier Herbinet,2 Frédérique Battin-Leclerc2           !
 !                        Christine B'Chir3, Karl Alexander Heufer3                    !
 !                                                                                     !
 !      1 School of Chemistry, National University of Ireland Galway, Ireland          !
-!  2 Laboratoire RÃ©actions et GÃ©nie des ProcÃ©dÃ©s, CNRS, UniversitÃ© de Lorraine,       !
+!  2 Laboratoire Réactions et Génie des Procédés, CNRS, Université de Lorraine,       !
 !          ENSIC, 1, rue Grandville, BP 20451, 54001 Nancy Cedex, France              !
 !  3 Physico-Chemical Fundamentals of Combustion (PCFC), RWTH Aachen University,      !
 !                          Schinkelstr. 8, 52062 Aachen                               !
@@ -752,7 +752,7 @@ H2/ 2.50/ H2O/ 12.00/ AR/ 0.83/ CO/ 1.90/ CO2/ 3.80/ HE/ 0.83/ CH4/ 2.00/ C2H6/ 
 !______________________________________________________________________________
 !\REACTIONCLASS: \RADICAL_ADDITION\H              \A             \N        \EA
 !______________________________________________________________________________
-O2+H<=>O+OH                                       1.040E+014     0.000   15286.0   !\AUTHOR: AK !\REF: HONG ET AL. PROC. OF THE COMB. INST. 33 (2011) 309Â¡Â§C316 
+O2+H<=>O+OH                                       1.040E+014     0.000   15286.0   !\AUTHOR: AK !\REF: HONG ET AL. PROC. OF THE COMB. INST. 33 (2011) 309¡§C316 
 !------------------------------------------------------------------------------
 !\ENDSUBMECH: \O2
 !------------------------------------------------------------------------------
@@ -762,7 +762,7 @@ O2+H<=>O+OH                                       1.040E+014     0.000   15286.0
 !______________________________________________________________________________
 !\REACTIONCLASS: \UNIMOL                          \A             \N        \EA
 !______________________________________________________________________________
-H+OH+M<=>H2O+M                                    3.500E+022    -2.000       0.0  !\AUTHOR: AK !\REF: LI IJCK 36: 566Â¡Â§C575, 2004 
+H+OH+M<=>H2O+M                                    3.500E+022    -2.000       0.0  !\AUTHOR: AK !\REF: LI IJCK 36: 566¡§C575, 2004 
 H2/ 0.73/ H2O/ 3.65/ CH4/ 2.00/ C2H6/ 3.00/ AR/ 0.38/
 !______________________________________________________________________________
 !\REACTIONCLASS: \ABSTRACTION                     \A             \N        \EA
@@ -940,7 +940,7 @@ CH4+O<=>CH3+OH                                    1.020E+009     1.500    8600.0
 CH4+OH<=>CH3+H2O                                  5.830E+004     2.600    2190.0 !\AUTHOR: !\REF: CURRAN ESTIMATE, FIT TO NIST DATABASE 
 CH4+HO2<=>CH3+H2O2                                1.130E+001     3.740   21010.0 !\AUTHOR: !\REF: J. AGUILERA-IPARRAGUIRRE ET AL. J PHYS CHEM A (2008) 112(30): 7047-7054. 
 CH4+CH3O2<=>CH3+CH3O2H                            9.600E-001     3.770   17810.0 !\AUTHOR: !\REF: NEW FIT FROM HJC 
-CH3+HO2<=>CH4+O2                                  1.160E+005     2.230   -3022.0 !\AUTHOR: !\REF: JASPER/ KLIPPENSTEIN PROC COMBUST INST 32 (2009) 279Â¡Â§C286 
+CH3+HO2<=>CH4+O2                                  1.160E+005     2.230   -3022.0 !\AUTHOR: !\REF: JASPER/ KLIPPENSTEIN PROC COMBUST INST 32 (2009) 279¡§C286 
 !______________________________________________________________________________
 !\REACTIONCLASS: \RADICAL_ADDITION\CH2            \A             \N        \EA
 !______________________________________________________________________________
@@ -1077,7 +1077,7 @@ CH3+OH<=>CH2+H2O                                  4.293E+004     2.568    3997.8
 !______________________________________________________________________________
 !\REACTIONCLASS: \R+HO2                           \A             \N        \EA
 !______________________________________________________________________________
-CH3+HO2<=>CH3O+OH                                 1.000E+012     0.269    -687.5 !\AUTHOR:  !\REF: JASPER/ KLIPPENSTEIN PROC COMBUST INST 32 (2009) 279Â¡Â§C286 
+CH3+HO2<=>CH3O+OH                                 1.000E+012     0.269    -687.5 !\AUTHOR:  !\REF: JASPER/ KLIPPENSTEIN PROC COMBUST INST 32 (2009) 279¡§C286 
 !==============================================================================
 !\ENDSUBSPECIES: \CH3
 !==============================================================================
@@ -1340,8 +1340,8 @@ C2H6+CH<=>C2H5+CH2                                1.100E+014     0.000    -260.0
 C2H6+CH2(S)<=>C2H5+CH3                            1.200E+014     0.000       0.0 !\AUTHOR: !\REF:MECHANISM AND MODELING OF NITROGEN CHEMISTRY IN COMBUSTION, WSS/ CI, AUTUMN 1988 
 C2H6+CH3<=>C2H5+CH4                               5.550E-004     4.720    3231.0 !\AUTHOR: !\REF:TSANG AND HAMPSON, J. PHYS. CHEM. REF. DATA, 15:1087 (1986) 
 C2H6+CH3O<=>C2H5+CH3OH                            2.410E+011     0.000    7090.0 !\AUTHOR: !\REF:TSANG AND HAMPSON, J. PHYS. CHEM. REF. DATA, 15:1087 (1986) 
-C2H6+CH3O2<=>C2H5+CH3O2H                          1.940E+001     3.640   17100.0 !\AUTHOR: !\REF:CARSTENSEN AND DEAN PROC COMBUST INST 30 (2005) 995Â¡Â§C1003    
-C2H6+C2H5O2<=>C2H5+C2H5O2H                        8.600E+000     3.760   17200.0 !\AUTHOR: !\REF:CARSTENSEN AND DEAN PROC COMBUST INST 30 (2005) 995Â¡Â§C1003    
+C2H6+CH3O2<=>C2H5+CH3O2H                          1.940E+001     3.640   17100.0 !\AUTHOR: !\REF:CARSTENSEN AND DEAN PROC COMBUST INST 30 (2005) 995¡§C1003    
+C2H6+C2H5O2<=>C2H5+C2H5O2H                        8.600E+000     3.760   17200.0 !\AUTHOR: !\REF:CARSTENSEN AND DEAN PROC COMBUST INST 30 (2005) 995¡§C1003    
 !______________________________________________________________________________
 !\REACTIONCLASS: \RADICAL_BETA_SCISSION           \A             \N        \EA
 !______________________________________________________________________________
@@ -1373,62 +1373,62 @@ PLOG/    100.0000     1.032E+002     3.230     11236.1/
 !______________________________________________________________________________
 !\REACTIONCLASS: \R+O2                           \A             \N        \EA
 !______________________________________________________________________________
-C2H5+O2<=>C2H5O2                                  3.398E+053   -13.900    9279.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H5+O2<=>C2H5O2                                  3.398E+053   -13.900    9279.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     3.398E+053   -13.900      9279.0/                                          
 PLOG/      1.0000     9.362E+059   -15.280     14240.0/                                          
 PLOG/     10.0000     1.262E+060   -14.910     16240.0/                                          
                                                                                                  
-C2H5+O2<=>C2H4O2H                                 2.103E+034    -9.010    5444.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H5+O2<=>C2H4O2H                                 2.103E+034    -9.010    5444.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     2.103E+034    -9.010      5444.0/                                          
 PLOG/      1.0000     4.884E+033    -8.310      7710.0/                                          
 PLOG/     10.0000     1.705E+045   -11.490     14590.0/                                          
                                                                                                  
-C2H5+O2<=>C2H4+HO2                                2.094E+009     0.490    -391.4 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H5+O2<=>C2H4+HO2                                2.094E+009     0.490    -391.4 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     2.094E+009     0.490      -391.4/                                          
 PLOG/      1.0000     1.843E+007     1.130      -720.6/                                          
 PLOG/     10.0000     7.561E+014    -1.010      4749.0/                                          
                                                                                                  
-C2H5+O2<=>C2H4O1-2+OH                             1.303E+003     1.930    -502.7 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H5+O2<=>C2H4O1-2+OH                             1.303E+003     1.930    -502.7 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     1.303E+003     1.930      -502.7/                                          
 PLOG/      1.0000     2.438E+002     2.180       -62.5/                                          
 PLOG/     10.0000     4.621E+009     0.150      5409.0/                                          
                                                                                                  
-C2H5+O2<=>CH3CHO+OH                               4.908E-006     4.760     254.3 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H5+O2<=>CH3CHO+OH                               4.908E-006     4.760     254.3 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     4.908E-006     4.760       254.3/                                           
 PLOG/      1.0000     6.803E-002     3.570      2643.0/                                          
 PLOG/     10.0000     8.265E+002     2.410      5285.0/                                          
                                                                                                  
-C2H4O2H<=>C2H5O2                                  2.653E-016     6.960    2396.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H4O2H<=>C2H5O2                                  2.653E-016     6.960    2396.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     2.653E-016     6.960      2396.0/                                          
 PLOG/      1.0000     1.064E+041   -10.100     26030.0/                                          
 PLOG/     10.0000     1.203E+036    -8.130     27020.0/                                          
                                                                                                  
-C2H5O2<=>CH3CHO+OH                                1.237E+035    -9.420   36360.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H5O2<=>CH3CHO+OH                                1.237E+035    -9.420   36360.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     1.237E+035    -9.420     36360.0/                                          
 PLOG/      1.0000     1.687E+036    -9.220     38700.0/                                          
 PLOG/     10.0000     2.520E+041   -10.200     43710.0/                                          
                                                                                                  
-C2H5O2<=>C2H4+HO2                                 1.782E+032    -7.100   32840.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H5O2<=>C2H4+HO2                                 1.782E+032    -7.100   32840.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     1.782E+032    -7.100     32840.0/                                          
 PLOG/      1.0000     2.701E+037    -8.470     35840.0/                                          
 PLOG/     10.0000     1.980E+038    -8.460     37900.0/                                          
                                                                                                  
-C2H5O2<=>C2H4O1-2+OH                              5.778E+045   -11.900    4112.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H5O2<=>C2H4O1-2+OH                              5.778E+045   -11.900    4112.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     5.778E+045   -11.900      4112.0/                                          
 PLOG/      1.0000     1.916E+043   -10.750     42400.0/                                          
 PLOG/     10.0000     3.965E+043   -10.460     45580.0/                                          
                                                                                                  
-C2H4O2H<=>C2H4O1-2+OH                             8.959E+038    -9.400   20660.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H4O2H<=>C2H4O1-2+OH                             8.959E+038    -9.400   20660.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     8.959E+038    -9.400     20660.0/                                          
 PLOG/      1.0000     1.224E+037    -8.320     21460.0/                                          
 PLOG/     10.0000     8.848E+030    -6.080     20660.0/                                          
                                                                                                  
-C2H4O2H<=>C2H4+HO2                                3.918E+040   -10.200   22250.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H4O2H<=>C2H4+HO2                                3.918E+040   -10.200   22250.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     3.918E+040   -10.200     22250.0/                                          
 PLOG/      1.0000     6.825E+040    -9.610     23840.0/                                          
 PLOG/     10.0000     3.980E+034    -7.250     23250.0/                                          
                                                                                                  
-C2H4O2H<=>CH3CHO+OH                               5.819E+026    -7.970   20860.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415Â¡Â§C4427
+C2H4O2H<=>CH3CHO+OH                               5.819E+026    -7.970   20860.0 !\AUTHOR: !\REF:John D. DeSain, J. Phys. Chem. A, 2003, 107 (22), pp 4415¡§C4427
 PLOG/      0.0400     5.819E+026    -7.970     20860.0/
 PLOG/      1.0000     5.520E+034    -9.880     26230.0/
 PLOG/     10.0000     1.188E+034    -9.020     29210.0/
@@ -1449,7 +1449,7 @@ C2H5O2+CH3OH<=>C2H5O2H+CH2OH                      1.810E+012     0.000   13710.0
 !______________________________________________________________________________
 !\REACTIONCLASS: \KHP_DECOMP               \A             \N        \EA
 !______________________________________________________________________________
-C2H5O2H<=>C2H5O+OH                                6.310E+014     0.000   42300.0 !\AUTHOR: !\REF:CARSTENSEN AND DEAN PROC COMBUST INST 30 (2005) 995Â¡Â§C1003    
+C2H5O2H<=>C2H5O+OH                                6.310E+014     0.000   42300.0 !\AUTHOR: !\REF:CARSTENSEN AND DEAN PROC COMBUST INST 30 (2005) 995¡§C1003    
 !==============================================================================
 !\ENDSUBSPECIES: \C2H5O2H
 !==============================================================================
@@ -2033,7 +2033,7 @@ CH3CHO+O<=>CH3CO+OH                               5.940E+012     0.000    1868.0
 CH3CHO+H<=>CH3CO+H2                               1.310E+005     2.580    1220.0 !\AUTHOR: !\REF:HARDING J. PHYS. CHEM., VOL. 114, NO. 2, 2010 
 CH3CHO+OH<=>CH3CO+H2O                             3.370E+012     0.000    -619.0 !\AUTHOR: !\REF:JUAN LI'S PHD THESIS 
 CH3CHO+HO2<=>CH3CO+H2O2                           3.010E+012     0.000   11920.0 !\AUTHOR: !\AUTHOR: !\REF:BAULCH ET AL., J. PHYS. CHEM. REF DATA, 21:411 (1992) 
-CH3CHO+CH3<=>CH3CO+CH4                            7.080E-004     4.580    1966.0 !\AUTHOR: !\REF: GUPTE ET AL.,PROC COMBUST INST 31 (2007) 167Â¡Â§C174 
+CH3CHO+CH3<=>CH3CO+CH4                            7.080E-004     4.580    1966.0 !\AUTHOR: !\REF: GUPTE ET AL.,PROC COMBUST INST 31 (2007) 167¡§C174 
 CH3CHO+CH3O2<=>CH3CO+CH3O2H                       3.010E+012     0.000   11920.0 !\AUTHOR: !\REF:BAULCH ET AL., J. PHYS. CHEM. REF DATA, 21:411 (1992) 
 CH3CHO+CH3CO3<=>CH3CO+CH3CO3H                     3.010E+012     0.000   11920.0 !\AUTHOR: !\REF:BAULCH ET AL., J. PHYS. CHEM. REF DATA, 21:411 (1992) 
 CH3CHO+H<=>CH2CHO+H2                              2.720E+003     3.100    5210.0 !\AUTHOR: !\REF:HARDING J. PHYS. CHEM., VOL. 114, NO. 2, 2010 
@@ -2586,7 +2586,7 @@ C3H8+IC3H7<=>NC3H7+C3H8                           3.000E+010     0.000   12900.0
 C3H8+O2<=>IC3H7+HO2                               2.000E+013     0.000   49640.0 !\AUTHOR: !\REF: Ingham,T.; Walker,R.W.; Woolford,R.E., Symp. Int. Combust. Proc. 25, 767-774 (1994) 
 C3H8+H<=>IC3H7+H2                                 1.300E+006     2.400    4471.0 !\AUTHOR: !\REF:Tsang, W. Chemical kinetic data base for combustion chemistry. Part 3. Propane J. Phys. Chem. Ref. Data 17, 887 (1988) 
 C3H8+O<=>IC3H7+OH                                 5.490E+005     2.500    3140.0 !\AUTHOR: !\REF:Tsang, W. Chemical kinetic data base for combustion chemistry. Part 3. Propane J. Phys. Chem. Ref. Data 17, 887 (1988) 
-C3H8+OH<=>IC3H7+H2O                               4.670E+007     1.610     -35.0 !\AUTHOR: !\REF: Droege, A. T. and Tully, F. P.: Hydrogen-atom abstraction from alkanes by OH. 3. Propane, J. Phys. Chem., 90, 1949Â¡Â§C1954 
+C3H8+OH<=>IC3H7+H2O                               4.670E+007     1.610     -35.0 !\AUTHOR: !\REF: Droege, A. T. and Tully, F. P.: Hydrogen-atom abstraction from alkanes by OH. 3. Propane, J. Phys. Chem., 90, 1949¡§C1954 
 C3H8+HO2<=>IC3H7+H2O2                             6.320E+001     3.370   13720.0 !\AUTHOR: !\REF:J. AGUILERA-IPARRAGUIRRE ET AL. J PHYS CHEM A (2008) 112(30): 7047-7054. 
 C3H8+CH3<=>IC3H7+CH4                              6.400E+004     2.170    7520.0 !\AUTHOR: !\REF:FIT TO NIST DATABASE 
 C3H8+C2H3<=>IC3H7+C2H4                            1.000E+011     0.000   10400.0 !\AUTHOR: !\REF:FROM HAUTMAN, D. J., SANTORO, R. J., DRYER, F. L., AND GLASSMAN, I., TO BE PUBLISHED. 
@@ -2602,7 +2602,7 @@ C3H8+IC3H7O2<=>IC3H7+IC3H7O2H                     2.000E+012     0.000   17000.0
 C3H8+O2<=>NC3H7+HO2                               6.000E+013     0.000   52290.0 !\AUTHOR: !\REF: ANALOGY WITH C4H10+O2<=>PC4H9+HO2                                                   
 C3H8+H<=>NC3H7+H2                                 3.490E+005     2.690    6450.0 !\AUTHOR: !\REF:Curran estimate, 15% lower than Tsang, W., J. Phys. Chem. Ref. Data 17, 887 (1988) 
 C3H8+O<=>NC3H7+OH                                 3.710E+006     2.400    5505.0 !\AUTHOR: !\REF:Tsang, W. Chemical kinetic data base for combustion chemistry. Part 3. Propane J. Phys. Chem. Ref. Data 17, 887 (1988) 
-C3H8+OH<=>NC3H7+H2O                               1.054E+010     0.970    1586.0 !\AUTHOR: !\REF: Droege, A. T. and Tully, F. P.: Hydrogen-atom abstraction from alkanes by OH. 3. Propane, J. Phys. Chem., 90, 1949Â¡Â§C1954 
+C3H8+OH<=>NC3H7+H2O                               1.054E+010     0.970    1586.0 !\AUTHOR: !\REF: Droege, A. T. and Tully, F. P.: Hydrogen-atom abstraction from alkanes by OH. 3. Propane, J. Phys. Chem., 90, 1949¡§C1954 
 C3H8+HO2<=>NC3H7+H2O2                             4.080E+001     3.590   17160.0 !\AUTHOR: !\REF:J. AGUILERA-IPARRAGUIRRE ET AL. J PHYS CHEM A (2008) 112(30): 7047-7054. 
 C3H8+CH3<=>NC3H7+CH4                              9.040E-001     3.650    7154.0 !\AUTHOR: !\REF:TSANG, W. J. PHYS. CHEM. REF. DATA 17, 887 (1988) 
 C3H8+C2H3<=>NC3H7+C2H4                            1.000E+011     0.000   10400.0 !\AUTHOR: !\REF:FROM HAUTMAN, D. J., SANTORO, R. J., DRYER, F. L., AND GLASSMAN, I., TO BE PUBLISHED. 
@@ -2635,8 +2635,8 @@ IC3H7+CH3O2<=>IC3H7O+CH3O                         7.000E+012     0.000   -1000.0
 !______________________________________________________________________________
 !\REACTIONCLASS: \R_BETA_SCISSION                  \A             \N        \EA  
 !______________________________________________________________________________
-C2H5+CH2O<=>NC3H7O                                1.000E+011     0.000    3496.0 !\AUTHOR: !\REF: H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250Â¡Â§C275.  
-C2H5CHO+H<=>NC3H7O                                4.000E+012     0.000    6260.0 !\AUTHOR: !\REF: H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250Â¡Â§C275.  
+C2H5+CH2O<=>NC3H7O                                1.000E+011     0.000    3496.0 !\AUTHOR: !\REF: H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250¡§C275.  
+C2H5CHO+H<=>NC3H7O                                4.000E+012     0.000    6260.0 !\AUTHOR: !\REF: H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250¡§C275.  
 !==============================================================================
 !\ENDSUBSPECIES: \NC3H7O
 !==============================================================================
@@ -2646,8 +2646,8 @@ C2H5CHO+H<=>NC3H7O                                4.000E+012     0.000    6260.0
 !______________________________________________________________________________
 !\REACTIONCLASS: \R_BETA_SCISSION                  \A             \N        \EA  
 !______________________________________________________________________________
-CH3+CH3CHO<=>IC3H7O                               1.000E+011     0.000    9256.0 !\AUTHOR: !\REF: H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250Â¡Â§C275.  
-CH3COCH3+H<=>IC3H7O                               2.000E+012     0.000    7270.0 !\AUTHOR: !\REF: H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250Â¡Â§C275.  
+CH3+CH3CHO<=>IC3H7O                               1.000E+011     0.000    9256.0 !\AUTHOR: !\REF: H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250¡§C275.  
+CH3COCH3+H<=>IC3H7O                               2.000E+012     0.000    7270.0 !\AUTHOR: !\REF: H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250¡§C275.  
 !______________________________________________________________________________
 !\REACTIONCLASS: \R_O2_PRODUCTS                    \A             \N        \EA  
 !______________________________________________________________________________
@@ -3219,37 +3219,37 @@ C3H5-T+O2<=>C3H4-A+HO2                            3.590E+010    -0.270    -413.6
 !______________________________________________________________________________
 !\REACTIONCLASS: \R_HO2
 !______________________________________________________________________________
-C3H5-A+HO2<=>C3H5O+OH                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT: 
+C3H5-A+HO2<=>C3H5O+OH                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT: 
 PLOG/      0.0100     1.020E+013    -0.158     -1417.0/
 PLOG/      0.1000     4.980E+014    -0.642      -349.1/
 PLOG/      1.0000     7.770E+017    -1.520      2379.2/
 PLOG/     10.0000     2.930E+015    -0.684      3615.3/
 PLOG/    100.0000     1.640E+004     2.740      1144.4/
-C3H5-A+HO2<=>AC3H5OOH                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT: 
+C3H5-A+HO2<=>AC3H5OOH                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT: 
 PLOG/      0.0100     1.910E+031    -7.230      1336.2/
 PLOG/      0.1000     6.310E+042   -10.300      5568.9/
 PLOG/      1.0000     1.030E+045   -10.600      7851.5/
 PLOG/     10.0000     2.790E+037    -7.920      6497.9/
 PLOG/    100.0000     1.440E+032    -6.010      6053.6/
-C3H5-A+HO2<=>C2H3CHO+H2O                          1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT: 
+C3H5-A+HO2<=>C2H3CHO+H2O                          1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT: 
 PLOG/      0.0100     1.090E+000     3.010     -3421.1/
 PLOG/      0.1000     6.350E+001     2.500     -2341.4/
 PLOG/      1.0000     6.050E+005     1.390       595.1/
 PLOG/     10.0000     3.100E+005     1.590      2677.6/
 PLOG/    100.0000     5.070E-005     4.590       927.5/
-AC3H5OOH<=>C2H3CHO+H2O                            1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT: 
+AC3H5OOH<=>C2H3CHO+H2O                            1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT: 
 PLOG/      0.0100     1.990E+050   -12.700     53531.9/
 PLOG/      0.1000     4.720E+047   -11.500     54360.9/
 PLOG/      1.0000     1.500E+040    -8.840     53179.2/
 PLOG/     10.0000     2.540E+028    -5.000     49919.4/
 PLOG/    100.0000     1.480E+016    -1.120     45949.3/
-AC3H5OOH<=>C3H5O+OH                               1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+AC3H5OOH<=>C3H5O+OH                               1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0100     1.490E+058   -13.900     54266.9/
 PLOG/      0.1000     1.800E+054   -12.400     54193.8/
 PLOG/      1.0000     3.360E+046    -9.810     52468.5/
 PLOG/     10.0000     2.390E+036    -6.540     49429.0/
 PLOG/    100.0000     1.280E+027    -3.610     46333.1/
-C3H5O<=>C2H3+CH2O                                 1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+C3H5O<=>C2H3+CH2O                                 1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     7.260E+006     0.182     17815.5/
 PLOG/      0.0100     6.970E+016    -2.500     20878.7/
 PLOG/      0.1000     6.640E+023    -4.230     23565.0/
@@ -3257,7 +3257,7 @@ PLOG/      1.0000     1.070E+026    -4.560     24622.9/
 PLOG/     10.0000     6.500E+029    -5.370     26645.0/
 PLOG/    100.0000     4.630E+031    -5.590     28915.3/
 PLOG/   1000.0000     8.520E+025    -3.610     27863.4/
-C3H5O<=>CH2CHOCH2                                 1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+C3H5O<=>CH2CHOCH2                                 1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     3.170E+020    -4.150     12121.3/
 PLOG/      0.0100     4.790E+024    -5.030     14606.1/
 PLOG/      0.1000     1.900E+026    -5.160     16124.4/
@@ -3265,7 +3265,7 @@ PLOG/      1.0000     1.510E+028    -5.400     18165.4/
 PLOG/     10.0000     2.420E+028    -5.170     19691.2/
 PLOG/    100.0000     5.570E+024    -3.860     19395.2/
 PLOG/   1000.0000     1.350E+018    -1.730     17386.5/
-C3H5O<=>CH2CH2CHO                                 1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+C3H5O<=>CH2CH2CHO                                 1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     5.250E-049    15.500    -15639.9/
 PLOG/      0.0100     1.460E-088    27.600    -35995.0/
 PLOG/      0.1000     4.440E-022     8.380     -3819.0/
@@ -3273,7 +3273,7 @@ PLOG/      1.0000     6.230E+012    -1.440     10829.2/
 PLOG/     10.0000     3.480E+042    -9.910     25297.9/
 PLOG/    100.0000     1.880E+038    -8.160     25974.5/
 PLOG/   1000.0000     1.670E+021    -2.740     20337.7/
-C3H5O<=>C2H3CHO+H                                 1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+C3H5O<=>C2H3CHO+H                                 1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     3.000E+015    -2.310     14667.9/
 PLOG/      0.0100     1.500E+022    -3.960     18283.0/
 PLOG/      0.1000     1.950E+023    -3.990     19143.3/
@@ -3281,7 +3281,7 @@ PLOG/      1.0000     1.150E+025    -4.240     20311.2/
 PLOG/     10.0000     1.760E+028    -4.890     22765.2/
 PLOG/    100.0000     1.410E+027    -4.280     23770.6/
 PLOG/   1000.0000     2.570E+020    -2.060     22040.1/
-C3H5O<=>C2H4+HCO                                  1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+C3H5O<=>C2H4+HCO                                  1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     6.620E+016    -2.840     13197.0/
 PLOG/      0.0100     1.260E+020    -3.530     15469.2/
 PLOG/      0.1000     2.130E+021    -3.640     16584.5/
@@ -3289,7 +3289,7 @@ PLOG/      1.0000     1.070E+024    -4.160     18985.0/
 PLOG/     10.0000     8.420E+025    -4.400     22382.6/
 PLOG/    100.0000     1.860E+021    -2.730     23658.8/
 PLOG/   1000.0000     4.750E+008     1.140     20922.5/
-CH2CHOCH2<=>C2H3+CH2O                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+CH2CHOCH2<=>C2H3+CH2O                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     3.300E+009    -0.638     19747.8/
 PLOG/      0.0100     3.360E+021    -3.900     23945.2/
 PLOG/      0.1000     2.910E+029    -5.900     27249.7/
@@ -3297,7 +3297,7 @@ PLOG/      1.0000     1.830E+034    -6.940     30690.4/
 PLOG/     10.0000     9.720E+033    -6.500     33002.5/
 PLOG/    100.0000     2.680E+027    -4.260     33305.6/
 PLOG/   1000.0000     8.810E+014    -0.326     31553.1/
-CH2CHOCH2<=>CH2CH2CHO                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+CH2CHOCH2<=>CH2CH2CHO                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     8.010E-092    27.800    -37321.2/
 PLOG/      0.0100     7.780E-011     3.700     -2766.9/
 PLOG/      0.1000     5.110E+015    -2.760     15937.6/
@@ -3305,7 +3305,7 @@ PLOG/      1.0000     4.480E+025    -5.200     21532.2/
 PLOG/     10.0000     3.970E+034    -7.410     28116.9/
 PLOG/    100.0000     5.620E+022    -3.560     25806.7/
 PLOG/   1000.0000     2.510E+020    -2.630     29288.4/
-CH2CHOCH2<=>C2H3CHO+H                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+CH2CHOCH2<=>C2H3CHO+H                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     4.930E+024    -5.050     20108.4/
 PLOG/      0.0100     2.140E+028    -5.800     22219.4/
 PLOG/      0.1000     1.930E+032    -6.640     25108.2/
@@ -3313,7 +3313,7 @@ PLOG/      1.0000     8.600E+034    -7.110     28209.1/
 PLOG/     10.0000     2.170E+034    -6.640     30647.6/
 PLOG/    100.0000     4.170E+028    -4.710     31231.9/
 PLOG/   1000.0000     3.980E+018    -1.620     30129.8/
-CH2CHOCH2<=>C2H4+HCO                              1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+CH2CHOCH2<=>C2H4+HCO                              1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     8.230E+026    -5.840     19356.9/
 PLOG/      0.0100     1.320E+029    -6.210     21293.6/
 PLOG/      0.1000     3.470E+032    -6.960     24197.3/
@@ -3321,7 +3321,7 @@ PLOG/      1.0000     1.440E+036    -7.760     28007.8/
 PLOG/     10.0000     9.720E+037    -8.020     32394.6/
 PLOG/    100.0000     2.430E+031    -5.810     34295.8/
 PLOG/   1000.0000     3.730E+014    -0.726     32008.3/
-CH2CH2CHO<=>C2H3+CH2O                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+CH2CH2CHO<=>C2H3+CH2O                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     6.890E-069    21.500      2638.0/
 PLOG/      0.0100     5.340E-033    11.100     16749.1/
 PLOG/      0.1000     6.110E+026    -6.010     44116.7/
@@ -3329,7 +3329,7 @@ PLOG/      1.0000     8.040E+035    -8.310     46919.7/
 PLOG/     10.0000     5.520E+040    -9.190     50508.7/
 PLOG/    100.0000     5.850E+035    -7.180     52038.4/
 PLOG/   1000.0000     1.930E+019    -1.940     48440.0/
-CH2CH2CHO<=>C2H3CHO+H                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+CH2CH2CHO<=>C2H3CHO+H                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     1.610E+010    -1.240     32371.3/
 PLOG/      0.0100     5.840E+015    -2.610     32878.4/
 PLOG/      0.1000     3.640E+023    -4.600     34275.3/
@@ -3337,7 +3337,7 @@ PLOG/      1.0000     7.580E+031    -6.630     37895.4/
 PLOG/     10.0000     2.860E+032    -6.300     39990.7/
 PLOG/    100.0000     1.570E+023    -3.140     38011.7/
 PLOG/   1000.0000     4.520E+012     0.214     34570.5/
-CH2CH2CHO<=>C2H4+HCO                              1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+CH2CH2CHO<=>C2H4+HCO                              1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     2.900E+032    -7.240     25687.5/
 PLOG/      0.0100     5.300E+033    -7.280     27100.6/
 PLOG/      0.1000     2.000E+035    -7.410     29027.3/
@@ -3345,7 +3345,7 @@ PLOG/      1.0000     1.010E+034    -6.700     30018.1/
 PLOG/     10.0000     9.760E+027    -4.630     28923.9/
 PLOG/    100.0000     2.110E+019    -1.850     26239.8/
 PLOG/   1000.0000     1.590E+013     0.063     24086.3/
-C2H3+CH2O<=>C2H3CHO+H                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+C2H3+CH2O<=>C2H3CHO+H                             1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     2.600E+004     2.260      1510.3/
 PLOG/      0.0100     5.130E+004     2.170      1675.5/
 PLOG/      0.1000     3.990E+005     1.910      2218.3/
@@ -3353,7 +3353,7 @@ PLOG/      1.0000     1.750E+007     1.450      3428.0/
 PLOG/     10.0000     1.350E+009     0.933      5173.0/
 PLOG/    100.0000     2.240E+011     0.357      8001.3/
 PLOG/   1000.0000     6.010E+005     2.090      7895.6/
-C2H3+CH2O<=>C2H4+HCO                              1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 \COMMENT:
+C2H3+CH2O<=>C2H4+HCO                              1.000E+011     0.000       0.0 !\AUTHOR: !\REF:FRANKLIN C GOLDSMITH J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 \COMMENT:
 PLOG/      0.0010     1.110E+007     1.090      1807.2/
 PLOG/      0.0100     2.470E+007     0.993      1994.9/
 PLOG/      0.1000     2.470E+008     0.704      2596.2/
@@ -3385,7 +3385,7 @@ PLOG/    100.0000     2.560E+027    -3.610     46333.1/
 !______________________________________________________________________________
 !\REACTIONCLASS: \RADICAL_ADDITION\OH
 !______________________________________________________________________________
-C3H6+OH<=>C3H5OH+H                                2.290E+013     0.070   10580.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040Â¡Â§C11053 
+C3H6+OH<=>C3H5OH+H                                2.290E+013     0.070   10580.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040¡§C11053 
 PLOG/      0.0013     2.670E+013     0.050     10611.0/
 PLOG/      0.0100     2.750E+013     0.050     10623.0/
 PLOG/      0.0130     2.870E+013     0.040     10634.0/
@@ -3395,7 +3395,7 @@ PLOG/      0.1315     3.780E+014    -0.240     11458.0/
 PLOG/      1.0000     9.150E+007     1.420     10087.0/
 PLOG/     10.0000     3.660E+005     2.140     10410.0/
 PLOG/    100.0000     8.190E+002     2.840     10481.0/
-C3H6+OH<=>C2H3OH+CH3                              1.290E+006     1.650    1233.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040Â¡Â§C11053 
+C3H6+OH<=>C2H3OH+CH3                              1.290E+006     1.650    1233.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040¡§C11053 
 PLOG/      0.0013     1.290E+006     1.650      1233.0/
 PLOG/      0.0100     1.820E+004     2.100      1162.0/
 PLOG/      0.0130     2.040E+003     2.480      1128.0/
@@ -3405,7 +3405,7 @@ PLOG/      0.1315     7.710E+000     3.290      1216.0/
 PLOG/      1.0000     1.130E+004     2.500      3238.0/
 PLOG/     10.0000     2.410E+019    -1.740     13107.0/
 PLOG/    100.0000     3.300E-001     3.700      3665.0/
-C3H6+OH<=>IC3H5OH+H                               2.870E+000     2.920     625.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040Â¡Â§C11053 
+C3H6+OH<=>IC3H5OH+H                               2.870E+000     2.920     625.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040¡§C11053 
 PLOG/      0.0013     2.870E+000     2.920       625.0/
 PLOG/      0.0100     4.840E-001     2.980       704.0/
 PLOG/      0.0130     3.130E-001     3.040       721.0/
@@ -3415,7 +3415,7 @@ PLOG/      0.1315     2.710E-005     4.560       707.0/
 PLOG/      1.0000     7.650E-007     5.050       874.0/
 PLOG/     10.0000     2.640E+015    -0.800     12728.0/
 PLOG/    100.0000     4.870E-004     4.320      4020.0/
-C3H6+OH<=>SC3H5OH+H                               2.870E+000     2.920     625.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040Â¡Â§C11053 
+C3H6+OH<=>SC3H5OH+H                               2.870E+000     2.920     625.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040¡§C11053 
 PLOG/      0.0013     3.470E+006     1.530      4288.0/
 PLOG/      0.0100     1.080E+007     1.340      4576.0/
 PLOG/      0.0130     9.760E+006     1.330      4589.0/
@@ -3425,7 +3425,7 @@ PLOG/      0.1315     1.390E+005     1.800      4603.0/
 PLOG/      1.0000     1.030E+002     2.830      4530.0/
 PLOG/     10.0000     3.400E-002     3.890      4390.0/
 PLOG/    100.0000     4.460E-006     5.030      4132.0/
-C3H6+OH<=>CH3CHO+CH3                              6.930E+005     1.490    -536.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040Â¡Â§C11053 
+C3H6+OH<=>CH3CHO+CH3                              6.930E+005     1.490    -536.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040¡§C11053 
 PLOG/      0.0013     6.930E+005     1.490      -536.0/
 PLOG/      0.0100     5.940E+003     2.010      -560.0/
 PLOG/      0.0130     1.100E+003     2.220      -680.0/
@@ -3435,7 +3435,7 @@ PLOG/      0.1315     3.070E-001     3.220      -946.0/
 PLOG/      1.0000     3.160E-004     4.050     -1144.0/
 PLOG/     10.0000     7.590E-006     4.490      -680.0/
 PLOG/    100.0000     5.450E-005     4.220      1141.0/
-C3H6+OH<=>C3H6OH1-2                               5.100E+054   -20.700   32402.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040Â¡Â§C11053 
+C3H6+OH<=>C3H6OH1-2                               5.100E+054   -20.700   32402.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040¡§C11053 
 PLOG/      0.0013     2.300E+078   -20.700     32402.0/
 PLOG/      0.0100     2.740E+077   -20.000     33874.0/
 PLOG/      0.0130     1.070E+076   -19.580     32874.0/
@@ -3446,7 +3446,7 @@ PLOG/      1.0000     1.950E+059   -14.170     23079.0/
 PLOG/     10.0000     7.580E+053   -12.230     22976.0/
 PLOG/    100.0000     1.430E+048   -10.230     23772.0/
 DUP
-C3H6+OH<=>C3H6OH1-2                               1.420E+036   -15.840   11594.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040Â¡Â§C11053 
+C3H6+OH<=>C3H6OH1-2                               1.420E+036   -15.840   11594.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040¡§C11053 
 PLOG/      0.0013     6.410E+059   -15.840     11594.0/
 PLOG/      0.0100     7.280E+059   -15.510     12898.0/
 PLOG/      0.0130     2.790E+059   -15.340     12913.0/
@@ -3457,7 +3457,7 @@ PLOG/      1.0000     1.550E+050   -12.040     11493.0/
 PLOG/     10.0000     6.410E+041    -9.350      8921.0/
 PLOG/    100.0000     2.300E+032    -6.310      6088.0/
 DUP
-C3H6+OH<=>C3H6OH2-1                               5.100E+054   -20.700   32402.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040Â¡Â§C11053 
+C3H6+OH<=>C3H6OH2-1                               5.100E+054   -20.700   32402.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040¡§C11053 
 PLOG/      0.0013     2.140E+059   -15.840     11594.0/
 PLOG/      0.0100     2.430E+059   -15.510     12898.0/
 PLOG/      0.0130     9.300E+058   -15.340     12913.0/
@@ -3468,7 +3468,7 @@ PLOG/      1.0000     5.180E+049   -12.040     11493.0/
 PLOG/     10.0000     2.140E+041    -9.350      8921.0/
 PLOG/    100.0000     7.650E+031    -6.310      6088.0/
 DUP
-C3H6+OH<=>C3H6OH2-1                               1.420E+036   -15.840   11594.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040Â¡Â§C11053 
+C3H6+OH<=>C3H6OH2-1                               1.420E+036   -15.840   11594.0 !\AUTHOR: !\REF: ZADOR PHYS. CHEM. CHEM. PHYS., 2009, 11, 11040¡§C11053 
 PLOG/      0.0013     7.680E+077   -20.700     32402.0/
 PLOG/      0.0100     9.130E+076   -20.000     33874.0/
 PLOG/      0.0130     3.550E+075   -19.580     32874.0/
@@ -3548,8 +3548,8 @@ SC3H5OH+HO2=>C2H3CHO+H+H2O2                       9.600E+003     2.600   13900.0
 SC3H5OH+CH3=>C2H3CHO+H+CH4                        2.210E+000     3.500    5675.0 !\AUTHOR: !\REF: TSANG 1991                                                      
 SC3H5OH+CH3O2=>C2H3CHO+H+CH3O2H                   9.600E+003     2.600   13900.0 !\AUTHOR: !\REF: USE HO2 ABSTRACTION RATE CONSTANT                               
 SC3H5OH+CH3O=>C2H3CHO+H+CH3OH                     8.300E+010     0.000    2600.0 !\AUTHOR: !\REF: LITERATURE SOURCE UNKNOWN                                       
-SC3H5OH+HO2<=>C2H5CHO+HO2                         1.490E+005     1.670    6810.0 !\AUTHOR: !\REF: DASILVA, BOZZELLI, CHEM. PHYS. LETT. 483 (2009) 25Â¡Â§C29.          
-SC3H5OH+HOCHO<=>C2H5CHO+HOCHO                     2.810E-002     3.286   -4509.0 !\AUTHOR: !\REF: DASILVA, ANGEW. CHEM. 122 (2010) 7685Â¡Â§C7687                      
+SC3H5OH+HO2<=>C2H5CHO+HO2                         1.490E+005     1.670    6810.0 !\AUTHOR: !\REF: DASILVA, BOZZELLI, CHEM. PHYS. LETT. 483 (2009) 25¡§C29.          
+SC3H5OH+HOCHO<=>C2H5CHO+HOCHO                     2.810E-002     3.286   -4509.0 !\AUTHOR: !\REF: DASILVA, ANGEW. CHEM. 122 (2010) 7685¡§C7687                      
 !==============================================================================
 !\ENDSUBSPECIES: \SC3H5OH
 !==============================================================================
@@ -3616,28 +3616,28 @@ C3H4-A+C3H5-A<=>C3H3+C3H6                         2.000E+011     0.000    7700.0
 !______________________________________________________________________________
 !\REACTIONCLASS: \R_ADDITION\H                     \A             \N        \EA  
 !______________________________________________________________________________
-C3H4-A+H<=>C3H4-P+H                               2.440E+010     1.040    2159.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-A+H<=>C3H4-P+H                               2.440E+010     1.040    2159.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     8.490E+010     0.890      2503.0/
 PLOG/      0.0390     1.480E+013     0.260      4103.0/
 PLOG/      1.0000     2.480E+015    -0.330      6436.0/
 PLOG/     10.0000     2.350E+025    -3.230     13165.0/
 PLOG/    100.0000     1.020E+024    -2.670     15552.0/
 DUP
-C3H4-A+H<=>C3H4-P+H                               2.440E+010     1.040    2159.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-A+H<=>C3H4-P+H                               2.440E+010     1.040    2159.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     1E-10          0.0           0.0/
 PLOG/      0.0390     1E-10          0.0           0.0/
 PLOG/      1.0000     1E-10          0.0           0.0/
 PLOG/     10.0000     1.790E+007     1.980      4521.0/
 PLOG/    100.0000     4.630E+004     2.620      4466.0/
 DUP
-C3H4-A+H<=>C3H5-A                                 2.210E+061   -15.250   20076.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-A+H<=>C3H5-A                                 2.210E+061   -15.250   20076.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     2.210E+061   -15.250     20076.0/
 PLOG/      0.0390     1.240E+052   -12.020     17839.0/
 PLOG/      1.0000     4.670E+051   -11.450     21340.0/
 PLOG/     10.0000     3.750E+048   -10.270     22511.0/
 PLOG/    100.0000     4.230E+043    -8.610     22522.0/
 DUP
-C3H4-A+H<=>C3H5-A                                 2.210E+061   -15.250   20076.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-A+H<=>C3H5-A                                 2.210E+061   -15.250   20076.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     2.800E+038    -8.670      8035.0/
 PLOG/      0.0390     9.330E+036    -8.190      7462.0/
 PLOG/      1.0000     3.320E+030    -5.780      6913.0/
@@ -3649,63 +3649,63 @@ PLOG/      0.1000     1.100E+030    -6.520     15200.0/
 PLOG/      1.0000     5.400E+029    -6.090     16300.0/
 PLOG/     10.0000     2.600E+031    -6.230     18700.0/
 PLOG/    100.0000     3.200E+031    -5.880     21500.0/
-C3H4-A+H<=>C3H5-T                                 6.440E+102   -27.510   51768.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-A+H<=>C3H5-T                                 6.440E+102   -27.510   51768.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     6.440E+102   -27.510     51768.0/
 PLOG/      0.0390     1.550E+053   -13.100     14472.0/
 PLOG/      1.0000     1.900E+053   -12.590     16726.0/
 PLOG/     10.0000     7.950E+051   -11.820     18286.0/
 PLOG/    100.0000     4.210E+052   -11.640     22262.0/
 DUP
-C3H4-A+H<=>C3H5-T                                 6.440E+102   -27.510   51768.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-A+H<=>C3H5-T                                 6.440E+102   -27.510   51768.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     1.100E+054   -14.290     10809.0/
 PLOG/      0.0390     9.880E+044   -11.210      8212.0/
 PLOG/      1.0000     2.810E+040    -9.420      7850.0/
 PLOG/     10.0000     2.600E+035    -7.570      7147.0/
 PLOG/    100.0000     9.880E+029    -5.530      6581.0/
 DUP
-C3H4-A+H<=>CH3+C2H2                               3.740E+001     3.350      57.8 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-A+H<=>CH3+C2H2                               3.740E+001     3.350      57.8 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     1.230E+008     1.530      4737.0/
 PLOG/      0.0390     2.720E+009     1.200      6834.0/
 PLOG/      1.0000     1.260E+020    -1.830     15003.0/
 PLOG/     10.0000     1.680E+016    -0.600     14754.0/
 PLOG/    100.0000     1.370E+017    -0.790     17603.0/
 DUP
-C3H4-A+H<=>CH3+C2H2                               3.740E+001     3.350      57.8 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-A+H<=>CH3+C2H2                               3.740E+001     3.350      57.8 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     1E-10          0.0           0.0/
 PLOG/      0.0390     1E-10          0.0           0.0/
 PLOG/      1.0000     1.230E+004     2.680      6335.0/
 PLOG/     10.0000     3.310E+008     1.140      8886.0/
 PLOG/    100.0000     1.280E+006     1.710      9774.0/
 DUP
-C3H4-P+H<=>C3H5-T                                 8.850E+051   -13.040   12325.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-P+H<=>C3H5-T                                 8.850E+051   -13.040   12325.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     8.850E+051   -13.040     12325.0/
 PLOG/      0.0390     3.170E+052   -12.690     14226.0/
 PLOG/      1.0000     2.870E+053   -12.510     16853.0/
 PLOG/     10.0000     9.510E+051   -11.740     18331.0/
 PLOG/    100.0000     4.510E+052   -11.580     22207.0/
 DUP
-C3H4-P+H<=>C3H5-T                                 8.850E+051   -13.040   12325.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-P+H<=>C3H5-T                                 8.850E+051   -13.040   12325.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     1.970E+046   -11.910      7456.0/
 PLOG/      0.0390     2.590E+045   -11.230      8046.0/
 PLOG/      1.0000     6.930E+039    -9.110      7458.0/
 PLOG/     10.0000     6.800E+034    -7.290      6722.0/
 PLOG/    100.0000     5.650E+029    -5.390      6150.0/
 DUP
-C3H4-P+H<=>C3H5-S                                 3.380E+049   -12.750   14072.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-P+H<=>C3H5-S                                 3.380E+049   -12.750   14072.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     1E-10          0.0           0.0/
 PLOG/      0.0390     3.380E+049   -12.750     14072.0/
 PLOG/      1.0000     1.370E+051   -12.550     15428.0/
 PLOG/     10.0000     3.880E+050   -11.900     16915.0/
 PLOG/    100.0000     2.170E+049   -11.100     18746.0/
 DUP
-C3H4-P+H<=>C3H5-S                                 3.380E+049   -12.750   14072.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-P+H<=>C3H5-S                                 3.380E+049   -12.750   14072.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     1.490E+038   -10.110      7458.0/
 PLOG/      0.0390     2.980E+043   -11.430      8736.0/
 PLOG/      1.0000     5.750E+039    -9.510      8772.0/
 PLOG/     10.0000     4.330E+040    -9.600      9401.0/
 PLOG/    100.0000     3.440E+034    -7.360      8558.0/
 DUP
-C3H4-P+H<=>CH3+C2H2                               2.120E+010     1.060    3945.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+C3H4-P+H<=>CH3+C2H2                               2.120E+010     1.060    3945.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     2.440E+010     1.040      3980.0/
 PLOG/      0.0390     3.890E+010     0.989      4114.0/
 PLOG/      1.0000     3.460E+012     0.442      5463.0/
@@ -3749,14 +3749,14 @@ PLOG/      2.0000     3.640E+052   -12.460     36127.0/
 PLOG/      5.0000     1.040E+051   -11.890     36476.0/
 PLOG/     10.0000     4.400E+049   -11.400     36700.0/
 PLOG/    100.0000     3.800E+044    -9.630     37600.0/
-CH3+C2H2<=>C3H5-S                                 1.780E+042   -10.400   13647.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+CH3+C2H2<=>C3H5-S                                 1.780E+042   -10.400   13647.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     1.780E+042   -10.400     13647.0/
 PLOG/      0.0390     1.520E+044   -10.730     15256.0/
 PLOG/      1.0000     1.190E+044   -10.190     18728.0/
 PLOG/     10.0000     6.020E+043    -9.740     20561.0/
 PLOG/    100.0000     1.420E+042    -8.910     22235.0/
 DUP
-CH3+C2H2<=>C3H5-S                                 1.780E+042   -10.400   13647.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429Â¡Â§C9438 
+CH3+C2H2<=>C3H5-S                                 1.780E+042   -10.400   13647.0 !\AUTHOR: !\REF: MILLER ET AL. J. PHYS. CHEM. A 2008, 112, 9429¡§C9438 
 PLOG/      0.0010     1E-10           0.0          0.0/
 PLOG/      0.0390     1E-10           0.0          0.0/
 PLOG/      1.0000     8.490E+035    -8.430     12356.0/
@@ -3820,25 +3820,25 @@ C3H3+CH<=>C4H3-N+H                                  7.0E13         0.0         0
 !______________________________________________________________________________
 !\REACTIONCLASS: \R+HO2                            \A             \N        \EA  
 !______________________________________________________________________________
-C3H3+HO2<=>C3H3O+OH                               1.000E+011     0.000       0.0 !\AUTHOR: !\REF: ANALOGY WITH C3H5-A+HO2 !\KINETICS FROM FRANKLIN C GOLDSMITH !\J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 
+C3H3+HO2<=>C3H3O+OH                               1.000E+011     0.000       0.0 !\AUTHOR: !\REF: ANALOGY WITH C3H5-A+HO2 !\KINETICS FROM FRANKLIN C GOLDSMITH !\J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 
 PLOG/      0.0100     1.020E+013    -0.158     -1417.0/
 PLOG/      0.1000     4.980E+014    -0.642      -349.1/
 PLOG/      1.0000     7.770E+017    -1.520      2379.2/
 PLOG/     10.0000     2.930E+015    -0.684      3615.3/
 PLOG/    100.0000     1.640E+004     2.740      1144.4/
-C3H3+HO2<=>C3H3O2H                                1.000E+011     0.000       0.0  !\AUTHOR: !\REF: ANALOGY WITH C3H5-A+HO2 !\KINETICS FROM FRANKLIN C GOLDSMITH !\J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 
+C3H3+HO2<=>C3H3O2H                                1.000E+011     0.000       0.0  !\AUTHOR: !\REF: ANALOGY WITH C3H5-A+HO2 !\KINETICS FROM FRANKLIN C GOLDSMITH !\J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 
 PLOG/      0.0100     1.910E+031    -7.230      1336.2/
 PLOG/      0.1000     6.310E+042   -10.300      5568.9/
 PLOG/      1.0000     1.030E+045   -10.600      7851.5/
 PLOG/     10.0000     2.790E+037    -7.920      6497.9/
 PLOG/    100.0000     4.730E+025    -4.130      2923.8/
-C3H3+HO2<=>C2HCHO+H2O                             1.000E+011     0.000       0.0  !\AUTHOR: !\REF: ANALOGY WITH C3H5-A+HO2 !\KINETICS FROM FRANKLIN C GOLDSMITH !\J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 
+C3H3+HO2<=>C2HCHO+H2O                             1.000E+011     0.000       0.0  !\AUTHOR: !\REF: ANALOGY WITH C3H5-A+HO2 !\KINETICS FROM FRANKLIN C GOLDSMITH !\J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 
 PLOG/      0.0100     1.090E+000     3.010     -3421.1/
 PLOG/      0.1000     6.350E+001     2.500     -2341.4/
 PLOG/      1.0000     6.050E+005     1.390       595.1/
 PLOG/     10.0000     3.100E+005     1.590      2677.6/
 PLOG/    100.0000     5.070E-005     4.590       927.5/
-C3H3O2H<=>C2HCHO+H2O                              1.000E+011     0.000       0.0  !\AUTHOR: !\REF: ANALOGY WITH C3H5-A+HO2 !\KINETICS FROM FRANKLIN C GOLDSMITH !\J. PHYS. CHEM. A, 2012, 116 (13), PP 3325Â¡Â§C3346 
+C3H3O2H<=>C2HCHO+H2O                              1.000E+011     0.000       0.0  !\AUTHOR: !\REF: ANALOGY WITH C3H5-A+HO2 !\KINETICS FROM FRANKLIN C GOLDSMITH !\J. PHYS. CHEM. A, 2012, 116 (13), PP 3325¡§C3346 
 PLOG/      0.0100     1.990E+050   -12.700     53531.9/
 PLOG/      0.1000     4.720E+047   -11.500     54360.9/
 PLOG/      1.0000     1.500E+040    -8.840     53179.2/
@@ -3942,7 +3942,7 @@ CH3COCH2+H<=>CH3COCH3                             1.000E+013     0.000       0.0
 CH3COCH3+OH<=>CH3COCH2+H2O                        1.250E+005     2.483     445.0 !\AUTHOR:                                                
 CH3COCH3+H<=>CH3COCH2+H2                          9.800E+005     2.430    5160.0 !\AUTHOR: !\REF:CURRAN ESTIMATE                                          
 CH3COCH3+O<=>CH3COCH2+OH                          5.130E+011     0.211    4890.0 !\AUTHOR: !\REF:FIT TO DATA ON NIST STANDARD REFERENCE DATABASE 17 -2Q98 
-CH3COCH3+CH3<=>CH3COCH2+CH4                       3.960E+011     0.000    9784.0 !\AUTHOR: !\REF:S. Pichon, Combustion and Flame (2009) 156(2) 494Â¡Â§C504.   
+CH3COCH3+CH3<=>CH3COCH2+CH4                       3.960E+011     0.000    9784.0 !\AUTHOR: !\REF:S. Pichon, Combustion and Flame (2009) 156(2) 494¡§C504.   
 CH3COCH3+CH3O<=>CH3COCH2+CH3OH                    4.340E+011     0.000    6460.0 !\AUTHOR:                                                
 CH3COCH3+O2<=>CH3COCH2+HO2                        6.030E+013     0.000   48500.0 !\AUTHOR: !\REF:A-FACTOR BY ANALOGY WITH C2H6+O2 AND EA FROM DHRXN       
 CH3COCH3+HO2<=>CH3COCH2+H2O2                      1.700E+013     0.000   20460.0 !\AUTHOR: !\REF:ANALOGY TO ETHANE                                        
@@ -4059,7 +4059,7 @@ PLOG/100  5.40E+26   -3.05   103313/     !\
 C4H10+H<=>PC4H9+H2                                3.490E+005     2.690    6450.0 !\AUTHOR: !\REF:TSANG, W. J. PHYS. CHEM. REF. DATA 17, 887 (1988) 
 C4H10+O2<=>PC4H9+HO2                              6.000E+013     0.000   52340.0 !\AUTHOR: !\REF: ANALOGY WITH C4H10+O2<=>PC4H9+HO2 
 C4H10+O<=>PC4H9+OH                                1.130E+014     0.000    7850.0 !\AUTHOR: !\REF:MICHAEL, KEIL AND KLEM, INT. J. CHEM. KIN. 15, 705 (1983) 
-C4H10+OH<=>PC4H9+H2O                              1.054E+010     0.970    1586.0 !\AUTHOR: !\REF: Droege, A. T. and Tully, F. P.: Hydrogen-atom abstraction from alkanes by OH. 3. Propane, J. Phys. Chem., 90, 1949Â¡Â§C1955 
+C4H10+OH<=>PC4H9+H2O                              1.054E+010     0.970    1586.0 !\AUTHOR: !\REF: Droege, A. T. and Tully, F. P.: Hydrogen-atom abstraction from alkanes by OH. 3. Propane, J. Phys. Chem., 90, 1949¡§C1955 
 C4H10+HO2<=>PC4H9+H2O2                            4.080E+001     3.590   17160.0 !\AUTHOR: !\REF:J. AGUILERA-IPARRAGUIRRE ET AL. J PHYS CHEM A (2008) 112(30): 7047-7054. 
 C4H10+CH3<=>PC4H9+CH4                             9.040E-001     3.650    7154.0 !\AUTHOR: !\REF:TSANG, W. J. PHYS. CHEM. REF. DATA 17, 887 (1988) 
 C4H10+CH3O<=>PC4H9+CH3OH                          3.000E+011     0.000    7000.0 !\AUTHOR: !\REF:DRYER ESTIMATE 
@@ -4081,7 +4081,7 @@ C4H10+TC4H9O2<=>PC4H9+TC4H9O2H                    1.700E+013     0.000   20460.0
 C4H10+H<=>SC4H9+H2                                2.600E+006     2.400    4471.0 !\AUTHOR: !\REF:TSANG, W. J. PHYS. CHEM. REF. DATA 17, 887 (1988) 
 C4H10+O2<=>SC4H9+HO2                              4.000E+013     0.000   49800.0 !\AUTHOR: !\REF: Ingham,T.; Walker,R.W.; Woolford,R.E., Symp. Int. Combust. Proc. 25, 767-774 (1994) 
 C4H10+O<=>SC4H9+OH                                5.620E+013     0.000    5200.0 !\AUTHOR: !\REF:MICHAEL, KEIL AND KLEM, INT. J. CHEM. KIN. 15, 705 (1983) 
-C4H10+OH<=>SC4H9+H2O                              9.340E+007     1.610     -35.0 !\AUTHOR: !\REF: Droege, A. T. and Tully, F. P.: Hydrogen-atom abstraction from alkanes by OH. 3. Propane, J. Phys. Chem., 90, 1949Â¡Â§C1955 
+C4H10+OH<=>SC4H9+H2O                              9.340E+007     1.610     -35.0 !\AUTHOR: !\REF: Droege, A. T. and Tully, F. P.: Hydrogen-atom abstraction from alkanes by OH. 3. Propane, J. Phys. Chem., 90, 1949¡§C1955 
 C4H10+HO2<=>SC4H9+H2O2                            1.264E+002     3.370   13720.0 !\AUTHOR: !\REF:J. AGUILERA-IPARRAGUIRRE ET AL. J PHYS CHEM A (2008) 112(30): 7047-7054. 
 C4H10+CH3<=>SC4H9+CH4                             3.020E+000     3.460    5481.0 !\AUTHOR: !\REF:TSANG, W. J. PHYS. CHEM. REF. DATA 17, 887 (1988) 
 C4H10+CH3O<=>SC4H9+CH3OH                          6.000E+011     0.000    7000.0 !\AUTHOR: !\REF:DRYER ESTIMATE 
@@ -4112,7 +4112,7 @@ SC4H9+CH3O2<=>CH3O+SC4H9O                         7.000E+012     0.000   -1000.0
 !______________________________________________________________________________
 !\REACTIONCLASS: \R_BETA_SCISSION                   \A             \N        \EA  
 !______________________________________________________________________________
-C2H5+CH3CHO<=>SC4H9O                              3.330E+010     0.000    6397.0 !\AUTHOR: !\REF:Henry J. Curran International Journal of Chemical Kinetics (2006) 38: 250Â¡Â§C275.  
+C2H5+CH3CHO<=>SC4H9O                              3.330E+010     0.000    6397.0 !\AUTHOR: !\REF:Henry J. Curran International Journal of Chemical Kinetics (2006) 38: 250¡§C275.  
 !______________________________________________________________________________
 !\REACTIONCLASS: \R+O2                              \A             \N        \EA  
 !______________________________________________________________________________
@@ -4427,7 +4427,7 @@ IC4H10+IC4H9<=>TC4H9+IC4H10                       2.500E+010     0.000    7900.0
 !______________________________________________________________________________
 !\REACTIONCLASS: \R_ISOMERISATION                  \A             \N        \EA  
 !______________________________________________________________________________
-IC4H9<=>TC4H9                                     3.560E+010     0.880   34600.0 !\AUTHOR: !\REF:D.M. Matheu, W.H. Green, J.M. Grenda, Int. J. Chem. Kin. 2003 Volume 35, Issue 3, 2003, Pages: 95Â¡Â§C119 
+IC4H9<=>TC4H9                                     3.560E+010     0.880   34600.0 !\AUTHOR: !\REF:D.M. Matheu, W.H. Green, J.M. Grenda, Int. J. Chem. Kin. 2003 Volume 35, Issue 3, 2003, Pages: 95¡§C119 
 !______________________________________________________________________________
 !\REACTIONCLASS: \R_BETA_SCISSION                  \A             \N        \EA  
 !______________________________________________________________________________
@@ -4523,8 +4523,8 @@ IC4H8O+O2<=>IC3H6CHO+HO2                          1.500E+013     0.000   50150.0
 !______________________________________________________________________________
 !\REACTIONCLASS: \RADICAL_DECOMPOSITION            \A             \N        \EA  
 !______________________________________________________________________________
-IC3H5CHO+H<=>TC3H6CHO                             1.300E+013     0.000    1200.0 !\AUTHOR: !\REF:H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250Â¡Â§C275.  
-IC3H6CO+H<=>TC3H6CHO                              1.300E+013     0.000    4800.0 !\AUTHOR: !\REF:H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250Â¡Â§C275.  
+IC3H5CHO+H<=>TC3H6CHO                             1.300E+013     0.000    1200.0 !\AUTHOR: !\REF:H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250¡§C275.  
+IC3H6CO+H<=>TC3H6CHO                              1.300E+013     0.000    4800.0 !\AUTHOR: !\REF:H.J. Curran,  International Journal of Chemical Kinetics (2006) 38: 250¡§C275.  
 IC3H6CO+OH<=>IC3H7+CO2                            1.730E+012     0.000   -1010.0 !\AUTHOR: !\REF:ANALOGY TO 1C4H8+OH 
 IC3H6CO+OH<=>C3H6OH2-1+CO                         2.000E+012     0.000   -1010.0 !\AUTHOR: !\REF:CURRAN ESTIMATE 
 !______________________________________________________________________________
@@ -5772,15 +5772,15 @@ TC3H6OH+O2<=>CH3COCH3+HO2                        2.230E13   0.000    0.000E+00 !
 !______________________________________________________________________________
 !\REACTIONCLASS: \UNIMOL                            \A             \N        \EA  
 !______________________________________________________________________________
-C3H5-A+CH3(+M)<=>C4H8-1(+M)                    1.00E+14  -0.32     -262.3    !\AUTHOR: !\REF: Yijun Zhang et al. Combustion and Flame 159 (2012) 905?Â¡Ã¬C917
+C3H5-A+CH3(+M)<=>C4H8-1(+M)                    1.00E+14  -0.32     -262.3    !\AUTHOR: !\REF: Yijun Zhang et al. Combustion and Flame 159 (2012) 905?¡ìC917
 LOW  / 3.91E+60 -12.81     6250.0    /
 TROE / 0.104  1606.0 60000.0  6118.4 /
 H2/2/ H2O/6/ CH4/2/ CO/1.5/ CO2/2/ C2H6/3/ AR/0.7/
-C2H5+C2H3(+M)<=>C4H8-1(+M)                    1.50E+13   0.00        0.0    !\AUTHOR: !\REF: Yijun Zhang et al. Combustion and Flame 159 (2012) 905?Â¡Ã¬C917
+C2H5+C2H3(+M)<=>C4H8-1(+M)                    1.50E+13   0.00        0.0    !\AUTHOR: !\REF: Yijun Zhang et al. Combustion and Flame 159 (2012) 905?¡ìC917
 LOW  / 1.55E+56 -11.79     8984.5    /
 TROE / 0.198 2277.9 60000.0 5723.2   /
 H2/2/ H2O/6/ CH4/2/ CO/1.5/ CO2/2/ C2H6/3/ AR/0.7/
-C4H71-4+H(+M)<=>C4H8-1(+M)                       3.60E+13   0.00         0.0   !\AUTHOR: !\REF: Yijun Zhang et al. Combustion and Flame 159 (2012) 905?Â¡Ã¬C917
+C4H71-4+H(+M)<=>C4H8-1(+M)                       3.60E+13   0.00         0.0   !\AUTHOR: !\REF: Yijun Zhang et al. Combustion and Flame 159 (2012) 905?¡ìC917
 LOW  / 3.01E+48  -9.32      5833.6   /
 TROE / 0.498  1314.0  1314.0 50000.0 /
 H2/2/ H2O/6/ CH4/2/ CO/1.5/ CO2/2/ C2H6/3/ AR/0.7/
@@ -5795,15 +5795,15 @@ C4H8-2<=>H+C4H71-3                                  4.60E+84     -20.03      132
 !\REACTIONCLASS: \RH_R_ABSTRACTION                 \A             \N        \EA  
 !______________________________________________________________________________
 !*******************************************ABSTRACTION BY OH****************************************!
-C4H8-1+OH<=>C4H71-3+H2O                           7.769E+005     2.200      -437.18        !\AUTHOR: !\REF:Subith S. Vasu ET AL. J. Phys. Chem. A 2011, 115, 2549?Â¡Ã¬C2556 
-C4H8-1+OH<=>C4H71-4+H2O                           8.60E+006     2.030      2623.10         !\AUTHOR: !\REF:Subith S. Vasu ET AL. J. Phys. Chem. A 2011, 115, 2549?Â¡Ã¬C2556 
-C4H8-1+OH<=>C4H71-2+H2O                           3.000E+006     1.970      2847.66        !\AUTHOR: !\REF:Subith S. Vasu ET AL. J. Phys. Chem. A 2011, 115, 2549?Â¡Ã¬C2556 
-C4H8-1+OH<=>C4H71-1+H2O                           6.930E+006     1.920      4962.04        !\AUTHOR: !\REF:Subith S. Vasu ET AL. J. Phys. Chem. A 2011, 115, 2549?Â¡Ã¬C2556 
+C4H8-1+OH<=>C4H71-3+H2O                           7.769E+005     2.200      -437.18        !\AUTHOR: !\REF:Subith S. Vasu ET AL. J. Phys. Chem. A 2011, 115, 2549?¡ìC2556 
+C4H8-1+OH<=>C4H71-4+H2O                           8.60E+006     2.030      2623.10         !\AUTHOR: !\REF:Subith S. Vasu ET AL. J. Phys. Chem. A 2011, 115, 2549?¡ìC2556 
+C4H8-1+OH<=>C4H71-2+H2O                           3.000E+006     1.970      2847.66        !\AUTHOR: !\REF:Subith S. Vasu ET AL. J. Phys. Chem. A 2011, 115, 2549?¡ìC2556 
+C4H8-1+OH<=>C4H71-1+H2O                           6.930E+006     1.920      4962.04        !\AUTHOR: !\REF:Subith S. Vasu ET AL. J. Phys. Chem. A 2011, 115, 2549?¡ìC2556 
 C4H8-2+OH<=>C4H71-3+H2O                              4.460E+006     2.072    1050.8        !\AUTHOR: !\REF:ANALOGY WITH C3H6+OH<=>C3H5-A+H2O *2/2 
 C4H8-2+OH<=>C4H72-2+H2O                           6.000E+006     1.970    2845.9           !\AUTHOR: !\REF: ANALOGY WITH C4H8-1 *2
 !**************************************** ABSTRACTION BY HO2******************************************!
-C4H8-1+HO2<=>C4H71-3+H2O2                          7.82E-01       3.97       11702         !\AUTHOR: !\REF:Judit Zador,Stephen J. Klippenstein,and James A. Miller J. Phys. Chem. A 2011, 115, 10218?Â¡Ã¬C10225 
-C4H8-2+HO2<=>C4H71-3+H2O2                          6.90E-01       4.00       12103         !\AUTHOR: !\REF:Judit Zador,Stephen J. Klippenstein,and James A. Miller J. Phys. Chem. A 2011, 115, 10218?Â¡Ã¬C10225 
+C4H8-1+HO2<=>C4H71-3+H2O2                          7.82E-01       3.97       11702         !\AUTHOR: !\REF:Judit Zador,Stephen J. Klippenstein,and James A. Miller J. Phys. Chem. A 2011, 115, 10218?¡ìC10225 
+C4H8-2+HO2<=>C4H71-3+H2O2                          6.90E-01       4.00       12103         !\AUTHOR: !\REF:Judit Zador,Stephen J. Klippenstein,and James A. Miller J. Phys. Chem. A 2011, 115, 10218?¡ìC10225 
 C4H8-1+HO2<=>C4H71-4+H2O2                            4.080E+001     3.590   17160.0         !\AUTHOR: !\REF:ANALOGY WITH C4H10+HO2<=>PC4H9+H2O2
 C4H8-1+HO2<=>C4H71-1+H2O2                            9.570E+002     3.059   20798.6         !\AUTHOR: !\REF:ANALOGY WITH C3H6+HO2
 C4H8-1+HO2<=>C4H71-2+H2O2                            1.560E+004     2.820   24427.9         !\AUTHOR: !\REF:ANALOGY WITH C3H6+HO2
@@ -6105,12 +6105,12 @@ C8H141-5,3+O2<=>C8H131-5,3,SA+HO2                           2.000E+013      0.0 
 C8H141-5,3+O2<=>C8H131-5,3,PA+HO2                           2.000E+013      0.0      39390.0     !\AUTHOR: !\REF: C4H8-1, C4H8-2 AND LLNL ANALOGY
 C8H142-6+O2<=>C8H132-6,SA+HO2                               4.000E+013      0.0      37190.0     !\AUTHOR: !\REF: C4H8-1, C4H8-2 AND LLNL ANALOGY
 C8H142-6+O2<=>C8H132-6,PA+HO2                               4.000E+013      0.0      39390.0     !\AUTHOR: !\REF: C4H8-1, C4H8-2 AND LLNL ANALOGY
-C6H101-3,3+C2H3<=>C8H131-5,3-4,TA                           4.40E+04        2.48     6130      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?Â¡Ã¬C275, 2006
-B13DE2M+C3H5-S<=>C8H131-5,3,TA                              4.40E+04        2.48     6130      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?Â¡Ã¬C275, 2006
-C6H10D24+C2H3<=>C8H131-5,3,SA                               8.80E+03        2.48     6130      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?Â¡Ã¬C275, 2006
-C4H6+C4H71-3<=>C8H131-5,3,PA                                1.30E+03        2.48     8520      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?Â¡Ã¬C275, 2006
-C5H81-3+C3H5-S<=>C8H132-6,SA                                8.80E+03        2.48     6130      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?Â¡Ã¬C275, 2006
-C4H6+C4H71-3<=>C8H132-6,PA                                  1.30E+03        2.48     8520      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?Â¡Ã¬C275, 2006
+C6H101-3,3+C2H3<=>C8H131-5,3-4,TA                           4.40E+04        2.48     6130      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?¡ìC275, 2006
+B13DE2M+C3H5-S<=>C8H131-5,3,TA                              4.40E+04        2.48     6130      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?¡ìC275, 2006
+C6H10D24+C2H3<=>C8H131-5,3,SA                               8.80E+03        2.48     6130      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?¡ìC275, 2006
+C4H6+C4H71-3<=>C8H131-5,3,PA                                1.30E+03        2.48     8520      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?¡ìC275, 2006
+C5H81-3+C3H5-S<=>C8H132-6,SA                                8.80E+03        2.48     6130      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?¡ìC275, 2006
+C4H6+C4H71-3<=>C8H132-6,PA                                  1.30E+03        2.48     8520      !\AUTHOR: !\REF: H. J. CURRAN INC. INT J CHEM KINET 38: 250?¡ìC275, 2006
 C6H101-3,3<=>C2H3+C4H72-2                         2.500E+15      0.0000      99500.0 !\AUTHOR: !\REF: ANALOGY TO KUIWEN'S MECH
 C6H10D24<=>C3H5-S+C3H5-S                          2.500E+15      0.0000      99500.0 !\AUTHOR: !\REF: ANALOGY TO KUIWEN'S MECH
 C8H131-5,3-4,TA+HO2<=>C8H131-5,3-4,TAO+OH         1.64e+004      2.74        1144.38          !\AUTHOR: !\REF:C. FRANKLIN GOLDSMITH J. PHYS. CHEM. A 2012, 116, 3325.3346  #ALLYL + HO2 = ALLYLOXY + OH#
@@ -6346,28 +6346,28 @@ PLOG  /  1.0000000E+002  4.7900000E+026 -4.0100000E+000  3.6898000E+004 / ! FIT 
 !______________________________________________________________________________
 !\REACTIONCLASS: \R_ADDITION\OH                    \A             \N        \EA  
 !______________________________________________________________________________
-C4H71-1OH+H<=>PC4H8OH-1                      4267949684205.41     0.492750689836384         4444.57662660868      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-NC3H7CHO+H<=>PC4H8OH-1                       9.8E+10              1.19205556991972          8785.56579045593      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C2H3OH+C2H5<=>PC4H8OH-1                      3.0E+06              1.8344227669761           7337.92313843988      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C4H8-1+OH<=>PC4H8OH-2                        2.1E+06              1.80584359238537         -3292.33399356593      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526 
-C4H71-1OH+H<=>PC4H8OH-2                      1.6E+10              1.11403297478319          4389.23773365885      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C4H72-1OH+H<=>PC4H8OH-2                      2.7E+11             -0.134331624130482         1584.65884107689      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C3H6+CH2OH<=>PC4H8OH-3                       7.0E+03              2.42680725691275           7063.5142949433      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C4H71-4OH+H<=>PC4H8OH-3                      1.5E+11              0.88281161510281          2750.62938509725      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-SC4H8OH-1<=>PC4H8OH-3                        2.9E+08              1.37714323923115          37865.9705441062      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C3H6+CH2OH<=>PC4H8OH-4                       7.0E+03              2.42680725691275           7063.5142949433      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C4H71-4OH+H<=>PC4H8OH-4                      1.5E+11              0.88281161510281          2750.62938509725      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-SC4H8OH-1<=>PC4H8OH-4                        2.9E+08              1.37714323923115          37865.9705441062      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-NC3H7CHO+H<=>PC4H9O                          4.7E+09              1.43469379654107          4357.89006047953      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-NC3H7+CH2O<=>PC4H9O                          5.0E+03              2.42516348673951          3238.89516310988      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C4H71-2OH+H<=>SC4H8OH-2                      1.4E+08              1.51550214630697          218.841417907051      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C2H5COCH3+H<=>SC4H8OH-2                      7.0E+07              1.80134205573461          13223.1219632522      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C4H8-1+OH<=>SC4H8OH-1                        7E+05              1.80188194674497         -3290.24380570477        !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526 
-C2H3OH+C2H5<=>SC4H8OH-1                      6.4E+06              1.67089578770901          10270.2427563368      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C4H8-2+OH<=>SC4H8OH-3                        1.4E+06              1.80188194674497         -3290.24380570477      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526 
-SC3H5OH+CH3<=>SC4H8OH-3                      6.4E+06              1.67089578770901          10270.2427563368      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C2H5COCH3+H<=>SC4H9O                         2.7E+07              1.75632567406421          6206.15193211754      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
-C2H5CHO+CH3<=>SC4H9O                         1.2E+04              2.28382558987551          7978.10227873491      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?Â¡Ã¬C526
+C4H71-1OH+H<=>PC4H8OH-1                      4267949684205.41     0.492750689836384         4444.57662660868      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+NC3H7CHO+H<=>PC4H8OH-1                       9.8E+10              1.19205556991972          8785.56579045593      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C2H3OH+C2H5<=>PC4H8OH-1                      3.0E+06              1.8344227669761           7337.92313843988      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C4H8-1+OH<=>PC4H8OH-2                        2.1E+06              1.80584359238537         -3292.33399356593      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526 
+C4H71-1OH+H<=>PC4H8OH-2                      1.6E+10              1.11403297478319          4389.23773365885      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C4H72-1OH+H<=>PC4H8OH-2                      2.7E+11             -0.134331624130482         1584.65884107689      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C3H6+CH2OH<=>PC4H8OH-3                       7.0E+03              2.42680725691275           7063.5142949433      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C4H71-4OH+H<=>PC4H8OH-3                      1.5E+11              0.88281161510281          2750.62938509725      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+SC4H8OH-1<=>PC4H8OH-3                        2.9E+08              1.37714323923115          37865.9705441062      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C3H6+CH2OH<=>PC4H8OH-4                       7.0E+03              2.42680725691275           7063.5142949433      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C4H71-4OH+H<=>PC4H8OH-4                      1.5E+11              0.88281161510281          2750.62938509725      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+SC4H8OH-1<=>PC4H8OH-4                        2.9E+08              1.37714323923115          37865.9705441062      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+NC3H7CHO+H<=>PC4H9O                          4.7E+09              1.43469379654107          4357.89006047953      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+NC3H7+CH2O<=>PC4H9O                          5.0E+03              2.42516348673951          3238.89516310988      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C4H71-2OH+H<=>SC4H8OH-2                      1.4E+08              1.51550214630697          218.841417907051      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C2H5COCH3+H<=>SC4H8OH-2                      7.0E+07              1.80134205573461          13223.1219632522      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C4H8-1+OH<=>SC4H8OH-1                        7E+05              1.80188194674497         -3290.24380570477        !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526 
+C2H3OH+C2H5<=>SC4H8OH-1                      6.4E+06              1.67089578770901          10270.2427563368      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C4H8-2+OH<=>SC4H8OH-3                        1.4E+06              1.80188194674497         -3290.24380570477      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526 
+SC3H5OH+CH3<=>SC4H8OH-3                      6.4E+06              1.67089578770901          10270.2427563368      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C2H5COCH3+H<=>SC4H9O                         2.7E+07              1.75632567406421          6206.15193211754      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
+C2H5CHO+CH3<=>SC4H9O                         1.2E+04              2.28382558987551          7978.10227873491      !\AUTHOR: !\REF:J. ZA?? DOR, J.A. MILLER / PROCEEDINGS OF THE COMBUSTION INSTITUTE 34 (2013) 519?¡ìC526
 C4H71-4OH+OH<=>C4H64,2-1OH+H2O                           2.020E+006     2.200    -437.2             !\AUTHOR: !\REF:ANALOGY WITH C4H8-1+OH
 C4H71-4OH+HO2<=>C4H64,2-1OH+H2O2                          3.91E-01       3.97     11702             !\AUTHOR: !\REF:ANALOGY WITH C4H8-1+OH
 !______________________________________________________________________________
@@ -6385,10 +6385,10 @@ C4H72-1OH+HO2<=>C4H64,2-1OH+H2O2                       1.725E-01       4.00     
 C4H72-1OH+HO2<=>C4H63,1-1OH+H2O2                        2.30E-01       4.00       12103             !\AUTHOR: !\REF: !ANALOGY WITH C4H8-2+OH (CONSIDER THE NUMBER OF H ATOM AND OH GROUP AFFACT *2)
 C4H71-1OH+OH<=>C4H63,1-1OH+H2O                          2.020E+006     2.200    -437.2               !\AUTHOR: !\REF: !ANALOGY WITH C4H8-1+OH
 C4H71-1OH+HO2<=>C4H63,1-1OH+H2O2                        3.91E-01       3.97     11702                !\AUTHOR: !\REF: !ANALOGY WITH C4H8-1+OH
-C4H64,2-1OH<=>C4H6+OH                                    7.035E+16      -1.012       3.607E+04          !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?Â¡Ã¬C2055
-C4H63,1-1OH<=>C4H5OH-13+H                                7.722E+12       0.488       4.394E+04          !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?Â¡Ã¬C2055
-C4H5OH-13<=>C4H5-N+OH                                    5.610E+21      -1.612       1.060E+05          !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?Â¡Ã¬C2055
-C4H5OH-13<=>C2H3+CH2CHO                                  2.816E+24      -2.381       9.013E+04          !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?Â¡Ã¬C2055
+C4H64,2-1OH<=>C4H6+OH                                    7.035E+16      -1.012       3.607E+04          !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?¡ìC2055
+C4H63,1-1OH<=>C4H5OH-13+H                                7.722E+12       0.488       4.394E+04          !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?¡ìC2055
+C4H5OH-13<=>C4H5-N+OH                                    5.610E+21      -1.612       1.060E+05          !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?¡ìC2055
+C4H5OH-13<=>C2H3+CH2CHO                                  2.816E+24      -2.381       9.013E+04          !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?¡ìC2055
 NC4KET21OH+OH<=>C2H4COCH2OH+H2O                     8.450E+011     0.000    -228.0          !\AUTHOR: !\REF:ANALOGY WITH C2H5COCH3 REACTIONS
 NC4KET21OH+HO2<=>C2H4COCH2OH+H2O2                   2.000E+011     0.000    8698.0          !\AUTHOR: !\REF:ANALOGY WITH C2H5COCH3 REACTIONS
 NC4KET21OH+O<=>C2H4COCH2OH+OH                       3.070E+013     0.000    3400.0          !\AUTHOR: !\REF:ANALOGY WITH C2H5COCH3 REACTIONS
@@ -6444,19 +6444,19 @@ PQC4H7OHS-3<=>CCY(COCC)OH+OH                          2.590E+009     0.690   160
 PQC4H7OHS-3=>OH+CH2O+SC3H5OH                          1.230E+009     1.300   24900.0                 !\AUTHOR: !\REF:VILLANO (FROM KUIWEN'S MECH)
 C4H71-2OH+OH<=>C4H63,1-2OH+H2O                          2.020E+006     2.200    -437.2                !\AUTHOR: !\REF:ANALOGY WITH C4H8-1+OH
 C4H71-2OH+HO2<=>C4H63,1-2OH+H2O2                        3.91E-01       3.97     11702                 !\AUTHOR: !\REF:ANALOGY WITH C4H8-1+OH
-C4H63,1-2OH<=>C4H612+OH                                    7.035E+16      -1.012       3.607E+04         !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?Â¡Ã¬C2055
-NC4KET12OH+H<=>C2H5CHOHCO+H2                            1.000E+005       2.580       1220.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-NC4KET12OH+OH<=>C2H5CHOHCO+H2O                          1.700E+012       0.000       -619.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-NC4KET12OH+O<=>C2H5CHOHCO+OH                            5.940E+012       0.000       1868.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-NC4KET12OH+HO2<=>C2H5CHOHCO+H2O2                        0.950E+004        2.70      11520.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-NC4KET12OH+CH3<=>C2H5CHOHCO+CH4                         1.420E-003       4.580       1966.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-NC4KET12OH+C2H5<=>C2H5CHOHCO+C2H6                       7.360E+004       2.000      5917.09           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-NC4KET12OH+CH3O<=>C2H5CHOHCO+CH3OH                      1.000E+012       0.000       3300.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-NC4KET12OH+CH3O2<=>C2H5CHOHCO+CH3O2H                    3.010E+012       0.000      11920.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-NC4KET12OH+O2<=>C2H5CHOHCO+HO2                          9.030E+013       0.000      43320.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-NC4KET12OH+C2H3<=>C2H5CHOHCO+C2H4                       3.256E+005       2.000      3965.69           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-NC4KET12OH+C2H5O<=>C2H5CHOHCO+C2H5OH                    6.030E+011       0.000      3300.00           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
-C2H5CHOHCO<=>C3H6OH1-1+CO                               5.78E+014        0.00      16843.51           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?Â¡Ã¬C286.
+C4H63,1-2OH<=>C4H612+OH                                    7.035E+16      -1.012       3.607E+04         !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?¡ìC2055
+NC4KET12OH+H<=>C2H5CHOHCO+H2                            1.000E+005       2.580       1220.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+NC4KET12OH+OH<=>C2H5CHOHCO+H2O                          1.700E+012       0.000       -619.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+NC4KET12OH+O<=>C2H5CHOHCO+OH                            5.940E+012       0.000       1868.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+NC4KET12OH+HO2<=>C2H5CHOHCO+H2O2                        0.950E+004        2.70      11520.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+NC4KET12OH+CH3<=>C2H5CHOHCO+CH4                         1.420E-003       4.580       1966.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+NC4KET12OH+C2H5<=>C2H5CHOHCO+C2H6                       7.360E+004       2.000      5917.09           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+NC4KET12OH+CH3O<=>C2H5CHOHCO+CH3OH                      1.000E+012       0.000       3300.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+NC4KET12OH+CH3O2<=>C2H5CHOHCO+CH3O2H                    3.010E+012       0.000      11920.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+NC4KET12OH+O2<=>C2H5CHOHCO+HO2                          9.030E+013       0.000      43320.0           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+NC4KET12OH+C2H3<=>C2H5CHOHCO+C2H4                       3.256E+005       2.000      3965.69           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+NC4KET12OH+C2H5O<=>C2H5CHOHCO+C2H5OH                    6.030E+011       0.000      3300.00           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
+C2H5CHOHCO<=>C3H6OH1-1+CO                               5.78E+014        0.00      16843.51           !\AUTHOR: !\REF:M. PELUCCHI ET AL. COMBUSTION AND FLAME (2015) 162(2) 265?¡ìC286.
 C3H6OH1-1<=>C2H5CHO+H                                   8.981E11         0.271    3.299E+04           !\AUTHOR: !\REF:J. MENDES, C-W ZHOU, AND H. J. CURRAN. JPCA, 2014, 118, 12089-12104.
 C2H3OH+CH3<=>C3H6OH1-1                                  2.040E+040     -8.250      24214.0              !\AUTHOR: !\REF:ANALOGY WITH C2H4+CH3<=>NC3H7
 DUP
@@ -6530,7 +6530,7 @@ C4H71-3OH+OH<=>C4H63,1-3OH+H2O                          2.020E+006     2.200    
 C4H71-3OH+HO2<=>C4H63,1-3OH+H2O2                        3.91E-01       3.97     11702        !\AUTHOR: \REF:ANALOGY WITH C4H8-1+OH
 C4H72-2OH+OH<=>C4H63,1-3OH+H2O                          2.020E+006     2.200    -437.2       !\AUTHOR: \REF:ANALOGY WITH C4H8-1+OH
 C4H72-2OH+HO2<=>C4H63,1-3OH+H2O2                        3.91E-01       3.97     11702        !\AUTHOR: \REF:ANALOGY WITH C4H8-1+OH
-C4H63,1-3OH<=>C4H6+OH                                    7.035E+16      -1.012       3.607E+04           !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?Â¡Ã¬C2055
+C4H63,1-3OH<=>C4H6+OH                                    7.035E+16      -1.012       3.607E+04           !\AUTHOR: !\REF:S.M. SARATHY ET AL. / COMBUSTION AND FLAME 159 (2012) 2028?¡ìC2055
 NC4KET23OH+OH<=>CH3COCOHCH3+H2O                     8.450E+011     0.000    -228.0            !\AUTHOR: !\REF:ANALOGY WITH C2H5COCH3 REACTIONS
 NC4KET23OH+HO2<=>CH3COCOHCH3+H2O2                   2.000E+011     0.000    8698.0            !\AUTHOR: !\REF:ANALOGY WITH C2H5COCH3 REACTIONS
 NC4KET23OH+O<=>CH3COCOHCH3+OH                       3.070E+013     0.000    3400.0            !\AUTHOR: !\REF:ANALOGY WITH C2H5COCH3 REACTIONS
@@ -6592,32 +6592,32 @@ PLOG  / 5.000E+000 7.860E+026  -4.35  22246. / !FIT FROM: 800-2000 K ERROR IN FI
 PLOG  / 1.000E+001 1.730E+026  -4.06  22736. / !FIT FROM: 800-2000 K ERROR IN FIT: 7%
 PLOG  / 3.000E+001 1.390E+023  -3.04  22032. / !FIT FROM: 800-2000 K ERROR IN FIT: 6%
 PLOG  / 5.000E+001 1.450E+021  -2.43  21227. / !FIT FROM: 800-2000 K ERROR IN FIT: 5%
-C4H8-1+HO2<=>C4H8OOH2-1                            1.46E-01      3.45       5798            !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?Â¡Ã¬C10225
+C4H8-1+HO2<=>C4H8OOH2-1                            1.46E-01      3.45       5798            !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?¡ìC10225
 PLOG/      0.0133     9.74E+05      0.41      7570/
 PLOG/      1.0000     8.43E+14     -1.76     12124/
 PLOG/     10.0000     1.82E+20     -3.03     16135/
 PLOG/    100.0000     8.79E+17     -2.04     17111/
-C4H8-1+HO2<=>C4H8O1-2+OH                           1.000E+011     0.000       0.0      !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?Â¡Ã¬C10225
+C4H8-1+HO2<=>C4H8O1-2+OH                           1.000E+011     0.000       0.0      !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?¡ìC10225
 PLOG/      0.0133     2.96E+03       2.45      12199/
 PLOG/      1.0000     1.69E+10       0.51      16606/
 PLOG/     10.0000     2.19E+17      -1.48      22209/
 PLOG/    100.0000     2.73E+21      -2.51      27857/
-C4H8OOH2-1<=>C4H8O1-2+OH                           3.92E+06       1.65     12124           !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?Â¡Ã¬C10225
+C4H8OOH2-1<=>C4H8O1-2+OH                           3.92E+06       1.65     12124           !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?¡ìC10225
 PLOG/      0.0133     2.75E+22      -4.39      12349/
 PLOG/      1.0000     2.44E+29      -5.90      17573/
 PLOG/     10.0000     1.52E+30      -5.84      19702/
 PLOG/    100.0000     1.93E+20      -2.66      16454/
-C4H8-2+HO2<=>C4H8OOH2-3                            9.55E+03       2.58      10347            !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?Â¡Ã¬C10225
+C4H8-2+HO2<=>C4H8OOH2-3                            9.55E+03       2.58      10347            !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?¡ìC10225
 PLOG/      0.0133     2.53E+12      -1.27      10098/
 PLOG/      1.0000     1.34E+11      -0.48       8480/
 PLOG/     10.0000     1.93E+17      -2.04      12122/
 PLOG/    100.0000     4.45E+19      -2.45      14812/
-C4H8-2+HO2<=>C4H8O2-3+OH                           1.000E+011     0.000       0.0              !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?Â¡Ã¬C10225
+C4H8-2+HO2<=>C4H8O2-3+OH                           1.000E+011     0.000       0.0              !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?¡ìC10225
 PLOG/      0.0133     7.65E+05      1.92622    10745/
 PLOG/      1.0000     1.79E+08      1.25089    12370/
 PLOG/     10.0000     1.75E+15      -0.74      17220/
 PLOG/    100.0000     8.37E+20      -2.28314   22838/
-C4H8OOH2-3<=>C4H8O2-3+OH                           1.05E+10       0.68       11964              !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?Â¡Ã¬C10225
+C4H8OOH2-3<=>C4H8O2-3+OH                           1.05E+10       0.68       11964              !\AUTHOR: !\REF:JUDIT ZADOR,STEPHEN J. KLIPPENSTEIN,AND JAMES A. MILLER J. PHYS. CHEM. A 2011, 115, 10218?¡ìC10225
 PLOG/      0.0133     3.02E+19      -3.51       9746/
 PLOG/      1.0000     6.37E+24      -4.55      13480/
 PLOG/     10.0000     1.39E+28      -5.25      16470/
@@ -8907,11 +8907,11 @@ PC4H8CHO-4O2<=>C4H7CHO-4+HO2                      2.885E+009     0.930   29800.0
 !______________________________________________________________________________
 !\REACTIONCLASS: \OTHER_DECOMPOSITIONS,ETC.       \A             \N        \EA
 !______________________________________________________________________________
-C4H7CHO-2+OH=>C4H71-1+CO+H2O                      1.700E+012     0.000    -619.0 !\AUTHOR: !\REF: M. PELUCCHI, K. P. SOMERS, K. YASUNAGA, U. BURKE, A. FRASSOLDATI, E. RANZI, H. J. CURRAN, T. FARAVELLI, COMBUST. FLAME, 2015, 162, 265Â¡Â§C286 
-C4H7CHO-3+OH=>C4H72-2+CO+H2O                      1.700E+012     0.000    -619.0 !\AUTHOR: !\REF: M. PELUCCHI, K. P. SOMERS, K. YASUNAGA, U. BURKE, A. FRASSOLDATI, E. RANZI, H. J. CURRAN, T. FARAVELLI, COMBUST. FLAME, 2015, 162, 265Â¡Â§C286 
-C4H7CHO-3+OH=>C4H6+HCO+H2O                        1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549Â¡Â§C2556 
-C4H7CHO-4+OH=>C4H71-4+CO+H2O                      1.700E+012     0.000    -619.0 !\AUTHOR: !\REF: M. PELUCCHI, K. P. SOMERS, K. YASUNAGA, U. BURKE, A. FRASSOLDATI, E. RANZI, H. J. CURRAN, T. FARAVELLI, COMBUST. FLAME, 2015, 162, 265Â¡Â§C286 
-C4H7CHO-4+OH=>C4H6+HCO+H2O                        1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549Â¡Â§C2556 
+C4H7CHO-2+OH=>C4H71-1+CO+H2O                      1.700E+012     0.000    -619.0 !\AUTHOR: !\REF: M. PELUCCHI, K. P. SOMERS, K. YASUNAGA, U. BURKE, A. FRASSOLDATI, E. RANZI, H. J. CURRAN, T. FARAVELLI, COMBUST. FLAME, 2015, 162, 265¡§C286 
+C4H7CHO-3+OH=>C4H72-2+CO+H2O                      1.700E+012     0.000    -619.0 !\AUTHOR: !\REF: M. PELUCCHI, K. P. SOMERS, K. YASUNAGA, U. BURKE, A. FRASSOLDATI, E. RANZI, H. J. CURRAN, T. FARAVELLI, COMBUST. FLAME, 2015, 162, 265¡§C286 
+C4H7CHO-3+OH=>C4H6+HCO+H2O                        1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549¡§C2556 
+C4H7CHO-4+OH=>C4H71-4+CO+H2O                      1.700E+012     0.000    -619.0 !\AUTHOR: !\REF: M. PELUCCHI, K. P. SOMERS, K. YASUNAGA, U. BURKE, A. FRASSOLDATI, E. RANZI, H. J. CURRAN, T. FARAVELLI, COMBUST. FLAME, 2015, 162, 265¡§C286 
+C4H7CHO-4+OH=>C4H6+HCO+H2O                        1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549¡§C2556 
 !------------------------------------------------------------------------------
 !\ENDSUBMECH:  \PC4H8CHO-1\PC4H8CHO-2\PC4H8CHO-3
 !------------------------------------------------------------------------------
@@ -8976,7 +8976,7 @@ NC53ONEO2-2<=>NC53ONE-1+HO2                       2.885E+009     0.930   29800.0
 !\REACTIONCLASS: \OTHER_DECOMPOSITIONS,ETC.       \A             \N        \EA
 !______________________________________________________________________________
 NC52ONE-3+OH=>CH2CO+C3H5-S+H2O                    4.460E+006     2.072    1050.8 !\AUTHOR: !\REF: ANALOGY TO C3H6+OH<=>C3H5-A+H2O 
-NC52ONE-4+OH=>CH2CO+C3H5-A+H2O                    1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549Â¡Â§C2556 
+NC52ONE-4+OH=>CH2CO+C3H5-A+H2O                    1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549¡§C2556 
 NC53ONE-1+OH=>CH3CHCO+C2H3+H2O                    2.360E+002     3.150    3050.4 !\AUTHOR: !\REF: C. -W. ZHOU, J. M. SIMMIE, H. J. CURRAN, PHYS. CHEM. CHEM. PHYS., 13, 2011, 11175-11192 
 !------------------------------------------------------------------------------
 !\ENDSUBMECH: \NC3H7COCH3\C2H5COC2H5
@@ -9030,11 +9030,11 @@ C5H10OH-5O2<=>C5H9OH1-4+HO2                       2.885E+009     0.930   29800.0
 !______________________________________________________________________________
 !\REACTIONCLASS: \OTHER_DECOMPOSITIONS,ETC.       \A             \N        \EA
 !______________________________________________________________________________
-C5H9OH1-1+OH=>C4H7CHO-2+H+H2O                     1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549Â¡Â§C2556 
-C5H9OH1-2+OH=>C4H7CHO-2+H+H2O                     1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549Â¡Â§C2556 
-C5H9OH1-2+OH=>C5H81-3+OH+H2O                      1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549Â¡Â§C2556 
-C5H9OH1-3+OH=>C5H81-3+OH+H2O                      1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549Â¡Â§C2556 
-C5H9OH1-4+OH=>C4H6+CH2OH+H2O                      1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549Â¡Â§C2556 
+C5H9OH1-1+OH=>C4H7CHO-2+H+H2O                     1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549¡§C2556 
+C5H9OH1-2+OH=>C4H7CHO-2+H+H2O                     1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549¡§C2556 
+C5H9OH1-2+OH=>C5H81-3+OH+H2O                      1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549¡§C2556 
+C5H9OH1-3+OH=>C5H81-3+OH+H2O                      1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549¡§C2556 
+C5H9OH1-4+OH=>C4H6+CH2OH+H2O                      1.010E+006     2.200    -437.2 !\AUTHOR: !\REF: S. S. VASU ET AL. J. PHYS. CHEM. A, 2011, 115, 2549¡§C2556 
 !------------------------------------------------------------------------------
 !\ENDSUBMECH: \NC5H11OH
 !------------------------------------------------------------------------------

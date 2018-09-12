@@ -126,13 +126,13 @@ def test__automech__syngas_from_chemkin():
                            'cmd', 'ls'])
 
     # test divided runs
-    subprocess.check_call(['automech', 'abstractions', 'divide',
+    subprocess.check_call(['automech', 'divide',
                            'rad-rad', 'rad-rad', 'rad-mol',
                            '-r', os.path.join(tmp_path, 'abstractions',
                                               'reactions.csv'),
                            '-P', os.path.join(tmp_path, 'abstractions'),
                            '-p'])
-    subprocess.check_call(['automech', 'abstractions', 'divide',
+    subprocess.check_call(['automech', 'divide',
                            'high-spin', 'high-spin', 'low-spin',
                            '-r', os.path.join(tmp_path, 'abstractions',
                                               'rad-rad', 'reactions.csv'),

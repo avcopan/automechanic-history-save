@@ -281,7 +281,7 @@ def migrations_run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,
                 id2path, job_argv, logger)
 
 
-def abstractions_divide(key, dir1, dir2, rxn_csv, rxn_csv_out, logger):
+def divide(key, dir1, dir2, rxn_csv, rxn_csv_out, logger):
     """ split reactions by key
     """
     from .strid import is_radical_radical
@@ -428,26 +428,35 @@ def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
             idxs = tuple(row[list(idx_cols)])
             logger.info('  indices: {:s}'.format(str(idxs)))
 
+            logger.info('here -1')
             dxyz_dct = reaction_xyz_strings(sids, idxs, mgeo_dct)
             if dxyz_dct:
+                logger.info('here 0')
                 dxyz_sids = dxyz_dct.keys()
                 dxyzs = dxyz_dct.values()
+                logger.info('here 1')
 
                 dname = id2path(rid)
+                logger.info('here 2')
                 dpath = os.path.join(run_dir, dname)
                 logger.info("Creating job directory {:s}".format(dpath))
                 if not os.path.exists(dpath):
                     os.mkdir(dpath)
 
+                logger.info('here 3')
                 fnames = tuple(map('{:s}.xyz'.format, map(id2path, dxyz_sids)))
+                logger.info('here 4')
                 fpaths = tuple(os.path.join(dpath, fname) for fname in fnames)
                 for fpath, dxyz in zip(fpaths, dxyzs):
                     logger.info("  Writing {:s}".format(fpath))
                     write_file(fpath, dxyz)
+                logger.info('here 5')
 
                 inp_str = reaction_input_string(sids, tmp_str, tmp_keyval_dct)
                 inp_fpath = os.path.join(dpath, 'input.dat')
+                logger.info('here 6')
 
+                logger.info('here 7')
                 logger.info("  Writing {:s}".format(inp_fpath))
                 write_file(inp_fpath, inp_str)
                 rxn_df.loc[idx, 'created'] = True

@@ -84,22 +84,14 @@ def reaction_identifier(rct_sids, prd_sids):
     return rid
 
 
-def canonical_complex_identifier(cid):
-    """ canonical SMILES for a set of species IDs sid1.sid2...
-    """
-    sids = cid.split('.')
-    can_cid = '.'.join(sorted(map(canonical, sids)))
-    return can_cid
-
-
 def canonical_reaction_identifier(rid):
     """ canonical SMILES for a reaction identifier
     """
     rct_cid, prd_cid = rid.split('>>')
-    can_rct_cid = canonical_complex_identifier(rct_cid)
-    can_prd_cid = canonical_complex_identifier(prd_cid)
-    can_rid = '>>'.join(sorted((can_rct_cid, can_prd_cid)))
-    return can_rid
+    rct_sids = sorted(rct_cid.split('.'))
+    prd_sids = sorted(prd_cid.split('.'))
+    rxn_sids = sorted([rct_sids, prd_sids], key=lambda x: (-len(x), x))
+    return reaction_identifier(*rxn_sids)
 
 
 def split_reaction_identifier(rid):
@@ -133,10 +125,3 @@ def is_spin_balanced(rid):
     """
     rct_scts, prd_scts = reaction_spin_counts(rid)
     return sum(rct_scts) == sum(prd_scts)
-
-
-if __name__ == '__main__':
-    print canonical_reaction_identifier(
-        'O[O]_m2.C=C[C](C(C=C)C)C_m2>>[O][O]_m3.C=CC(C(C=C)C)C_m1')
-    print canonical_reaction_identifier(
-        'C=CC(C(C=C)C)C_m1.[O][O]_m3>>C=C[C](C(C=C)C)C_m2.O[O]_m2')

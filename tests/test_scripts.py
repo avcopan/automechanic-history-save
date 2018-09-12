@@ -16,8 +16,8 @@ def test__automech__natgas_from_rmg():
     tmp_path = tempfile.mkdtemp()
 
     rmg_mech_json = os.path.join(NATGAS_PATH, 'mechanism.json')
-    subprocess.check_call(['automech', 'init',
-                           '-j', rmg_mech_json,
+    subprocess.check_call(['automech', 'init_from_rmg',
+                           rmg_mech_json,
                            '-P', tmp_path,
                            '-p'])
     # these are too slow to run regularly right now (use syngas when available)
@@ -82,22 +82,22 @@ def test__automech__syngas_from_chemkin():
     print(tmp_path)
 
     subprocess.check_call(['automech', 'init',
-                           '-m', os.path.join(SYNGAS_PATH, 'mechanism.txt'),
-                           '-s', os.path.join(SYNGAS_PATH, 'species.csv'),
+                           os.path.join(SYNGAS_PATH, 'mechanism.txt'),
+                           os.path.join(SYNGAS_PATH, 'species.csv'),
                            '-P', tmp_path])
     subprocess.check_call(['automech', 'abstractions', 'init',
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'reactions.csv'),
+                           os.path.join(tmp_path, 'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
                            '-P', os.path.join(tmp_path, 'abstractions'),
                            '-p'])
     subprocess.check_call(['automech', 'additions', 'init',
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'reactions.csv'),
+                           os.path.join(tmp_path, 'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
                            '-P', os.path.join(tmp_path, 'additions'),
                            '-p'])
     subprocess.check_call(['automech', 'migrations', 'init',
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'reactions.csv'),
+                           os.path.join(tmp_path, 'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
                            '-P', os.path.join(tmp_path, 'migrations'),
                            '-p'])
     subprocess.check_call(['automech', 'additions', 'run',

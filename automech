@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter as Formatter
 import logging
 import from_qtc.obtools
-import automechanic.io
+import automechanic.io2
 
 
 def main(argv):
@@ -18,12 +18,80 @@ def main(argv):
         cmd='automech',
         subcmd_dct={
             'init': init,
+            'init_from_rmg': init_from_rmg,
             'database': database_main,
             'additions': additions_main,
             'abstractions': abstractions_main,
             'migrations': migrations_main
         }
     )
+
+
+def init(argv):
+    """ initialize a mechanism
+    """
+    mech_txt_arg = {
+        'dest': '<mech_txt>',
+        'type': str,
+        'help': "[i] CHEMKIN mechanism file"
+    }
+    spc_csv_arg = {
+        'dest': '<species_csv>',
+        'type': str,
+        'help': "[i] csv with 'species_id' column"
+    }
+    parser = _init_parser(mech_txt_arg, spc_csv_arg)
+    _get_help(parser, argv)
+
+    args = vars(parser.parse_args(argv))
+
+    with _ChangeDirectory(args['prefix']) as locator:
+        logger = _logger(
+            log_file_name=args['log_file_name'],
+            log_level=args['log_level'],
+            print_out=args['print_out']
+        )
+        automechanic.io2.init(
+            mech_txt=os.path.join(
+                locator.working_directory, args['<mech_txt>']),
+            spc_csv=os.path.join(
+                locator.working_directory, args['<species_csv>']),
+            spc_csv_out=args['species_csv_out'],
+            rxn_csv_out=args['reactions_csv_out'],
+            geom_dir=args['geom_dir'],
+            id2path=from_qtc.obtools.get_smiles_filename,
+            logger=logger
+        )
+
+
+def init_from_rmg(argv):
+    """ initialize a mechanism from an RMG json file
+    """
+    mech_json_arg = {
+        'dest': '<mech_json>',
+        'type': str,
+        'help': "[i] RMG's mechanism JSON file"
+    }
+    parser = _init_parser(mech_json_arg)
+    _get_help(parser, argv)
+
+    args = vars(parser.parse_args(argv))
+
+    with _ChangeDirectory(args['prefix']) as locator:
+        logger = _logger(
+            log_file_name=args['log_file_name'],
+            log_level=args['log_level'],
+            print_out=args['print_out']
+        )
+        automechanic.io2.init_from_rmg(
+            rmg_mech_json=os.path.join(
+                locator.working_directory, args['<mech_json>']),
+            spc_csv_out=args['species_csv_out'],
+            rxn_csv_out=args['reactions_csv_out'],
+            geom_dir=args['geom_dir'],
+            id2path=from_qtc.obtools.get_smiles_filename,
+            logger=logger
+        )
 
 
 def database_main(argv):
@@ -41,36 +109,37 @@ def database_main(argv):
 def database_merge(argv):
     """ merge reaction csv files
     """
-    parser = _default_parser(prog='automech database merge',
-                             log_file_name='merge.log')
-    parser.add_argument('reactions_csv_paths',
-                        type=str,
-                        nargs='+',
-                        default='reactions.csv',
-                        help="[i] csv file with 'reaction_id' column")
-    parser.add_argument('-R',
-                        '--reactions_csv_out',
-                        type=str,
-                        default='reactions.csv',
-                        help="[o] csv file with 'reaction_id' column")
-    _get_help(parser, argv)
-    args = vars(parser.parse_args(argv))
-
-    with _ChangeDirectory(args['prefix']) as locator:
-        logger = _logger(
-            log_file_name=args['log_file_name'],
-            log_level=args['log_level'],
-            print_out=args['print_out']
-        )
-
-        rxn_csv_lst = [os.path.join(locator.working_directory, rxn_csv_path)
-                       for rxn_csv_path in args['reactions_csv_paths']]
-
-        automechanic.io.database_merge(
-            rxn_csv_lst=rxn_csv_lst,
-            rxn_csv_out=args['reactions_csv_out'],
-            logger=logger
-        )
+    raise ValueError(argv)
+#     parser = _default_parser(prog='automech database merge',
+#                              log_file_name='merge.log')
+#     parser.add_argument('reactions_csv_paths',
+#                         type=str,
+#                         nargs='+',
+#                         default='reactions.csv',
+#                         help="[i] csv file with 'reaction_id' column")
+#     parser.add_argument('-R',
+#                         '--reactions_csv_out',
+#                         type=str,
+#                         default='reactions.csv',
+#                         help="[o] csv file with 'reaction_id' column")
+#     _get_help(parser, argv)
+#     args = vars(parser.parse_args(argv))
+#
+#     with _ChangeDirectory(args['prefix']) as locator:
+#         logger = _logger(
+#             log_file_name=args['log_file_name'],
+#             log_level=args['log_level'],
+#             print_out=args['print_out']
+#         )
+#
+#         rxn_csv_lst = [os.path.join(locator.working_directory, rxn_csv_path)
+#                        for rxn_csv_path in args['reactions_csv_paths']]
+#
+#         automechanic.io.database_merge(
+#             rxn_csv_lst=rxn_csv_lst,
+#             rxn_csv_out=args['reactions_csv_out'],
+#             logger=logger
+#         )
 
 
 def additions_main(argv):
@@ -116,7 +185,7 @@ def migrations_main(argv):
 def abstractions_init(argv):
     """ initialization for abstractions
     """
-    parser = _reactions_init_parser('abstractions')
+    parser = _reactions_init_parser2('abstractions')
     _get_help(parser, argv)
     args = vars(parser.parse_args(argv))
     with _ChangeDirectory(args['prefix']) as locator:
@@ -126,13 +195,13 @@ def abstractions_init(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io.abstractions_init(
+        automechanic.io2.abstractions_init(
             spc_csv=os.path.join(
-                locator.working_directory, args['species_csv']),
+                locator.working_directory, args['<species_csv>']),
             rxn_csv=os.path.join(
-                locator.working_directory, args['reactions_csv']),
+                locator.working_directory, args['<reactions_csv>']),
             rxn_csv_out=args['reactions_csv_out'],
-            can_csv_out=args['candidates_csv_out'],
+            cdt_csv_out=args['candidates_csv_out'],
             logger=logger
         )
 
@@ -140,7 +209,7 @@ def abstractions_init(argv):
 def additions_init(argv):
     """ initialization for additions
     """
-    parser = _reactions_init_parser('additions')
+    parser = _reactions_init_parser2('abstractions')
     _get_help(parser, argv)
     args = vars(parser.parse_args(argv))
     with _ChangeDirectory(args['prefix']) as locator:
@@ -150,13 +219,13 @@ def additions_init(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io.additions_init(
+        automechanic.io2.additions_init(
             spc_csv=os.path.join(
-                locator.working_directory, args['species_csv']),
+                locator.working_directory, args['<species_csv>']),
             rxn_csv=os.path.join(
-                locator.working_directory, args['reactions_csv']),
+                locator.working_directory, args['<reactions_csv>']),
             rxn_csv_out=args['reactions_csv_out'],
-            can_csv_out=args['candidates_csv_out'],
+            cdt_csv_out=args['candidates_csv_out'],
             logger=logger
         )
 
@@ -164,7 +233,7 @@ def additions_init(argv):
 def migrations_init(argv):
     """ initialization for migrations
     """
-    parser = _reactions_init_parser('migrations')
+    parser = _reactions_init_parser2('migrations')
     _get_help(parser, argv)
     args = vars(parser.parse_args(argv))
     with _ChangeDirectory(args['prefix']) as locator:
@@ -174,13 +243,13 @@ def migrations_init(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io.migrations_init(
+        automechanic.io2.migrations_init(
             spc_csv=os.path.join(
-                locator.working_directory, args['species_csv']),
+                locator.working_directory, args['<species_csv>']),
             rxn_csv=os.path.join(
-                locator.working_directory, args['reactions_csv']),
+                locator.working_directory, args['<reactions_csv>']),
             rxn_csv_out=args['reactions_csv_out'],
-            can_csv_out=args['candidates_csv_out'],
+            cdt_csv_out=args['candidates_csv_out'],
             logger=logger
         )
 
@@ -198,7 +267,7 @@ def abstractions_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io.abstractions_run(
+        automechanic.io2.abstractions_run(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -209,7 +278,7 @@ def abstractions_run(argv):
                 locator.working_directory, args['template_txt']),
             tmp_keyval_str=args['template_keyvals'],
             run_dir=args['run_dir'],
-            escape_id_chars=from_qtc.obtools.get_smiles_filename,
+            id2path=from_qtc.obtools.get_smiles_filename,
             job_argv=job_argv,
             logger=logger
         )
@@ -228,7 +297,7 @@ def additions_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io.additions_run(
+        automechanic.io2.additions_run(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -239,7 +308,7 @@ def additions_run(argv):
                 locator.working_directory, args['template_txt']),
             tmp_keyval_str=args['template_keyvals'],
             run_dir=args['run_dir'],
-            escape_id_chars=from_qtc.obtools.get_smiles_filename,
+            id2path=from_qtc.obtools.get_smiles_filename,
             job_argv=job_argv,
             logger=logger
         )
@@ -258,7 +327,7 @@ def migrations_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io.migrations_run(
+        automechanic.io2.migrations_run(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -269,7 +338,7 @@ def migrations_run(argv):
                 locator.working_directory, args['template_txt']),
             tmp_keyval_str=args['template_keyvals'],
             run_dir=args['run_dir'],
-            escape_id_chars=from_qtc.obtools.get_smiles_filename,
+            id2path=from_qtc.obtools.get_smiles_filename,
             job_argv=job_argv,
             logger=logger
         )
@@ -309,7 +378,7 @@ def abstractions_divide(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io.abstractions_divide(
+        automechanic.io2.abstractions_divide(
             key=args['key'],
             dir1=args['dir1'],
             dir2=args['dir2'],
@@ -318,79 +387,6 @@ def abstractions_divide(argv):
             rxn_csv_out=args['reactions_csv_out'],
             logger=logger
         )
-
-
-def init(argv):
-    """ initialization
-    """
-    parser = _default_parser(prog='automech init',
-                             log_file_name='init.log')
-
-    # input arguments
-    parser.add_argument('-j', '--rmg_mech_json',
-                        type=str,
-                        help="[i] RMG's mechanism JSON file")
-    parser.add_argument('-m', '--chemkin_mech_txt',
-                        type=str,
-                        help="[i] CHEMKIN mechanism file")
-    parser.add_argument('-s', '--species_csv',
-                        type=str,
-                        default='species.csv',
-                        help="[i] csv with 'species_id' column")
-
-    # output arguments
-    parser.add_argument('-D', '--geom_dir',
-                        type=str,
-                        default='geoms',
-                        help="[o] directory for storing geometry xyz files")
-    parser.add_argument('-S', '--species_csv_out',
-                        type=str,
-                        default='species.csv',
-                        help="[o] csv with 'species_id' and 'path' columns")
-    parser.add_argument('-R',
-                        '--reactions_csv_out',
-                        type=str,
-                        default='reactions.csv',
-                        help="[o] csv file with 'reaction_id' column")
-    _get_help(parser, argv)
-
-    args = vars(parser.parse_args(argv))
-
-    with _ChangeDirectory(args['prefix']) as locator:
-        logger = _logger(
-            log_file_name=args['log_file_name'],
-            log_level=args['log_level'],
-            print_out=args['print_out']
-        )
-
-        def _sid2fname(sid):
-            return from_qtc.obtools.get_smiles_filename(sid) + '.xyz'
-
-        if args['rmg_mech_json']:
-            automechanic.io.init_from_rmg(
-                rmg_mech_json=os.path.join(
-                    locator.working_directory, args['rmg_mech_json']),
-                spc_csv_out=args['species_csv_out'],
-                rxn_csv_out=args['reactions_csv_out'],
-                geom_dir=args['geom_dir'],
-                sid2fname=_sid2fname,
-                logger=logger
-            )
-        elif args['chemkin_mech_txt'] and args['species_csv']:
-            automechanic.io.init_from_chemkin(
-                chemkin_mech_txt=os.path.join(
-                    locator.working_directory, args['chemkin_mech_txt']),
-                spc_csv=os.path.join(
-                    locator.working_directory, args['species_csv']),
-                spc_csv_out=args['species_csv_out'],
-                rxn_csv_out=args['reactions_csv_out'],
-                geom_dir=args['geom_dir'],
-                sid2fname=_sid2fname,
-                logger=logger
-            )
-        else:
-            raise ValueError("Needs --chemkin_mech_txt and --spc_csv or "
-                             "--rmg_mech_json")
 
 
 # helpers
@@ -434,6 +430,30 @@ def _split_command_args(argv):
     return automech_argv, job_argv
 
 
+def _init_parser(*pos_args):
+    parser = _default_parser(prog='automech init',
+                             log_file_name='init.log')
+
+    for pos_arg in pos_args:
+        parser.add_argument(**pos_arg)
+
+    parser.add_argument('-D', '--geom_dir',
+                        type=str,
+                        default='geoms',
+                        help="[o] directory for storing geometry xyz files")
+    parser.add_argument('-S', '--species_csv_out',
+                        type=str,
+                        default='species.csv',
+                        help="[o] csv with 'species_id' and 'path' columns")
+    parser.add_argument('-R',
+                        '--reactions_csv_out',
+                        type=str,
+                        default='reactions.csv',
+                        help="[o] csv file with 'reaction_id' column")
+
+    return parser
+
+
 def _reactions_run_parser(cls):
     parser = _default_parser(prog='automech {:s} run'.format(cls),
                              log_file_name='run.log')
@@ -467,6 +487,32 @@ def _reactions_run_parser(cls):
                         help="[o] directory for running reaction jobs")
 
     parser.add_argument('cmd <commands for individual job>')
+    return parser
+
+
+def _reactions_init_parser2(cls):
+    parser = _default_parser(prog='automech {:s} init'.format(cls),
+                             log_file_name='init.log')
+
+    parser.add_argument(dest='<reactions_csv>',
+                        type=str,
+                        default='reactions.csv',
+                        help="[i(o)] csv with 'reaction_id' column")
+    parser.add_argument(dest='<species_csv>',
+                        type=str,
+                        default='species.csv',
+                        help="[i] csv with 'species_id' and 'path' columns")
+    parser.add_argument('-R',
+                        '--reactions_csv_out',
+                        type=str,
+                        default='reactions.csv',
+                        help="[o] csv file with 'reaction_id' and 'class' "
+                             "columns")
+    parser.add_argument('-C',
+                        '--candidates_csv_out',
+                        type=str,
+                        default='candidates.csv',
+                        help="[o] csv file with 'reaction_id' column")
     return parser
 
 
@@ -524,7 +570,7 @@ def _helpless_parser(prog):
 
 
 def _logger(log_file_name, log_level=logging.INFO, print_out=False):
-    automechanic.io.timestamp_if_exists(log_file_name)
+    automechanic.io2.timestamp_if_exists(log_file_name)
 
     logger = logging.getLogger()
     logger.setLevel(log_level)

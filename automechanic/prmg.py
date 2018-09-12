@@ -46,18 +46,11 @@ def mechanism_reaction_identifiers(mech_rxn_dcts):
     return rids
 
 
-# def mechanism_uncertainties(mech_rxn_dcts):
-#     """ reaction uncertainties
-#     """
-#     ucrts = tuple(rxn_dct['Uncertainty'] for rxn_dct in mech_rxn_dcts)
-#     return ucrts
-#
-#
-# def mechanism_sensitivities(mech_rxn_dcts):
-#     """ reaction uncertainties
-#     """
-#     stvts = tuple(rxn_dct['Sensitivity'] for rxn_dct in mech_rxn_dcts)
-#     return stvts
+def mechanism_sensitivities(mech_rxn_dcts):
+    """ reaction uncertainties
+    """
+    stvts = tuple(rxn_dct['Sensitivity'] for rxn_dct in mech_rxn_dcts)
+    return stvts
 
 
 def mechanism_importance_values(mech_rxn_dcts):

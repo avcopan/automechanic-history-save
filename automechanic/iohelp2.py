@@ -80,9 +80,11 @@ def abstraction(rid, mgeo_dct, _thv_dct=None):
         abst_idxs = abstraction_indices(*mgeos)
         if abst_idxs:
             if _thv_dct and _is_uphill(abst_sids[:2], abst_sids[2:], _thv_dct):
-                abst_sids, abst_idxs = _abs_reverse(abst_sids, abst_idxs)
+                abst_sids = tuple(reversed(abst_sids))
+                abst_idxs = tuple(reversed(abst_idxs))
             if _abs_reverse_for_torsscan(abst_sids):
-                abst_sids, abst_idxs = _abs_reverse(abst_sids, abst_idxs)
+                abst_sids = tuple(reversed(abst_sids))
+                abst_idxs = tuple(reversed(abst_idxs))
             abst = (abst_sids, abst_idxs)
     return abst
 
@@ -255,13 +257,6 @@ def _abs_reverse_for_torsscan(abst_sids):
             number_of_atoms_from_strid(q2h_sid) >= 3):
         ret = True
     return ret
-
-
-def _abs_reverse(abst_sids, abst_idxs):
-    assert len(abst_sids) == len(abst_idxs) == 4
-    rev_abst_sids = tuple(abst_sids[2:] + abst_sids[:2])
-    rev_abst_idxs = tuple(abst_idxs[2:] + abst_idxs[:2])
-    return rev_abst_sids, rev_abst_idxs
 
 
 def _mig_reverse(mgrn_sids, mgrn_idxs):

@@ -19,6 +19,7 @@ def main(argv):
         subcmd_dct={
             'init': init,
             'init_from_rmg': init_from_rmg,
+            'divide': divide,
             'database': database_main,
             'additions': additions_main,
             'abstractions': abstractions_main,
@@ -164,7 +165,6 @@ def abstractions_main(argv):
         subcmd_dct={
             'init': abstractions_init,
             'run': abstractions_run,
-            'divide': abstractions_divide
         }
     )
 
@@ -344,8 +344,8 @@ def migrations_run(argv):
         )
 
 
-def abstractions_divide(argv):
-    """ divide abstractions into binary categories, by key
+def divide(argv):
+    """ divide into binary categories, by key
     """
     keys = ('rad-rad', 'high-spin')
     parser = _default_parser(prog='automech abstractions divide',
@@ -378,7 +378,7 @@ def abstractions_divide(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io2.abstractions_divide(
+        automechanic.io2.divide(
             key=args['key'],
             dir1=args['dir1'],
             dir2=args['dir2'],

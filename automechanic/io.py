@@ -88,7 +88,9 @@ def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, id2path,
                   logger):
     """ initialize a mechanism from RMG's JSON file
     """
-    from .prmg import mechanism_species_identifiers
+    # from .prmg import species_name as species_name_from_rmg
+    from .prmg import species_identifier as species_identifier_from_rmg
+    from .prmg import mechanism_species_dictionaries
     from .prmg import mechanism_reaction_identifiers
     from .prmg import mechanism_sensitivities
     from .prmg import mechanism_importance_values
@@ -99,12 +101,15 @@ def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, id2path,
     with open(rmg_mech_json) as fle:
         mech_rxn_dcts = json.load(fle)
 
-    sids = mechanism_species_identifiers(mech_rxn_dcts)
+    spc_dcts = mechanism_species_dictionaries(mech_rxn_dcts)
+    sids = list(map(species_identifier_from_rmg, spc_dcts))
+    # spcs = list(map(species_name_from_rmg, spc_dcts))
     rids = mechanism_reaction_identifiers(mech_rxn_dcts)
     stvts = mechanism_sensitivities(mech_rxn_dcts)
     ipvls = mechanism_importance_values(mech_rxn_dcts)
     names = mechanism_reaction_names(mech_rxn_dcts)
 
+    # 'species': spcs,
     spc_df = pandas.DataFrame({'species_id': sids})
     rxn_df = pandas.DataFrame({'reaction_id': rids,
                                'reaction': names,
@@ -471,35 +476,26 @@ def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
             idxs = tuple(row[list(idx_cols)])
             logger.info('  indices: {:s}'.format(str(idxs)))
 
-            logger.info('here -1')
             dxyz_dct = reaction_xyz_strings(sids, idxs, mgeo_dct)
             if dxyz_dct:
-                logger.info('here 0')
                 dxyz_sids = dxyz_dct.keys()
                 dxyzs = dxyz_dct.values()
-                logger.info('here 1')
 
                 dname = id2path(rid)
-                logger.info('here 2')
                 dpath = os.path.join(run_dir, dname)
                 logger.info("Creating job directory {:s}".format(dpath))
                 if not os.path.exists(dpath):
                     os.mkdir(dpath)
 
-                logger.info('here 3')
                 fnames = tuple(map('{:s}.xyz'.format, map(id2path, dxyz_sids)))
-                logger.info('here 4')
                 fpaths = tuple(os.path.join(dpath, fname) for fname in fnames)
                 for fpath, dxyz in zip(fpaths, dxyzs):
                     logger.info("  Writing {:s}".format(fpath))
                     write_file(fpath, dxyz)
-                logger.info('here 5')
 
                 inp_str = reaction_input_string(sids, tmp_str, tmp_keyval_dct)
                 inp_fpath = os.path.join(dpath, 'input.dat')
-                logger.info('here 6')
 
-                logger.info('here 7')
                 logger.info("  Writing {:s}".format(inp_fpath))
                 write_file(inp_fpath, inp_str)
                 rxn_df.loc[idx, 'created'] = True

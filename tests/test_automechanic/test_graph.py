@@ -285,12 +285,12 @@ def test__forward_abstraction_indices():
 def test__addition_indices():
     """ test graph.addition_indices()
     """
-    x_mgrph = (('O', 'H'), frozenset([(frozenset([0, 1]), 1)]))
-    y_mgrph = (('C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'),
+    x_mgrph = (('C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'),
                frozenset([(frozenset([0, 3]), 1), (frozenset([1, 5]), 1),
                           (frozenset([1, 2]), 1), (frozenset([0, 4]), 1),
                           (frozenset([8, 2]), 1), (frozenset([2, 6]), 1),
                           (frozenset([0, 1]), 2), (frozenset([2, 7]), 1)]))
+    y_mgrph = (('O', 'H'), frozenset([(frozenset([0, 1]), 1)]))
     xy_mgrph = (('C', 'H', 'H', 'C', 'O', 'C', 'H', 'H', 'H', 'H', 'H'),
                 frozenset([(frozenset([10, 5]), 1), (frozenset([3, 5]), 1),
                            (frozenset([3, 6]), 1), (frozenset([4, 7]), 1),
@@ -298,7 +298,7 @@ def test__addition_indices():
                            (frozenset([0, 3]), 1), (frozenset([8, 5]), 1),
                            (frozenset([9, 5]), 1), (frozenset([0, 1]), 1)]))
     idxs = graph.addition_indices(x_mgrph, y_mgrph, xy_mgrph)
-    assert idxs == (0, 1, 4, 3)
+    assert idxs == (1, 0, 3, 4)
 
 
 def test__migration_indices():

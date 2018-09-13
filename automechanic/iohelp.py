@@ -158,7 +158,7 @@ def addition_xyz_strings(sids, idxs, mgeo_dct):
     x_dxyz = _addition_xyz_string_x(x_mgeo, x_idx)
     y_dxyz = _addition_xyz_string_y(y_mgeo, y_idx)
 
-    if x_dxyz:
+    if y_dxyz:
         dxyz_dct = {xy_sid: xy_dxyz, x_sid: x_dxyz, y_sid: y_dxyz}
 
     return dxyz_dct
@@ -267,33 +267,33 @@ def _mig_reverse(mgrn_sids, mgrn_idxs):
     return rev_mgrn_sids, rev_mgrn_idxs
 
 
-def _addition_xyz_string_y(mgeo, y_idx):
-    dxyz = xyz_string(mgeo, {y_idx: 4})
+def _addition_xyz_string_x(mgeo, x_idx):
+    dxyz = xyz_string(mgeo, {x_idx: 4})
     return dxyz
 
 
-def _addition_xyz_string_x(mgeo, x_idx):
+def _addition_xyz_string_y(mgeo, y_idx):
     dxyz = None
     mgrph = graph(mgeo)
-    _2chainz = ((xn1_idx, xn2_idx)
-                for xn1_idx in atom_neighborhood_indices(mgrph, x_idx)
-                for xn2_idx in atom_neighborhood_indices(mgrph, xn1_idx)
-                if xn2_idx != x_idx)
+    _2chainz = ((yn1_idx, yn2_idx)
+                for yn1_idx in atom_neighborhood_indices(mgrph, y_idx)
+                for yn2_idx in atom_neighborhood_indices(mgrph, yn1_idx)
+                if yn2_idx != y_idx)
     idxs = next(_2chainz, None)
     if idxs:
-        xn1_idx, xn2_idx = idxs
-        dxyz = xyz_string(mgeo, {x_idx: 2, xn1_idx: 1, xn2_idx: 3})
+        yn1_idx, yn2_idx = idxs
+        dxyz = xyz_string(mgeo, {y_idx: 2, yn1_idx: 1, yn2_idx: 3})
     return dxyz
 
 
 def _abstraction_xyz_string_q1h(mgeo, h_idx):
     # these functions happen to be the same
-    return _addition_xyz_string_x(mgeo=mgeo, x_idx=h_idx)
+    return _addition_xyz_string_y(mgeo=mgeo, y_idx=h_idx)
 
 
 def _abstraction_xyz_string_q2(mgeo, q_idx):
     # these functions happen to be the same
-    return _addition_xyz_string_y(mgeo=mgeo, y_idx=q_idx)
+    return _addition_xyz_string_x(mgeo=mgeo, x_idx=q_idx)
 
 
 def _migration_xyz_string(mgeo, h_idx, a_idx):

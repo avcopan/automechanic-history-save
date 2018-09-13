@@ -267,18 +267,18 @@ def addition_indices(x_mgrph, y_mgrph, xy_mgrph):
     """
     idxs = None
 
-    x_idxs = radical_sites(x_mgrph)
-    y_bkeys = multibond_keys(y_mgrph)
-    for x_idx, y_bkey in product(x_idxs, y_bkeys):
-        for y_idx, y_idx_other in permutations(y_bkey):
-            y_open_mgrph = increment_bond_order(
-                y_mgrph, y_idx, y_idx_other, incr=-1)
-            xy_mgrph_ = bind(x_mgrph, y_open_mgrph, x_idx, y_idx)
+    y_idxs = radical_sites(y_mgrph)
+    x_bkeys = multibond_keys(x_mgrph)
+    for y_idx, x_bkey in product(y_idxs, x_bkeys):
+        for x_idx, x_idx_other in permutations(x_bkey):
+            x_open_mgrph = increment_bond_order(
+                x_mgrph, x_idx, x_idx_other, incr=-1)
+            xy_mgrph_ = bind(y_mgrph, x_open_mgrph, y_idx, x_idx)
             iso = isomorphism(xy_mgrph, xy_mgrph_)
             if iso:
-                natms_x = len(atoms(x_mgrph))
-                xy_idx_x = int(iso[x_idx])
-                xy_idx_y = int(iso[natms_x + y_idx])
+                natms_y = len(atoms(y_mgrph))
+                xy_idx_y = int(iso[y_idx])
+                xy_idx_x = int(iso[natms_y + x_idx])
                 idxs = (x_idx, y_idx, xy_idx_x, xy_idx_y)
 
     return idxs

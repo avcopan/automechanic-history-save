@@ -15,6 +15,7 @@ from .geom import migration_indices
 from .graph import atom_neighborhood_indices
 from .form import subtract as subtract_formulas
 from .therm import enthalpy as therm_enthalpy
+from .timeout import timeout
 
 
 def translate_chemkin_reaction(rxn_str, sid_dct):
@@ -70,6 +71,7 @@ def migration_candidate(rid):
     return bool(_mig_sorted_candidate(rid))
 
 
+@timeout(300)
 def abstraction(rid, mgeo_dct, _thv_dct=None):
     """ species IDs with abstraction indices (or None)
     """
@@ -89,6 +91,7 @@ def abstraction(rid, mgeo_dct, _thv_dct=None):
     return abst
 
 
+@timeout(300)
 def addition(rid, mgeo_dct, _thv_dct=None):
     """ species IDs with addition indices (or None)
     """
@@ -102,6 +105,7 @@ def addition(rid, mgeo_dct, _thv_dct=None):
     return addn
 
 
+@timeout(300)
 def migration(rid, mgeo_dct, _thv_dct=None):
     """ species IDs with migration indices (or None)
     """

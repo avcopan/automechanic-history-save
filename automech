@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter as Formatter
 import logging
 import from_qtc.obtools
-import automechanic.io2
+import automechanic.io
 
 
 def main(argv):
@@ -20,7 +20,7 @@ def main(argv):
             'init': init,
             'init_from_rmg': init_from_rmg,
             'divide': divide,
-            'database': database_main,
+            'csv': csv_main,
             'additions': additions_main,
             'abstractions': abstractions_main,
             'migrations': migrations_main
@@ -52,7 +52,7 @@ def init(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io2.init(
+        automechanic.io.init(
             mech_txt=os.path.join(
                 locator.working_directory, args['<mech_txt>']),
             spc_csv=os.path.join(
@@ -84,7 +84,7 @@ def init_from_rmg(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io2.init_from_rmg(
+        automechanic.io.init_from_rmg(
             rmg_mech_json=os.path.join(
                 locator.working_directory, args['<mech_json>']),
             spc_csv_out=args['species_csv_out'],
@@ -95,52 +95,117 @@ def init_from_rmg(argv):
         )
 
 
-def database_main(argv):
-    """ main function for database operations
+def csv_main(argv):
+    """ main function for csv operations
     """
     _route_subcommand(
         argv=argv,
         cmd='automech databse',
         subcmd_dct={
-            'merge': database_merge
+            'reindex': csv_reindex,
+            'sort': csv_sort,
+            'merge': csv_merge
         }
     )
 
 
-def database_merge(argv):
+def csv_reindex(argv):
+    """ (over)write the 'index' column in a csv file
+    """
+    parser = _action_parser(prog='automech csv reindex',
+                            log_file_name='reindex.log',
+                            prefix=True)
+    parser.add_argument(dest='<table_csv>',
+                        type=str,
+                        help="[i(o)] csv file")
+    _get_help(parser, argv)
+
+    args = vars(parser.parse_args(argv))
+
+    with _ChangeDirectory(args['prefix']) as locator:
+        logger = _logger(
+            log_file_name=args['log_file_name'],
+            log_level=args['log_level'],
+            print_out=args['print_out']
+        )
+        automechanic.io.csv_reindex(
+            table_csv=os.path.join(
+                locator.working_directory, args['<table_csv>']),
+            logger=logger
+        )
+
+
+def csv_sort(argv):
+    """ sort a csv file by column
+    """
+    parser = _action_parser(prog='automech csv sort',
+                            log_file_name='sort.log',
+                            prefix=True)
+    parser.add_argument(dest='<table_csv>',
+                        type=str,
+                        help="[i(o)] csv file")
+    parser.add_argument(dest='<col_key>',
+                        type=str,
+                        help="the name of the colum to sort by")
+    parser.add_argument('-d', '--descending',
+                        action='store_true',
+                        help="sort in descending order")
+    _get_help(parser, argv)
+
+    args = vars(parser.parse_args(argv))
+
+    with _ChangeDirectory(args['prefix']) as locator:
+        logger = _logger(
+            log_file_name=args['log_file_name'],
+            log_level=args['log_level'],
+            print_out=args['print_out']
+        )
+        automechanic.io.csv_sort(
+            table_csv=os.path.join(
+                locator.working_directory, args['<table_csv>']),
+            col_key=args['<col_key>'],
+            descending=args['descending'],
+            logger=logger
+        )
+
+
+def csv_merge(argv):
     """ merge reaction csv files
     """
-    raise ValueError(argv)
-#     parser = _default_parser(prog='automech database merge',
-#                              log_file_name='merge.log')
-#     parser.add_argument('reactions_csv_paths',
-#                         type=str,
-#                         nargs='+',
-#                         default='reactions.csv',
-#                         help="[i] csv file with 'reaction_id' column")
-#     parser.add_argument('-R',
-#                         '--reactions_csv_out',
-#                         type=str,
-#                         default='reactions.csv',
-#                         help="[o] csv file with 'reaction_id' column")
-#     _get_help(parser, argv)
-#     args = vars(parser.parse_args(argv))
-#
-#     with _ChangeDirectory(args['prefix']) as locator:
-#         logger = _logger(
-#             log_file_name=args['log_file_name'],
-#             log_level=args['log_level'],
-#             print_out=args['print_out']
-#         )
-#
-#         rxn_csv_lst = [os.path.join(locator.working_directory, rxn_csv_path)
-#                        for rxn_csv_path in args['reactions_csv_paths']]
-#
-#         automechanic.io.database_merge(
-#             rxn_csv_lst=rxn_csv_lst,
-#             rxn_csv_out=args['reactions_csv_out'],
-#             logger=logger
-#         )
+    parser = _action_parser(prog='automech csv merge',
+                            log_file_name='merge.log',
+                            prefix=True)
+    parser.add_argument(dest='<table_csvs>',
+                        type=str,
+                        nargs='+',
+                        help="[i] csv files")
+    parser.add_argument(dest='<col_key>',
+                        type=str,
+                        help="the name of the colum to sort by")
+    parser.add_argument('-T', '--table_csv_out',
+                        type=str,
+                        default='table.csv',
+                        help="[o] csv file")
+    _get_help(parser, argv)
+
+    args = vars(parser.parse_args(argv))
+
+    table_csvs = args['<table_csvs>']
+    assert len(table_csvs) > 1
+    table_csvs = tuple(map(os.path.abspath, table_csvs))
+
+    with _ChangeDirectory(args['prefix']):
+        logger = _logger(
+            log_file_name=args['log_file_name'],
+            log_level=args['log_level'],
+            print_out=args['print_out']
+        )
+        automechanic.io.csv_merge(
+            table_csvs=table_csvs,
+            col_key=args['<col_key>'],
+            table_csv_out=args['table_csv_out'],
+            logger=logger
+        )
 
 
 def additions_main(argv):
@@ -185,7 +250,7 @@ def migrations_main(argv):
 def abstractions_init(argv):
     """ initialization for abstractions
     """
-    parser = _reactions_init_parser2('abstractions')
+    parser = _reactions_init_parser('abstractions')
     _get_help(parser, argv)
     args = vars(parser.parse_args(argv))
     with _ChangeDirectory(args['prefix']) as locator:
@@ -195,7 +260,7 @@ def abstractions_init(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io2.abstractions_init(
+        automechanic.io.abstractions_init(
             spc_csv=os.path.join(
                 locator.working_directory, args['<species_csv>']),
             rxn_csv=os.path.join(
@@ -209,7 +274,7 @@ def abstractions_init(argv):
 def additions_init(argv):
     """ initialization for additions
     """
-    parser = _reactions_init_parser2('abstractions')
+    parser = _reactions_init_parser('abstractions')
     _get_help(parser, argv)
     args = vars(parser.parse_args(argv))
     with _ChangeDirectory(args['prefix']) as locator:
@@ -219,7 +284,7 @@ def additions_init(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io2.additions_init(
+        automechanic.io.additions_init(
             spc_csv=os.path.join(
                 locator.working_directory, args['<species_csv>']),
             rxn_csv=os.path.join(
@@ -233,7 +298,7 @@ def additions_init(argv):
 def migrations_init(argv):
     """ initialization for migrations
     """
-    parser = _reactions_init_parser2('migrations')
+    parser = _reactions_init_parser('migrations')
     _get_help(parser, argv)
     args = vars(parser.parse_args(argv))
     with _ChangeDirectory(args['prefix']) as locator:
@@ -243,7 +308,7 @@ def migrations_init(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io2.migrations_init(
+        automechanic.io.migrations_init(
             spc_csv=os.path.join(
                 locator.working_directory, args['<species_csv>']),
             rxn_csv=os.path.join(
@@ -267,7 +332,7 @@ def abstractions_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io2.abstractions_run(
+        automechanic.io.abstractions_run(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -297,7 +362,7 @@ def additions_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io2.additions_run(
+        automechanic.io.additions_run(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -327,7 +392,7 @@ def migrations_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io2.migrations_run(
+        automechanic.io.migrations_run(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -348,8 +413,9 @@ def divide(argv):
     """ divide into binary categories, by key
     """
     keys = ('rad-rad', 'high-spin')
-    parser = _default_parser(prog='automech abstractions divide',
-                             log_file_name='divide.log')
+    parser = _action_parser(prog='automech abstractions divide',
+                            log_file_name='divide.log',
+                            prefix=True)
     parser.add_argument('key',
                         type=str,
                         help="options: {:s}".format(', '.join(keys)))
@@ -378,7 +444,7 @@ def divide(argv):
             print_out=args['print_out']
         )
 
-        automechanic.io2.divide(
+        automechanic.io.divide(
             key=args['key'],
             dir1=args['dir1'],
             dir2=args['dir2'],
@@ -395,7 +461,7 @@ def _route_subcommand(argv, cmd, subcmd_dct):
     """
     hlp_str = 'commands: ' + ', '.join(subcmd_dct.keys())
 
-    parser = _helpless_parser(cmd)
+    parser = _empty_parser(cmd)
     parser.add_argument('<command>',
                         type=str,
                         help=hlp_str)
@@ -431,8 +497,9 @@ def _split_command_args(argv):
 
 
 def _init_parser(*pos_args):
-    parser = _default_parser(prog='automech init',
-                             log_file_name='init.log')
+    parser = _action_parser(prog='automech init',
+                            log_file_name='init.log',
+                            prefix=True)
 
     for pos_arg in pos_args:
         parser.add_argument(**pos_arg)
@@ -455,8 +522,9 @@ def _init_parser(*pos_args):
 
 
 def _reactions_run_parser(cls):
-    parser = _default_parser(prog='automech {:s} run'.format(cls),
-                             log_file_name='run.log')
+    parser = _action_parser(prog='automech {:s} run'.format(cls),
+                            log_file_name='run.log',
+                            prefix=True)
 
     parser.add_argument('-t',
                         '--template_txt',
@@ -490,9 +558,10 @@ def _reactions_run_parser(cls):
     return parser
 
 
-def _reactions_init_parser2(cls):
-    parser = _default_parser(prog='automech {:s} init'.format(cls),
-                             log_file_name='init.log')
+def _reactions_init_parser(cls):
+    parser = _action_parser(prog='automech {:s} init'.format(cls),
+                            log_file_name='init.log',
+                            prefix=True)
 
     parser.add_argument(dest='<reactions_csv>',
                         type=str,
@@ -516,34 +585,8 @@ def _reactions_init_parser2(cls):
     return parser
 
 
-def _reactions_init_parser(cls):
-    parser = _default_parser(prog='automech {:s} init'.format(cls),
-                             log_file_name='init.log')
-
-    parser.add_argument('-s', '--species_csv',
-                        type=str,
-                        default='species.csv',
-                        help="[i] csv with 'species_id' and 'path' columns")
-    parser.add_argument('-r', '--reactions_csv',
-                        type=str,
-                        default='reactions.csv',
-                        help="[i(o)] csv with 'reaction_id' column")
-    parser.add_argument('-R',
-                        '--reactions_csv_out',
-                        type=str,
-                        default='reactions.csv',
-                        help="[o] csv file with 'reaction_id' and 'class' "
-                             "columns")
-    parser.add_argument('-C',
-                        '--candidates_csv_out',
-                        type=str,
-                        default='candidates.csv',
-                        help="[o] csv file with 'reaction_id' column")
-    return parser
-
-
-def _default_parser(prog, log_file_name):
-    parser = _helpless_parser(prog)
+def _action_parser(prog, log_file_name, prefix=False):
+    parser = _empty_parser(prog)
     parser.add_argument('-p', '--print_out',
                         dest='print_out',
                         action='store_true',
@@ -552,25 +595,28 @@ def _default_parser(prog, log_file_name):
                         type=int,
                         default=20,
                         help="log level: 20=INFO, 10=DEBUG")
-    parser.add_argument('-P', '--prefix',
-                        type=str,
-                        default='.',
-                        help="[o] prefix for all output")
     parser.add_argument('-L', '--log_file_name',
                         type=str,
                         default=log_file_name,
                         help="[o] name of the log file for automech output")
+
+    if prefix:
+        parser.add_argument('-P', '--prefix',
+                            type=str,
+                            default='.',
+                            help="[o] prefix for all output")
+
     return parser
 
 
-def _helpless_parser(prog):
+def _empty_parser(prog):
     parser = ArgumentParser(prog=prog, formatter_class=Formatter,
                             add_help=False)
     return parser
 
 
 def _logger(log_file_name, log_level=logging.INFO, print_out=False):
-    automechanic.io2.timestamp_if_exists(log_file_name)
+    automechanic.io.timestamp_if_exists(log_file_name)
 
     logger = logging.getLogger()
     logger.setLevel(log_level)

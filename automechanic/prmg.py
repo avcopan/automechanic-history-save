@@ -58,3 +58,10 @@ def mechanism_importance_values(mech_rxn_dcts):
     """
     ipvls = tuple(rxn_dct['Value'] for rxn_dct in mech_rxn_dcts)
     return ipvls
+
+
+def mechanism_reaction_names(mech_rxn_dcts):
+    """ reactions names
+    """
+    names = tuple(rxn_dct['name'] for rxn_dct in mech_rxn_dcts)
+    return names

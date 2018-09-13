@@ -88,8 +88,8 @@ def canonical_reaction_identifier(rid):
     """ canonical SMILES for a reaction identifier
     """
     rct_cid, prd_cid = rid.split('>>')
-    rct_sids = sorted(rct_cid.split('.'))
-    prd_sids = sorted(prd_cid.split('.'))
+    rct_sids = sorted(map(canonical, rct_cid.split('.')))
+    prd_sids = sorted(map(canonical, prd_cid.split('.')))
     rxn_sids = sorted([rct_sids, prd_sids], key=lambda x: (-len(x), x))
     return reaction_identifier(*rxn_sids)
 

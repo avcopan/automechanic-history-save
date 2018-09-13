@@ -1,22 +1,61 @@
 """ functions for working with pandas DataFrames
 """
+from itertools import chain
+from more_itertools import unique_everseen
 import pandas
 
 
-def merge(dfrs, col_key):
-    """ merge several dataframes into one, by keys
+def reindex(table_df):
+    """ add/overwrite 'index' column with a range index
     """
-    print dfrs[0][col_key]
+    table_df['index'] = range(len(table_df))
+    table_df = move_column_to_front(table_df, 'index')
+    return table_df
 
 
-if __name__ == '__main__':
-    import numpy
-    D1 = pandas.DataFrame({'a': numpy.arange(5),
-                           'b': 2 * numpy.ones(5),
-                           'c': 11 * numpy.ones(5)})
-    D2 = pandas.DataFrame({'a': numpy.arange(2, 7),
-                           'b': 3 * numpy.ones(5),
-                           'd': 12 * numpy.ones(5)})
-    print D1
-    print D2
-    print pandas.DataFrame.merge(D1, D2, on='a')
+def sort(table_df, col_key, descending=False):
+    """ sort a table by column
+    """
+    table_df = pandas.DataFrame.sort_values(
+        table_df, by=col_key, ascending=not descending)
+    return table_df
+
+
+def merge(table_dfs, col_key):
+    """ merge tables by column
+    """
+    col_key_vals = list(unique_everseen(chain(*(
+        table_df[col_key] for table_df in table_dfs))))
+    lookup_dcts = [lookup_dictionary(table_df, col_key)
+                   for table_df in table_dfs]
+
+    merged_rows = []
+    for val in col_key_vals:
+        row = {col_key: val}
+        for lookup_dct in lookup_dcts:
+            if val in lookup_dct:
+                row.update(lookup_dct[val])
+        merged_rows.append(row)
+    merged_col_keys = list(unique_everseen(chain(*table_dfs)))
+    merged_df = pandas.DataFrame.from_dict(merged_rows)[merged_col_keys]
+    return merged_df
+
+
+def lookup_dictionary(table_df, col_key):
+    """ look up table rows by column value
+    """
+    other_col_keys = [key for key in table_df.columns
+                      if key != col_key]
+    _, rows = zip(*table_df[other_col_keys].iterrows())
+    lookup_keys = table_df[col_key]
+    lookup_values = map(dict, rows)
+    return dict(zip(lookup_keys, lookup_values))
+
+
+def move_column_to_front(table_df, col_key):
+    """ move a column to a new position
+    """
+    assert col_key in table_df
+    col_keys = [col_key] + list(key for key in table_df.columns
+                                if key != col_key)
+    return table_df[col_keys]

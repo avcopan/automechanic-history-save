@@ -8,18 +8,21 @@ from functools import partial
 import pandas
 from .strid import canonical as canonical_species_identifier
 from .strid import canonical_reaction_identifier
-from .iohelp2 import abstraction_candidate
-from .iohelp2 import abstraction
-from .iohelp2 import abstraction_xyz_strings
-from .iohelp2 import abstraction_input_string
-from .iohelp2 import addition_candidate
-from .iohelp2 import addition
-from .iohelp2 import addition_xyz_strings
-from .iohelp2 import addition_input_string
-from .iohelp2 import migration_candidate
-from .iohelp2 import migration
-from .iohelp2 import migration_xyz_strings
-from .iohelp2 import migration_input_string
+from .iohelp import abstraction_candidate
+from .iohelp import abstraction
+from .iohelp import abstraction_xyz_strings
+from .iohelp import abstraction_input_string
+from .iohelp import addition_candidate
+from .iohelp import addition
+from .iohelp import addition_xyz_strings
+from .iohelp import addition_input_string
+from .iohelp import migration_candidate
+from .iohelp import migration
+from .iohelp import migration_xyz_strings
+from .iohelp import migration_input_string
+from .table import reindex as reindex_table
+from .table import sort as sort_table
+from .table import merge as merge_tables
 
 
 # logging functions
@@ -27,10 +30,10 @@ def init(mech_txt, spc_csv, spc_csv_out, rxn_csv_out, geom_dir, id2path,
          logger):
     """ initialize a mechanism from a CHEMKIN mechanism file
     """
-    from .iohelp2 import translate_chemkin_reaction
-    from .iohelp2 import translate_chemkin_thermo_data
-    from .pchemkin2 import reactions as chemkin_reactions
-    from .pchemkin2 import therm_datas as chemkin_therm_datas
+    from .iohelp import translate_chemkin_reaction
+    from .iohelp import translate_chemkin_thermo_data
+    from .pchemkin import reactions as chemkin_reactions
+    from .pchemkin import therm_datas as chemkin_therm_datas
 
     logger.info("Reading in {:s}".format(mech_txt))
     mech_str = open(mech_txt).read()
@@ -52,10 +55,10 @@ def init(mech_txt, spc_csv, spc_csv_out, rxn_csv_out, geom_dir, id2path,
         if rid:
             rid = canonical_reaction_identifier(rid)
             logger.info("Found reaction {:s}".format(rid))
-            rxn_rows.append((rid, rxn_str, num))
+            rxn_rows.append((rid, num+1, rxn_str))
         else:
             logger.info("Failed to translate reaction {:s}".format(rxn_str))
-            mis_rows.append((rxn_str, num))
+            mis_rows.append((num+1, rxn_str))
 
     thd_strs = chemkin_therm_datas(mech_str)
     thv_dct = dict(filter(bool,
@@ -65,20 +68,20 @@ def init(mech_txt, spc_csv, spc_csv_out, rxn_csv_out, geom_dir, id2path,
     spc_df = initialize_thermo_data(spc_df, thv_dct, logger)
     spc_df = initialize_geometries(spc_df, geom_dir, id2path, logger)
 
-    rxn_cols = ('reaction_id', 'reaction', 'number')
+    rxn_cols = ('reaction_id', 'chemkin_index', 'reaction')
     rxn_df = pandas.DataFrame(rxn_rows, columns=rxn_cols)
 
-    mis_cols = ('reaction', 'number')
+    mis_cols = ('chemkin_index', 'reaction')
     mis_df = pandas.DataFrame(mis_rows, columns=mis_cols)
 
     logger.info("Writing species to {:s}".format(spc_csv_out))
-    spc_df.to_csv(spc_csv_out, index=False)
+    write_table_to_csv(spc_df, spc_csv_out)
 
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
-    rxn_df.to_csv(rxn_csv_out, index=False)
+    write_table_to_csv(rxn_df, rxn_csv_out)
 
     logger.info("Writing missed reactions to {:s}".format(rxn_csv_out))
-    mis_df.to_csv('missed.csv', index=False)
+    write_table_to_csv(mis_df, 'missed.csv')
 
 
 def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, id2path,
@@ -89,6 +92,7 @@ def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, id2path,
     from .prmg import mechanism_reaction_identifiers
     from .prmg import mechanism_sensitivities
     from .prmg import mechanism_importance_values
+    from .prmg import mechanism_reaction_names
 
     logger.info("Parsing RMG mechanism JSON file")
 
@@ -99,9 +103,11 @@ def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, id2path,
     rids = mechanism_reaction_identifiers(mech_rxn_dcts)
     stvts = mechanism_sensitivities(mech_rxn_dcts)
     ipvls = mechanism_importance_values(mech_rxn_dcts)
+    names = mechanism_reaction_names(mech_rxn_dcts)
 
     spc_df = pandas.DataFrame({'species_id': sids})
     rxn_df = pandas.DataFrame({'reaction_id': rids,
+                               'reaction': names,
                                'sensitivity': stvts,
                                'rmg_value': ipvls})
 
@@ -116,10 +122,10 @@ def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, id2path,
     spc_df = initialize_geometries(spc_df, geom_dir, id2path, logger)
 
     logger.info("Writing species to {:s}".format(spc_csv_out))
-    spc_df.to_csv(spc_csv_out, index=False)
+    write_table_to_csv(spc_df, spc_csv_out)
 
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
-    rxn_df.to_csv(rxn_csv_out, index=False)
+    write_table_to_csv(rxn_df, rxn_csv_out)
 
 
 def initialize_thermo_data(spc_df, thv_dct, logger):
@@ -305,18 +311,56 @@ def divide(key, dir1, dir2, rxn_csv, rxn_csv_out, logger):
                 .format(rxn_csv1_out))
     if not os.path.exists(dir1):
         os.mkdir(dir1)
-    rxn_df1.to_csv(rxn_csv1_out)
+    write_table_to_csv(rxn_df1, rxn_csv1_out)
 
     rxn_csv2_out = os.path.join(dir2, rxn_csv_out)
     logger.info("Writing out-of-category reactions to {:s}"
                 .format(rxn_csv2_out))
     if not os.path.exists(dir2):
         os.mkdir(dir2)
-    rxn_df2.to_csv(rxn_csv2_out)
+    write_table_to_csv(rxn_df2, rxn_csv2_out)
 
     logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
-    timestamp_if_exists(rxn_csv)
-    rxn_df.to_csv(rxn_csv, index=False)
+    write_table_to_csv(rxn_df, rxn_csv)
+
+
+def csv_reindex(table_csv, logger):
+    """ reindex a table
+    """
+    logger.info("Reading in {:s}".format(table_csv))
+    table_df = pandas.read_csv(table_csv)
+
+    table_df = reindex_table(table_df)
+
+    logger.info("Writing updated {:s}".format(table_csv))
+    write_table_to_csv(table_df, table_csv)
+
+
+def csv_sort(table_csv, col_key, descending, logger):
+    """ sort table by column
+    """
+    logger.info("Reading in {:s}".format(table_csv))
+    table_df = pandas.read_csv(table_csv)
+
+    table_df = sort_table(table_df, col_key, descending=descending)
+
+    logger.info("Writing updated {:s}".format(table_csv))
+    write_table_to_csv(table_df, table_csv)
+
+
+def csv_merge(table_csvs, col_key, table_csv_out, logger):
+    """ merge tables by column
+    """
+    table_dfs = []
+    for table_csv in table_csvs:
+        logger.info("Reading in {:s}".format(table_csv))
+        table_df = pandas.read_csv(table_csv)
+        table_dfs.append(table_df)
+
+    table_df_out = merge_tables(table_dfs, col_key)
+
+    logger.info("Writing {:s}".format(table_csv_out))
+    write_table_to_csv(table_df_out, table_csv_out)
 
 
 # meta scripts
@@ -374,17 +418,16 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
                     .format(cls, os.path.abspath(rxn_csv_out)))
         cols = (('reaction_id',) + sid_cols + idx_cols)
         rxn_df_out = pandas.DataFrame(rxn_rows, columns=cols)
-        rxn_df_out.to_csv(rxn_csv_out, index=False)
+        write_table_to_csv(rxn_df_out, rxn_csv_out)
 
         logger.info("Writing left-over candidates to {:s}"
                     .format(os.path.abspath(cdt_csv_out)))
         columns = ('reaction_id', 'exception')
         cdt_df_out = pandas.DataFrame(cdt_rows, columns=columns)
-        cdt_df_out.to_csv(cdt_csv_out, index=False)
+        write_table_to_csv(cdt_df_out, cdt_csv_out)
 
         logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
-        timestamp_if_exists(rxn_csv)
-        rxn_df.to_csv(rxn_csv, index=False)
+        write_table_to_csv(rxn_df, rxn_csv)
 
     return _init
 
@@ -466,8 +509,7 @@ def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
                 rxn_df.loc[idx, 'created'] = False
 
         logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
-        timestamp_if_exists(rxn_csv)
-        rxn_df.to_csv(rxn_csv, index=False)
+        write_table_to_csv(rxn_df, rxn_csv)
 
         owd = os.getcwd()
         logger.info("Running job command in successfully created directories")
@@ -507,6 +549,13 @@ def read_file(fpath):
     """ read file contents as a string
     """
     return open(fpath).read()
+
+
+def write_table_to_csv(table_df, table_csv):
+    """ write table to csv
+    """
+    timestamp_if_exists(table_csv)
+    table_df.to_csv(table_csv, index=False)
 
 
 def timestamp_if_exists(fpath):

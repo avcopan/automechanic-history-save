@@ -22,7 +22,7 @@ def test__canonical_reaction_identifier():
     can_rid = 'C=CC(C(C=C)C)C_m1.[O][O]_m3>>C=C[C](C(C=C)C)C_m2.O[O]_m2'
     assert strid.canonical_reaction_identifier(rid) == can_rid
     rid = 'O=[C]O_m2>>[H]_m2.O=C=O_m1'
-    can_rid = 'O=C=O_m1.[H]_m2>>O=[C]O_m2'
+    can_rid = 'O=C=O_m1.[H]_m2>>O[C]=O_m2'
     assert strid.canonical_reaction_identifier(rid) == can_rid
 
 

@@ -1,8 +1,8 @@
 """ helpers for the io module
 """
 from itertools import permutations
-from .pchemkin2 import split_reaction as split_chemkin_reaction
-from .pchemkin2 import split_therm_data
+from .pchemkin import split_reaction as split_chemkin_reaction
+from .pchemkin import split_therm_data
 from .strid import split_reaction_identifier
 from .strid import formula as formula_from_strid
 from .strid import number_of_atoms as number_of_atoms_from_strid

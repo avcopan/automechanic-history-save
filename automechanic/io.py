@@ -75,10 +75,10 @@ def init(mech_txt, spc_csv, spc_csv_out, rxn_csv_out, geom_dir, id2path,
     mis_df = pandas.DataFrame(mis_rows, columns=mis_cols)
 
     logger.info("Writing species to {:s}".format(spc_csv_out))
-    write_table_to_csv(spc_df, spc_csv_out)
+    write_table_to_csv(spc_df, spc_csv_out, float_fmt='%.8f')
 
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
-    write_table_to_csv(rxn_df, rxn_csv_out)
+    write_table_to_csv(rxn_df, rxn_csv_out, float_fmt='%.4f')
 
     logger.info("Writing missed reactions to {:s}".format(rxn_csv_out))
     write_table_to_csv(mis_df, 'missed.csv')
@@ -95,6 +95,7 @@ def init_from_rmg(mech_json, spc_json, spc_csv_out, rxn_csv_out, geom_dir,
     from .prmg import reaction_name as reaction_name_from_dct
     from .prmg import reaction_identifier as reaction_identifier_from_dct
     from .prmg import reaction_sensitivity as reaction_sensitivity_from_dct
+    from .prmg import reaction_uncertainty as reaction_uncertainty_from_dct
     from .prmg import reaction_value as reaction_value_from_dct
 
     logger.info("Reading in {:s}".format(mech_json))
@@ -112,6 +113,7 @@ def init_from_rmg(mech_json, spc_json, spc_csv_out, rxn_csv_out, geom_dir,
     mech_rids = list(map(canonical_reaction_identifier,
                          map(reaction_identifier_from_dct, mech_rxn_dcts)))
     mech_stvys = list(map(reaction_sensitivity_from_dct, mech_rxn_dcts))
+    mech_uctys = list(map(reaction_uncertainty_from_dct, mech_rxn_dcts))
     mech_rvals = list(map(reaction_value_from_dct, mech_rxn_dcts))
 
     spc_cols = (spc_sids, spc_strs, spc_thvs)
@@ -119,15 +121,16 @@ def init_from_rmg(mech_json, spc_json, spc_csv_out, rxn_csv_out, geom_dir,
     spc_df = table_from_columns(spc_cols, spc_col_keys)
     spc_df = initialize_geometries(spc_df, geom_dir, id2path, logger)
 
-    rxn_cols = (mech_rids, mech_rxn_strs, mech_stvys, mech_rvals)
-    rxn_col_keys = ('reaction_id', 'reaction', 'sensitivity', 'rmg_value')
+    rxn_cols = (mech_rids, mech_rxn_strs, mech_stvys, mech_uctys, mech_rvals)
+    rxn_col_keys = ('reaction_id', 'reaction', 'sensitivity', 'uncertainty',
+                    'rmg_value')
     rxn_df = table_from_columns(rxn_cols, rxn_col_keys)
 
     logger.info("Writing species to {:s}".format(spc_csv_out))
-    write_table_to_csv(spc_df, spc_csv_out)
+    write_table_to_csv(spc_df, spc_csv_out, float_fmt='%.8f')
 
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
-    write_table_to_csv(rxn_df, rxn_csv_out)
+    write_table_to_csv(rxn_df, rxn_csv_out, float_fmt='%.4f')
 
 
 def initialize_thermo_data(spc_df, thv_dct, logger):
@@ -544,11 +547,11 @@ def read_file(fpath):
     return open(fpath).read()
 
 
-def write_table_to_csv(table_df, table_csv):
+def write_table_to_csv(table_df, table_csv, float_fmt=None):
     """ write table to csv
     """
     timestamp_if_exists(table_csv)
-    table_df.to_csv(table_csv, index=False)
+    table_df.to_csv(table_csv, index=False, float_format=float_fmt)
 
 
 def timestamp_if_exists(fpath):

@@ -118,3 +118,6 @@ example/geoms
 tmp/
 example-copy/
 init.log*
+
+# Mac files
+.DS_Store

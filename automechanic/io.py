@@ -2,7 +2,6 @@
 """
 import os
 import time
-import json
 import subprocess
 from functools import partial
 import pandas
@@ -20,6 +19,7 @@ from .iohelp import migration_candidate
 from .iohelp import migration
 from .iohelp import migration_xyz_strings
 from .iohelp import migration_input_string
+from .table import from_columns as table_from_columns
 from .table import reindex as reindex_table
 from .table import sort as sort_table
 from .table import merge as merge_tables
@@ -84,47 +84,44 @@ def init(mech_txt, spc_csv, spc_csv_out, rxn_csv_out, geom_dir, id2path,
     write_table_to_csv(mis_df, 'missed.csv')
 
 
-def init_from_rmg(rmg_mech_json, spc_csv_out, rxn_csv_out, geom_dir, id2path,
-                  logger):
-    """ initialize a mechanism from RMG's JSON file
+def init_from_rmg(mech_json, spc_json, spc_csv_out, rxn_csv_out, geom_dir,
+                  id2path, logger):
+    """ initialize a mechanism from RMG files
     """
-    # from .prmg import species_name as species_name_from_rmg
-    from .prmg import species_identifier as species_identifier_from_rmg
-    from .prmg import mechanism_species_dictionaries
-    from .prmg import mechanism_reaction_identifiers
-    from .prmg import mechanism_sensitivities
-    from .prmg import mechanism_importance_values
-    from .prmg import mechanism_reaction_names
+    import json
+    from .prmg import species_name as species_name_from_dct
+    from .prmg import species_identifier as species_identifier_from_dct
+    from .prmg import species_thermo_value as species_thermo_value_from_dct
+    from .prmg import reaction_name as reaction_name_from_dct
+    from .prmg import reaction_identifier as reaction_identifier_from_dct
+    from .prmg import reaction_sensitivity as reaction_sensitivity_from_dct
+    from .prmg import reaction_value as reaction_value_from_dct
 
-    logger.info("Parsing RMG mechanism JSON file")
+    logger.info("Reading in {:s}".format(mech_json))
+    mech_rxn_dcts = json.load(open(mech_json))
 
-    with open(rmg_mech_json) as fle:
-        mech_rxn_dcts = json.load(fle)
+    logger.info("Reading in {:s}".format(spc_json))
+    spc_dcts = json.load(open(spc_json))
 
-    spc_dcts = mechanism_species_dictionaries(mech_rxn_dcts)
-    sids = list(map(species_identifier_from_rmg, spc_dcts))
-    # spcs = list(map(species_name_from_rmg, spc_dcts))
-    rids = mechanism_reaction_identifiers(mech_rxn_dcts)
-    stvts = mechanism_sensitivities(mech_rxn_dcts)
-    ipvls = mechanism_importance_values(mech_rxn_dcts)
-    names = mechanism_reaction_names(mech_rxn_dcts)
+    spc_strs = list(map(species_name_from_dct, spc_dcts))
+    spc_sids = list(map(canonical_species_identifier,
+                        map(species_identifier_from_dct, spc_dcts)))
+    spc_thvs = list(map(species_thermo_value_from_dct, spc_dcts))
 
-    # 'species': spcs,
-    spc_df = pandas.DataFrame({'species_id': sids})
-    rxn_df = pandas.DataFrame({'reaction_id': rids,
-                               'reaction': names,
-                               'sensitivity': stvts,
-                               'rmg_value': ipvls})
+    mech_rxn_strs = list(map(reaction_name_from_dct, mech_rxn_dcts))
+    mech_rids = list(map(canonical_reaction_identifier,
+                         map(reaction_identifier_from_dct, mech_rxn_dcts)))
+    mech_stvys = list(map(reaction_sensitivity_from_dct, mech_rxn_dcts))
+    mech_rvals = list(map(reaction_value_from_dct, mech_rxn_dcts))
 
-    logger.info("Canonicalizing species IDs")
-    spc_df['species_id'] = map(canonical_species_identifier,
-                               spc_df['species_id'])
-
-    logger.info("Canonicalizing reaction IDs")
-    rxn_df['reaction_id'] = map(canonical_reaction_identifier,
-                                rxn_df['reaction_id'])
-
+    spc_cols = (spc_sids, spc_strs, spc_thvs)
+    spc_col_keys = ('species_id', 'species', 'therm_val')
+    spc_df = table_from_columns(spc_cols, spc_col_keys)
     spc_df = initialize_geometries(spc_df, geom_dir, id2path, logger)
+
+    rxn_cols = (mech_rids, mech_rxn_strs, mech_stvys, mech_rvals)
+    rxn_col_keys = ('reaction_id', 'reaction', 'sensitivity', 'rmg_value')
+    rxn_df = table_from_columns(rxn_cols, rxn_col_keys)
 
     logger.info("Writing species to {:s}".format(spc_csv_out))
     write_table_to_csv(spc_df, spc_csv_out)

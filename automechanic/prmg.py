@@ -1,8 +1,6 @@
-""" functions for parsing RMG files
+""" functions for processing RMG data
 """
-from itertools import starmap
-from itertools import chain
-from .strid import reaction_identifier
+from .strid import reaction_identifier as reaction_identifier_from_sids
 
 
 def species_name(spc_dct):
@@ -20,67 +18,47 @@ def species_identifier(spc_dct):
     return sid
 
 
+def species_thermo_value(spc_dct):
+    """ species enthalpy at 298
+    """
+    return spc_dct['H298']
+
+
+def reaction_name(rxn_dct):
+    """ reaction name
+    """
+    return rxn_dct['name']
+
+
+def reaction_identifier(rxn_dct):
+    """ reaction ID
+    """
+    rct_sids, prd_sids = reaction_species_identifiers(rxn_dct)
+    return reaction_identifier_from_sids(rct_sids, prd_sids)
+
+
+def reaction_sensitivity(rxn_dct):
+    """ reaction sensitivity
+    """
+    return rxn_dct['Sensitivity']
+
+
+def reaction_value(rxn_dct):
+    """ reaction value
+    """
+    return rxn_dct['Value']
+
+
+def reaction_species_dictionaries(rxn_dct):
+    """ return the species dictionaries for a reaction
+    """
+    return rxn_dct['Reactants'], rxn_dct['Products']
+
+
 def reaction_species_identifiers(rxn_dct):
-    """ parse an RMG reaction dictionary
+    """ species IDs for reactands and products
     """
-    rct_dcts = rxn_dct['Reactants']
-    prd_dcts = rxn_dct['Products']
-
-    rct_sids = list(map(species_identifier, rct_dcts))
-    prd_sids = list(map(species_identifier, prd_dcts))
-
+    rct_spc_dcts, prd_spc_dcts = reaction_species_dictionaries(rxn_dct)
+    rct_sids = tuple(map(species_identifier, rct_spc_dcts))
+    prd_sids = tuple(map(species_identifier, prd_spc_dcts))
     return rct_sids, prd_sids
-
-
-def mechanism_species_dictionaries(mech_rxn_dcts):
-    """ dictionaries for species in the mechanism
-    """
-    names = []
-    spc_dcts = []
-    for rxn_dct in mech_rxn_dcts:
-        for spc_dct in chain(rxn_dct['Reactants'], rxn_dct['Products']):
-            name = species_name(spc_dct)
-            if name not in names:
-                names.append(name)
-                spc_dcts.append(spc_dct)
-    return spc_dcts
-#
-#
-# def mechanism_species_identifiers(mech_rxn_dcts):
-#     """ IDs for species in the mechanism
-#     """
-#     rct_sids_lst, prd_sids_lst = zip(*map(reaction_species_identifiers,
-#                                           mech_rxn_dcts))
-#     sids = reduce(set.union, map(set, chain(rct_sids_lst, prd_sids_lst)))
-#     sids = sorted(sorted(sids), key=len)
-#     return sids
-
-
-def mechanism_reaction_identifiers(mech_rxn_dcts):
-    """ IDs for reactions in the mechanism
-    """
-    rct_sids_lst, prd_sids_lst = zip(*map(reaction_species_identifiers,
-                                          mech_rxn_dcts))
-    rids = tuple(starmap(reaction_identifier, zip(rct_sids_lst, prd_sids_lst)))
-    return rids
-
-
-def mechanism_sensitivities(mech_rxn_dcts):
-    """ reaction uncertainties
-    """
-    stvts = tuple(rxn_dct['Sensitivity'] for rxn_dct in mech_rxn_dcts)
-    return stvts
-
-
-def mechanism_importance_values(mech_rxn_dcts):
-    """ reaction uncertainties
-    """
-    ipvls = tuple(rxn_dct['Value'] for rxn_dct in mech_rxn_dcts)
-    return ipvls
-
-
-def mechanism_reaction_names(mech_rxn_dcts):
-    """ reactions names
-    """
-    names = tuple(rxn_dct['name'] for rxn_dct in mech_rxn_dcts)
-    return names

@@ -15,9 +15,11 @@ def test__automech__natgas_from_rmg():
     """
     tmp_path = tempfile.mkdtemp()
 
-    rmg_mech_json = os.path.join(NATGAS_PATH, 'mechanism.json')
+    mech_json = os.path.join(NATGAS_PATH, 'mechanism.json')
+    spc_json = os.path.join(NATGAS_PATH, 'species.json')
     subprocess.check_call(['automech', 'init_from_rmg',
-                           rmg_mech_json,
+                           mech_json,
+                           spc_json,
                            '-P', tmp_path,
                            '-p'])
     # these are too slow to run regularly right now (use syngas when available)

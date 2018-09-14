@@ -73,7 +73,12 @@ def init_from_rmg(argv):
         'type': str,
         'help': "[i] RMG's mechanism JSON file"
     }
-    parser = _init_parser(mech_json_arg)
+    species_json_arg = {
+        'dest': '<species_json>',
+        'type': str,
+        'help': "[i] RMG's species JSON file"
+    }
+    parser = _init_parser(mech_json_arg, species_json_arg)
     _get_help(parser, argv)
 
     args = vars(parser.parse_args(argv))
@@ -85,8 +90,10 @@ def init_from_rmg(argv):
             print_out=args['print_out']
         )
         automechanic.io.init_from_rmg(
-            rmg_mech_json=os.path.join(
+            mech_json=os.path.join(
                 locator.working_directory, args['<mech_json>']),
+            spc_json=os.path.join(
+                locator.working_directory, args['<species_json>']),
             spc_csv_out=args['species_csv_out'],
             rxn_csv_out=args['reactions_csv_out'],
             geom_dir=args['geom_dir'],

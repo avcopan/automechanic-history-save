@@ -5,6 +5,13 @@ from more_itertools import unique_everseen
 import pandas
 
 
+def from_columns(cols, col_keys):
+    """ construct a pandas.DataFrame from columns
+    """
+    col_dct = dict(zip(col_keys, cols))
+    return pandas.DataFrame(col_dct, columns=col_keys)
+
+
 def reindex(table_df):
     """ add/overwrite 'index' column with a range index
     """

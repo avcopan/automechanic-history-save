@@ -1,8 +1,10 @@
 """ graph functions
 """
 from functools import partial
+from itertools import chain
 from itertools import product
 from itertools import permutations
+from itertools import combinations
 from more_itertools import unique_everseen
 import numpy
 from .atom import valence
@@ -74,6 +76,34 @@ def multibond_opening_resonances(mgrph):
                         for idx1, idx2 in mbnd_bkeys)
 
     return res_mgrphs
+
+
+def multibond_forming_resonances(mgrph):
+    """ X.-Y. <-> X=Y resonances
+    """
+    mbnd_bkeys = potential_bond_keys(mgrph)
+
+    if len(mbnd_bkeys) == 1:
+        bkey, = mbnd_bkeys
+        idx1, idx2 = bkey
+        res_mgrphs = (mgrph, increment_bond_order(mgrph, idx1, idx2, incr=+1))
+    else:
+        seeds = tuple(increment_bond_order(mgrph, idx1, idx2, incr=+1)
+                      for idx1, idx2 in mbnd_bkeys)
+        res_mgrphs = (mgrph,)
+        res_mgrphs += tuple(chain(
+            *(multibond_forming_resonances(seed) for seed in seeds)))
+
+    return res_mgrphs
+
+
+def potential_bond_keys(mgrph):
+    """ neighboring radical sites of a molecular graph
+    """
+    ridxs = radical_sites(mgrph)
+    return tuple(frozenset([ridx1, ridx2])
+                 for ridx1, ridx2 in combinations(ridxs, 2)
+                 if ridx2 in atom_neighborhood_indices(mgrph, ridx1))
 
 
 def radical_sites(mgrph):
@@ -273,13 +303,14 @@ def addition_indices(x_mgrph, y_mgrph, xy_mgrph):
         for x_idx, x_idx_other in permutations(x_bkey):
             x_open_mgrph = increment_bond_order(
                 x_mgrph, x_idx, x_idx_other, incr=-1)
-            xy_mgrph_ = bind(y_mgrph, x_open_mgrph, y_idx, x_idx)
-            iso = isomorphism(xy_mgrph, xy_mgrph_)
-            if iso:
-                natms_y = len(atoms(y_mgrph))
-                xy_idx_y = int(iso[y_idx])
-                xy_idx_x = int(iso[natms_y + x_idx])
-                idxs = (x_idx, y_idx, xy_idx_x, xy_idx_y)
+            xy_open_mgrph = bind(y_mgrph, x_open_mgrph, y_idx, x_idx)
+            for xy_res_mgrph in multibond_forming_resonances(xy_open_mgrph):
+                iso = isomorphism(xy_mgrph, xy_res_mgrph)
+                if iso:
+                    natms_y = len(atoms(y_mgrph))
+                    xy_idx_y = int(iso[y_idx])
+                    xy_idx_x = int(iso[natms_y + x_idx])
+                    idxs = (x_idx, y_idx, xy_idx_x, xy_idx_y)
 
     return idxs
 

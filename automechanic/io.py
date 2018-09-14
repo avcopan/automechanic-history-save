@@ -2,6 +2,7 @@
 """
 import os
 import time
+import json
 import subprocess
 from functools import partial
 import pandas
@@ -20,31 +21,32 @@ from .iohelp import migration
 from .iohelp import migration_xyz_strings
 from .iohelp import migration_input_string
 from .table import from_columns as table_from_columns
+from .table import from_rows as table_from_rows
 from .table import reindex as reindex_table
 from .table import sort as sort_table
 from .table import merge as merge_tables
 
 
-# logging functions
-def init(mech_txt, spc_csv, spc_csv_out, rxn_csv_out, geom_dir, id2path,
-         logger):
+def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
+         therm_txt, without_thermo, logger):
     """ initialize a mechanism from a CHEMKIN mechanism file
     """
     from .iohelp import translate_chemkin_reaction
-    from .iohelp import translate_chemkin_thermo_data
+    from .iohelp import thermo_value_dictionary
     from .pchemkin import reactions as chemkin_reactions
     from .pchemkin import therm_datas as chemkin_therm_datas
 
     logger.info("Reading in {:s}".format(mech_txt))
-    mech_str = open(mech_txt).read()
+    mech_str = read_file(mech_txt)
 
     logger.info("Reading in {:s}".format(spc_csv))
     spc_df = pandas.read_csv(spc_csv)
 
-    spc_df['species_id'] = map(canonical_species_identifier,
-                               spc_df['species_id'])
+    spcs = tuple(spc_df['species'])
+    sids = tuple(map(canonical_species_identifier, spc_df['species_id']))
+    sid_dct = dict(zip(spcs, sids))
 
-    sid_dct = dict(zip(spc_df['species'], spc_df['species_id']))
+    spc_df['species_id'] = sids
 
     logger.info("Finding reactions")
     rxn_strs = chemkin_reactions(mech_str)
@@ -60,48 +62,52 @@ def init(mech_txt, spc_csv, spc_csv_out, rxn_csv_out, geom_dir, id2path,
             logger.info("Failed to translate reaction {:s}".format(rxn_str))
             mis_rows.append((num+1, rxn_str))
 
-    thd_strs = chemkin_therm_datas(mech_str)
-    thv_dct = dict(filter(bool,
-                          (translate_chemkin_thermo_data(thd_str, sid_dct)
-                           for thd_str in thd_strs)))
+    if not without_thermo:
+        if therm_txt is None:
+            therm_str = mech_str
+        else:
+            logger.info("Reading in {:s}".format(therm_txt))
+            therm_str = read_file(therm_txt)
+        thd_strs = chemkin_therm_datas(therm_str, specs=spcs)
+        thv_dct = thermo_value_dictionary(thd_strs, sid_dct)
+        spc_df['therm_val'] = map(thv_dct.__getitem__, spc_df['species_id'])
 
-    spc_df = initialize_thermo_data(spc_df, thv_dct, logger)
     spc_df = initialize_geometries(spc_df, geom_dir, id2path, logger)
 
     rxn_cols = ('reaction_id', 'chemkin_index', 'reaction')
-    rxn_df = pandas.DataFrame(rxn_rows, columns=rxn_cols)
+    rxn_df = table_from_rows(rxn_rows, rxn_cols)
 
     mis_cols = ('chemkin_index', 'reaction')
-    mis_df = pandas.DataFrame(mis_rows, columns=mis_cols)
+    mis_df = table_from_rows(mis_rows, mis_cols)
 
     logger.info("Writing species to {:s}".format(spc_csv_out))
-    write_table_to_csv(spc_df, spc_csv_out)
+    write_table_to_csv(spc_df, spc_csv_out, float_fmt='%.8f')
 
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
-    write_table_to_csv(rxn_df, rxn_csv_out)
+    write_table_to_csv(rxn_df, rxn_csv_out, float_fmt='%.4f')
 
     logger.info("Writing missed reactions to {:s}".format(rxn_csv_out))
     write_table_to_csv(mis_df, 'missed.csv')
 
 
-def init_from_rmg(mech_json, spc_json, spc_csv_out, rxn_csv_out, geom_dir,
+def init_from_rmg(mech_json, spc_json, rxn_csv_out, spc_csv_out, geom_dir,
                   id2path, logger):
     """ initialize a mechanism from RMG files
     """
-    import json
     from .prmg import species_name as species_name_from_dct
     from .prmg import species_identifier as species_identifier_from_dct
     from .prmg import species_thermo_value as species_thermo_value_from_dct
     from .prmg import reaction_name as reaction_name_from_dct
     from .prmg import reaction_identifier as reaction_identifier_from_dct
     from .prmg import reaction_sensitivity as reaction_sensitivity_from_dct
+    from .prmg import reaction_uncertainty as reaction_uncertainty_from_dct
     from .prmg import reaction_value as reaction_value_from_dct
 
     logger.info("Reading in {:s}".format(mech_json))
-    mech_rxn_dcts = json.load(open(mech_json))
+    mech_rxn_dcts = read_json(mech_json)
 
     logger.info("Reading in {:s}".format(spc_json))
-    spc_dcts = json.load(open(spc_json))
+    spc_dcts = read_json(spc_json)
 
     spc_strs = list(map(species_name_from_dct, spc_dcts))
     spc_sids = list(map(canonical_species_identifier,
@@ -112,6 +118,7 @@ def init_from_rmg(mech_json, spc_json, spc_csv_out, rxn_csv_out, geom_dir,
     mech_rids = list(map(canonical_reaction_identifier,
                          map(reaction_identifier_from_dct, mech_rxn_dcts)))
     mech_stvys = list(map(reaction_sensitivity_from_dct, mech_rxn_dcts))
+    mech_uctys = list(map(reaction_uncertainty_from_dct, mech_rxn_dcts))
     mech_rvals = list(map(reaction_value_from_dct, mech_rxn_dcts))
 
     spc_cols = (spc_sids, spc_strs, spc_thvs)
@@ -119,33 +126,16 @@ def init_from_rmg(mech_json, spc_json, spc_csv_out, rxn_csv_out, geom_dir,
     spc_df = table_from_columns(spc_cols, spc_col_keys)
     spc_df = initialize_geometries(spc_df, geom_dir, id2path, logger)
 
-    rxn_cols = (mech_rids, mech_rxn_strs, mech_stvys, mech_rvals)
-    rxn_col_keys = ('reaction_id', 'reaction', 'sensitivity', 'rmg_value')
+    rxn_cols = (mech_rids, mech_rxn_strs, mech_stvys, mech_uctys, mech_rvals)
+    rxn_col_keys = ('reaction_id', 'reaction', 'sensitivity', 'uncertainty',
+                    'rmg_value')
     rxn_df = table_from_columns(rxn_cols, rxn_col_keys)
 
     logger.info("Writing species to {:s}".format(spc_csv_out))
-    write_table_to_csv(spc_df, spc_csv_out)
+    write_table_to_csv(spc_df, spc_csv_out, float_fmt='%.8f')
 
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
-    write_table_to_csv(rxn_df, rxn_csv_out)
-
-
-def initialize_thermo_data(spc_df, thv_dct, logger):
-    """ add thermo data to the species table
-    """
-    assert 'species_id' in spc_df
-
-    for idx, row in spc_df.iterrows():
-        sid = row['species_id']
-        if sid in thv_dct:
-            thv = thv_dct[sid]
-            logger.info("Found thermo data for {:s}, H298 = {:f}"
-                        .format(sid, thv))
-            spc_df.at[idx, 'therm_val'] = thv
-        else:
-            logger.info("No thermo data for {:s}".format(sid))
-
-    return spc_df
+    write_table_to_csv(rxn_df, rxn_csv_out, float_fmt='%.4f')
 
 
 def initialize_geometries(spc_df, geom_dir, id2path, logger):
@@ -418,14 +408,14 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
 
         logger.info("Writing {:s} reactions to {:s}"
                     .format(cls, os.path.abspath(rxn_csv_out)))
-        cols = (('reaction_id',) + sid_cols + idx_cols)
-        rxn_df_out = pandas.DataFrame(rxn_rows, columns=cols)
+        col_keys = (('reaction_id',) + sid_cols + idx_cols)
+        rxn_df_out = table_from_rows(rxn_rows, col_keys)
         write_table_to_csv(rxn_df_out, rxn_csv_out)
 
         logger.info("Writing left-over candidates to {:s}"
                     .format(os.path.abspath(cdt_csv_out)))
-        columns = ('reaction_id', 'exception')
-        cdt_df_out = pandas.DataFrame(cdt_rows, columns=columns)
+        cdt_col_keys = ('reaction_id', 'exception')
+        cdt_df_out = table_from_rows(cdt_rows, cdt_col_keys)
         write_table_to_csv(cdt_df_out, cdt_csv_out)
 
         logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
@@ -544,11 +534,17 @@ def read_file(fpath):
     return open(fpath).read()
 
 
-def write_table_to_csv(table_df, table_csv):
+def read_json(fpath):
+    """ read json file
+    """
+    return json.load(open(fpath))
+
+
+def write_table_to_csv(table_df, table_csv, float_fmt=None):
     """ write table to csv
     """
     timestamp_if_exists(table_csv)
-    table_df.to_csv(table_csv, index=False)
+    table_df.to_csv(table_csv, index=False, float_format=float_fmt)
 
 
 def timestamp_if_exists(fpath):

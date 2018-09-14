@@ -260,6 +260,25 @@ def test__multibond_opening_resonances():
             == {mgrph1, mgrph2, mgrph3})
 
 
+def test__multibond_forming_resonances():
+    """ test graph.multibond_forming_resonances()
+    """
+    mgrph1 = (('O', 'C', 'O'),
+              frozenset([(frozenset([1, 2]), 1), (frozenset([0, 1]), 1)]))
+    mgrph2 = (('O', 'C', 'O'),
+              frozenset([(frozenset([1, 2]), 1), (frozenset([0, 1]), 2)]))
+    mgrph3 = (('O', 'C', 'O'),
+              frozenset([(frozenset([1, 2]), 2), (frozenset([0, 1]), 2)]))
+    mgrph4 = (('O', 'C', 'O'),
+              frozenset([(frozenset([1, 2]), 2), (frozenset([0, 1]), 1)]))
+    mgrph5 = (('O', 'C', 'O'),
+              frozenset([(frozenset([1, 2]), 2), (frozenset([0, 1]), 2)]))
+
+    assert (set(graph.multibond_forming_resonances(mgrph1))
+            == {mgrph1, mgrph2, mgrph3, mgrph4, mgrph5})
+
+
+
 def test__forward_abstraction_indices():
     """ test graph.forward_abstraction_indices()
     """
@@ -329,4 +348,4 @@ def test__migration_indices():
 
 
 if __name__ == '__main__':
-    test__migration_indices()
+    test__multibond_forming_resonances()

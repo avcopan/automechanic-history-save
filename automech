@@ -31,36 +31,53 @@ def main(argv):
 def init(argv):
     """ initialize a mechanism
     """
-    mech_txt_arg = {
+    mech_txt_arginfo = ((), {
         'dest': '<mech_txt>',
         'type': str,
         'help': "[i] CHEMKIN mechanism file"
-    }
-    spc_csv_arg = {
+    })
+    spc_csv_arginfo = ((), {
         'dest': '<species_csv>',
         'type': str,
         'help': "[i] csv with 'species_id' column"
-    }
-    parser = _init_parser(mech_txt_arg, spc_csv_arg)
+    })
+    therm_txt_arginfo = (('-t', '--therm_txt'), {
+        'type': str,
+        'default': None,
+        'help': "[i] CHEMKIN thermo data file"
+    })
+    no_thermo_arginfo = (('-w', '--without_thermo'), {
+        'action': 'store_true',
+        'help': "Initialize without thermo data"
+    })
+    parser = _init_parser(mech_txt_arginfo, spc_csv_arginfo, therm_txt_arginfo,
+                          no_thermo_arginfo)
     _get_help(parser, argv)
 
     args = vars(parser.parse_args(argv))
 
-    with _ChangeDirectory(args['prefix']) as locator:
+    mech_txt = args['<mech_txt>']
+    spc_csv = args['<species_csv>']
+    therm_txt = args['therm_txt']
+    abs_mech_txt = os.path.abspath(mech_txt)
+    abs_spc_csv = os.path.abspath(spc_csv)
+    abs_therm_txt = os.path.abspath(therm_txt) if therm_txt else None
+
+    with _ChangeDirectory(args['prefix']):
         logger = _logger(
             log_file_name=args['log_file_name'],
             log_level=args['log_level'],
             print_out=args['print_out']
         )
         automechanic.io.init(
-            mech_txt=os.path.join(
-                locator.working_directory, args['<mech_txt>']),
-            spc_csv=os.path.join(
-                locator.working_directory, args['<species_csv>']),
-            spc_csv_out=args['species_csv_out'],
+            mech_txt=abs_mech_txt,
+            spc_csv=abs_spc_csv,
             rxn_csv_out=args['reactions_csv_out'],
+            spc_csv_out=args['species_csv_out'],
             geom_dir=args['geom_dir'],
             id2path=from_qtc.obtools.get_smiles_filename,
+            therm_txt=abs_therm_txt,
+            without_thermo=args['without_thermo'],
             logger=logger
         )
 
@@ -68,17 +85,17 @@ def init(argv):
 def init_from_rmg(argv):
     """ initialize a mechanism from an RMG json file
     """
-    mech_json_arg = {
+    mech_json_arginfo = ((), {
         'dest': '<mech_json>',
         'type': str,
         'help': "[i] RMG's mechanism JSON file"
-    }
-    species_json_arg = {
+    })
+    species_json_arginfo = ((), {
         'dest': '<species_json>',
         'type': str,
         'help': "[i] RMG's species JSON file"
-    }
-    parser = _init_parser(mech_json_arg, species_json_arg)
+    })
+    parser = _init_parser(mech_json_arginfo, species_json_arginfo)
     _get_help(parser, argv)
 
     args = vars(parser.parse_args(argv))
@@ -94,8 +111,8 @@ def init_from_rmg(argv):
                 locator.working_directory, args['<mech_json>']),
             spc_json=os.path.join(
                 locator.working_directory, args['<species_json>']),
-            spc_csv_out=args['species_csv_out'],
             rxn_csv_out=args['reactions_csv_out'],
+            spc_csv_out=args['species_csv_out'],
             geom_dir=args['geom_dir'],
             id2path=from_qtc.obtools.get_smiles_filename,
             logger=logger
@@ -503,13 +520,13 @@ def _split_command_args(argv):
     return automech_argv, job_argv
 
 
-def _init_parser(*pos_args):
+def _init_parser(*arginfo_lst):
     parser = _action_parser(prog='automech init',
                             log_file_name='init.log',
                             prefix=True)
 
-    for pos_arg in pos_args:
-        parser.add_argument(**pos_arg)
+    for args, kwargs in arginfo_lst:
+        parser.add_argument(*args, **kwargs)
 
     parser.add_argument('-D', '--geom_dir',
                         type=str,

@@ -43,6 +43,12 @@ def reaction_sensitivity(rxn_dct):
     return rxn_dct['Sensitivity']
 
 
+def reaction_uncertainty(rxn_dct):
+    """ reaction uncertaingy
+    """
+    return rxn_dct['Uncertainty']
+
+
 def reaction_value(rxn_dct):
     """ reaction value
     """

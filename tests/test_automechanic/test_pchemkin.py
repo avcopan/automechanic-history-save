@@ -58,5 +58,33 @@ def test__species():
     assert pchemkin.species(mech_str) == specs
 
 
+def test__split_therm_data():
+    """ test pchemkin.split_therm_data
+    """
+    poly = """AR  G 5/97AR  1  0    0      0G   200.000  6000.00  1000.00    1
+ 2.50000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00  2
+-7.45375000E+02 4.37967491E+00 2.50000000E+00 0.00000000E+00 0.00000000E+00  3
+ 0.00000000E+00 0.00000000E+00-7.45375000E+02 4.37967491E+00 0.00000000E+00  4
+ """
+    specs = ['AR']
+    spec = 'AR'
+    cfts_lo = (2.5, 0.0, 0.0, 0.0, 0.0, -745.375, 4.37967491)
+    cfts_hi = (2.5, 0.0, 0.0, 0.0, 0.0, -745.375, 4.37967491)
+    temp_cross = 1000.
+    temp_lo = 200.
+    temp_hi = 6000.
+    assert (pchemkin.split_therm_data(poly, specs)
+            == (spec, cfts_lo, cfts_hi, temp_cross, temp_lo, temp_hi))
+
+
+def test__therm_datas():
+    """ test pchemkin.therm_datas
+    """
+    therm_fpath = os.path.join(DATA_PATH, 'heptane_thermo_data.txt')
+    therm_str = open(therm_fpath).read()
+    specs = ['AR', 'N2', 'HE', 'H', 'O2', 'O', 'OH']
+    assert len(pchemkin.therm_datas(therm_str, specs=specs)) == len(specs)
+
+
 if __name__ == '__main__':
-    test__reactions()
+    test__therm_datas()

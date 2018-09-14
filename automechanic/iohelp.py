@@ -33,6 +33,14 @@ def translate_chemkin_reaction(rxn_str, sid_dct):
     return rid
 
 
+def thermo_value_dictionary(thd_strs, sid_dct):
+    """ a dictionary of thermo values
+    """
+    thv_dct = dict(translate_chemkin_thermo_data(thd_str, sid_dct)
+                   for thd_str in thd_strs)
+    return thv_dct
+
+
 def translate_chemkin_thermo_data(thd_str, sid_dct):
     """ determine the heat of formation from a CHEMKIN NASA polynomial
     """
@@ -49,6 +57,9 @@ def translate_chemkin_thermo_data(thd_str, sid_dct):
         sid = sid_dct[spc]
         h_298 = therm_enthalpy(t_298, cfts)
         ret = (sid, h_298)
+    else:
+        raise ValueError("Failed to parse thermo data:\n{:s}"
+                         .format(str(thd_str)))
 
     return ret
 
@@ -101,6 +112,9 @@ def addition(rid, mgeo_dct, _thv_dct=None):
         mgeos = list(map(mgeo_dct.__getitem__, addn_sids))
         addn_idxs = addition_indices(*mgeos)
         if addn_idxs:
+            if _add_switch_reactants_for_torsscan(addn_sids):
+                addn_sids, addn_idxs = _add_switch_reactants(
+                    addn_sids, addn_idxs)
             addn = (addn_sids, addn_idxs)
     return addn
 
@@ -162,7 +176,7 @@ def addition_xyz_strings(sids, idxs, mgeo_dct):
     x_dxyz = _addition_xyz_string_x(x_mgeo, x_idx)
     y_dxyz = _addition_xyz_string_y(y_mgeo, y_idx)
 
-    if y_dxyz:
+    if x_dxyz:
         dxyz_dct = {xy_sid: xy_dxyz, x_sid: x_dxyz, y_sid: y_dxyz}
 
     return dxyz_dct
@@ -256,10 +270,15 @@ def _abs_matches_formula(r1_sid, r2_sid, p1_sid, p2_sid):
 
 def _abs_reverse_for_torsscan(abst_sids):
     q1h_sid, _, _, q2h_sid = abst_sids
-    ret = False
-    if (number_of_atoms_from_strid(q1h_sid) < 3 and
-            number_of_atoms_from_strid(q2h_sid) >= 3):
-        ret = True
+    ret = (number_of_atoms_from_strid(q1h_sid) < 3 and
+           number_of_atoms_from_strid(q2h_sid) >= 3)
+    return ret
+
+
+def _add_switch_reactants_for_torsscan(addn_sids):
+    x_sid, y_sid, _ = addn_sids
+    ret = (number_of_atoms_from_strid(x_sid) < 3 and
+           number_of_atoms_from_strid(y_sid) >= 3)
     return ret
 
 
@@ -271,33 +290,43 @@ def _mig_reverse(mgrn_sids, mgrn_idxs):
     return rev_mgrn_sids, rev_mgrn_idxs
 
 
+def _add_switch_reactants(addn_sids, addn_idxs):
+    assert len(addn_sids) == 3
+    assert len(addn_idxs) == 4
+    x_sid, y_sid, xy_sid = addn_sids
+    x_idx, y_idx, xy_idx_x, xy_idx_y = addn_idxs
+    ret_addn_sids = (y_sid, x_sid, xy_sid)
+    ret_addn_idxs = (y_idx, x_idx, xy_idx_y, xy_idx_x)
+    return (ret_addn_sids, ret_addn_idxs)
+
+
 def _addition_xyz_string_x(mgeo, x_idx):
-    dxyz = xyz_string(mgeo, {x_idx: 4})
+    dxyz = None
+    mgrph = graph(mgeo)
+    _2chainz = ((xn1_idx, xn2_idx)
+                for xn1_idx in atom_neighborhood_indices(mgrph, x_idx)
+                for xn2_idx in atom_neighborhood_indices(mgrph, xn1_idx)
+                if xn2_idx != x_idx)
+    idxs = next(_2chainz, None)
+    if idxs:
+        xn1_idx, xn2_idx = idxs
+        dxyz = xyz_string(mgeo, {x_idx: 2, xn1_idx: 1, xn2_idx: 3})
     return dxyz
 
 
 def _addition_xyz_string_y(mgeo, y_idx):
-    dxyz = None
-    mgrph = graph(mgeo)
-    _2chainz = ((yn1_idx, yn2_idx)
-                for yn1_idx in atom_neighborhood_indices(mgrph, y_idx)
-                for yn2_idx in atom_neighborhood_indices(mgrph, yn1_idx)
-                if yn2_idx != y_idx)
-    idxs = next(_2chainz, None)
-    if idxs:
-        yn1_idx, yn2_idx = idxs
-        dxyz = xyz_string(mgeo, {y_idx: 2, yn1_idx: 1, yn2_idx: 3})
+    dxyz = xyz_string(mgeo, {y_idx: 4})
     return dxyz
 
 
 def _abstraction_xyz_string_q1h(mgeo, h_idx):
     # these functions happen to be the same
-    return _addition_xyz_string_y(mgeo=mgeo, y_idx=h_idx)
+    return _addition_xyz_string_x(mgeo=mgeo, x_idx=h_idx)
 
 
 def _abstraction_xyz_string_q2(mgeo, q_idx):
     # these functions happen to be the same
-    return _addition_xyz_string_x(mgeo=mgeo, x_idx=q_idx)
+    return _addition_xyz_string_y(mgeo=mgeo, y_idx=q_idx)
 
 
 def _migration_xyz_string(mgeo, h_idx, a_idx):

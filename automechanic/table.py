@@ -12,6 +12,12 @@ def from_columns(cols, col_keys):
     return pandas.DataFrame(col_dct, columns=col_keys)
 
 
+def from_rows(rows, col_keys):
+    """ construct a pandas.DataFrame from rows
+    """
+    return pandas.DataFrame(rows, columns=col_keys)
+
+
 def reindex(table_df):
     """ add/overwrite 'index' column with a range index
     """

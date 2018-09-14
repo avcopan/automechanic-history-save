@@ -19,6 +19,7 @@ from .parse import FLOAT
 from .parse import SIGN
 from .parse import INTEGER
 from .parse import STRING_START
+from .parse import LINE_START
 
 
 WHITESPACES = one_or_more(WHITESPACE, greedy=False)
@@ -63,7 +64,7 @@ def block(mech_str, name):
     gdct = group_dictionary(block_pattern, clean_mech_str)
     if gdct:
         ret_str = gdct['contents']
-    return ret_str
+    return '\n'.join(ret_str.splitlines())
 
 
 def elements_block(mech_str):
@@ -132,7 +133,7 @@ def species(mech_str):
     return specs
 
 
-def reactions(mech_str):
+def reactions(mech_str, specs=None):
     """ all reactions in a CHEMKIN file string
 
     :param mech_str: CHEMKIN file contents
@@ -141,14 +142,14 @@ def reactions(mech_str):
     :returns: reactions
     :rtype: list of strings
     """
-    specs = species(mech_str)
+    specs = species(mech_str) if specs is None else specs
     reag_pattern = _en_reagents_pattern(specs)
     reac_pattern = _reaction_pattern(reag_pattern)
     reac_block_str = reactions_block(mech_str)
     return re.findall(reac_pattern, reac_block_str)
 
 
-def therm_datas(mech_str):
+def therm_datas(mech_str, specs=None):
     """ all NASA polynomials in a CHEMKIN file string
 
     :param mech_str: CHEMKIN file contents
@@ -159,11 +160,11 @@ def therm_datas(mech_str):
     """
     polys = None
 
-    specs = species(mech_str)
+    specs = species(mech_str) if specs is None else specs
     ther_pattern = _therm_data_pattern(specs)
     ther_block_str = thermo_block(mech_str)
     if ther_block_str:
-        polys = re.findall(ther_pattern, ther_block_str)
+        polys = re.findall(ther_pattern, ther_block_str, re.MULTILINE)
 
     return polys
 
@@ -220,13 +221,13 @@ def split_therm_data(poly, specs):
     exp = FLOAT + one_of_these(['E', 'e']) + maybe(SIGN) + INTEGER
     cfts = re.findall(exp, coef_lines)
 
-    if gdct and len(cfts) == 14:
+    if gdct and len(cfts) in (14, 15):
         spec = gdct['species']
         temp_lo = float(gdct['temp_lo'])
         temp_hi = float(gdct['temp_hi'])
         temp_cross = float(gdct['temp_cross'])
-        cfts_hi = list(map(float, cfts[:7]))
-        cfts_lo = list(map(float, cfts[7:]))
+        cfts_hi = tuple(map(float, cfts[:7]))
+        cfts_lo = tuple(map(float, cfts[7:14]))
         poly_data = (spec, cfts_lo, cfts_hi, temp_cross, temp_lo, temp_hi)
 
     return poly_data
@@ -287,14 +288,14 @@ def _therm_data_pattern(specs):
     exp = FLOAT + one_of_these(['E', 'e']) + maybe(SIGN) + INTEGER
 
     thermo_pattern = maybe_spaces.join(
-        [reagent, WHITESPACE, one_or_more(NON_NEWLINE),
+        [LINE_START, reagent, WHITESPACE, one_or_more(NON_NEWLINE),
          FLOAT, WHITESPACE, FLOAT, WHITESPACE, FLOAT,
          zero_or_more(NON_NEWLINE),
-         WHITESPACE, '1', NEWLINE,
+         WHITESPACE, maybe(INTEGER), '1', NEWLINE,
          exp, exp, exp, exp, exp,
          WHITESPACE, '2', NEWLINE,
          exp, exp, exp, exp, exp,
          WHITESPACE, '3', NEWLINE,
-         exp, exp, exp, exp,
+         exp, exp, exp, exp, maybe(exp),
          WHITESPACE, '4', NEWLINE])
     return thermo_pattern

@@ -20,6 +20,12 @@ def atoms(mgrph):
     return atms
 
 
+def indices(mgrph):
+    """ indices of the atoms in thie graph
+    """
+    return tuple(range(len(atoms(mgrph))))
+
+
 def formula(mgrph):
     """ the molecular formula of this molecular graph
     """

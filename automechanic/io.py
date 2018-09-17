@@ -34,7 +34,7 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
     from .iohelp import translate_chemkin_reaction
     from .iohelp import thermo_value_dictionary
     from .pchemkin import reactions as chemkin_reactions
-    from .pchemkin import therm_datas as chemkin_therm_datas
+    from .pchemkin import therm_data_strings as chemkin_therm_data_strings
 
     logger.info("Reading in {:s}".format(mech_txt))
     mech_str = read_file(mech_txt)
@@ -68,7 +68,7 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
         else:
             logger.info("Reading in {:s}".format(therm_txt))
             therm_str = read_file(therm_txt)
-        thd_strs = chemkin_therm_datas(therm_str, specs=spcs)
+        thd_strs = chemkin_therm_data_strings(therm_str)
         thv_dct = thermo_value_dictionary(thd_strs, sid_dct)
         spc_df['therm_val'] = map(thv_dct.__getitem__, spc_df['species_id'])
 
@@ -460,9 +460,7 @@ def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
             logger.info('reaction {:d}: {:s}'.format(idx, rid))
 
             sids = tuple(row[list(sid_cols)])
-            logger.info(sids)
             idxs = tuple(row[list(idx_cols)])
-            logger.info(idxs)
             logger.info('  indices: {:s}'.format(str(idxs)))
 
             dxyz_dct = reaction_xyz_strings(sids, idxs, mgeo_dct)

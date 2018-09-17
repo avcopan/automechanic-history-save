@@ -2,6 +2,7 @@
 """
 import re
 from re import escape
+from more_itertools import windowed
 from .parse import maybe
 from .parse import capture
 from .parse import zero_or_more
@@ -149,7 +150,7 @@ def reactions(mech_str, specs=None):
     return re.findall(reac_pattern, reac_block_str)
 
 
-def therm_datas(mech_str, specs=None):
+def therm_data_strings(mech_str):
     """ all NASA polynomials in a CHEMKIN file string
 
     :param mech_str: CHEMKIN file contents
@@ -160,11 +161,16 @@ def therm_datas(mech_str, specs=None):
     """
     polys = None
 
-    specs = species(mech_str) if specs is None else specs
-    ther_pattern = _therm_data_pattern(specs)
     ther_block_str = thermo_block(mech_str)
     if ther_block_str:
-        polys = re.findall(ther_pattern, ther_block_str, re.MULTILINE)
+        ther_lines = (line.strip() for line in ther_block_str.splitlines())
+        polys = []
+        for stanza_lines in windowed(ther_lines, 4):
+            match = all(lin.endswith('{:d}'.format(num))
+                        for lin, num in zip(stanza_lines, range(1, 5)))
+            if match:
+                stanza = '\n'.join(stanza_lines)
+                polys.append(stanza)
 
     return polys
 

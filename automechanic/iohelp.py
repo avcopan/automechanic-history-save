@@ -5,13 +5,13 @@ from .pchemkin import split_reaction as split_chemkin_reaction
 from .pchemkin import split_therm_data
 from .strid import split_reaction_identifier
 from .strid import formula as formula_from_strid
-from .strid import number_of_atoms as number_of_atoms_from_strid
 from .strid import reaction_identifier as reaction_identifier_from_sids
 from .geom import graph
 from .geom import xyz_string
 from .geom import abstraction_indices
 from .geom import addition_indices
 from .geom import migration_indices
+from .graph import indices as graph_indices
 from .graph import atom_neighborhood_indices
 from .form import subtract as subtract_formulas
 from .therm import enthalpy as therm_enthalpy
@@ -95,7 +95,7 @@ def abstraction(rid, mgeo_dct, _thv_dct=None):
             if _thv_dct and _is_uphill(abst_sids[:2], abst_sids[2:], _thv_dct):
                 abst_sids = tuple(reversed(abst_sids))
                 abst_idxs = tuple(reversed(abst_idxs))
-            if _abs_reverse_for_torsscan(abst_sids):
+            if _abs_reverse_for_torsscan(abst_sids, abst_idxs, mgeo_dct):
                 abst_sids = tuple(reversed(abst_sids))
                 abst_idxs = tuple(reversed(abst_idxs))
             abst = (abst_sids, abst_idxs)
@@ -112,7 +112,7 @@ def addition(rid, mgeo_dct, _thv_dct=None):
         mgeos = list(map(mgeo_dct.__getitem__, addn_sids))
         addn_idxs = addition_indices(*mgeos)
         if addn_idxs:
-            if _add_switch_reactants_for_torsscan(addn_sids):
+            if _add_swap_for_torsscan(addn_sids, addn_idxs, mgeo_dct):
                 addn_sids, addn_idxs = _add_switch_reactants(
                     addn_sids, addn_idxs)
             addn = (addn_sids, addn_idxs)
@@ -268,17 +268,23 @@ def _abs_matches_formula(r1_sid, r2_sid, p1_sid, p2_sid):
     return match
 
 
-def _abs_reverse_for_torsscan(abst_sids):
+def _abs_reverse_for_torsscan(abst_sids, abst_idxs, mgeo_dct):
     q1h_sid, _, _, q2h_sid = abst_sids
-    ret = (number_of_atoms_from_strid(q1h_sid) < 3 and
-           number_of_atoms_from_strid(q2h_sid) >= 3)
+    q1h_idx, _, _, q2h_idx = abst_idxs
+    q1h_mgeo = mgeo_dct[q1h_sid]
+    q2h_mgeo = mgeo_dct[q2h_sid]
+    ret = (not _abstraction_xyz_string_q1h(q1h_mgeo, q1h_idx) and
+           _abstraction_xyz_string_q1h(q2h_mgeo, q2h_idx))
     return ret
 
 
-def _add_switch_reactants_for_torsscan(addn_sids):
+def _add_swap_for_torsscan(addn_sids, addn_idxs, mgeo_dct):
     x_sid, y_sid, _ = addn_sids
-    ret = (number_of_atoms_from_strid(x_sid) < 3 and
-           number_of_atoms_from_strid(y_sid) >= 3)
+    x_idx, y_idx, _, _ = addn_idxs
+    x_mgeo = mgeo_dct[x_sid]
+    y_mgeo = mgeo_dct[y_sid]
+    ret = (not _addition_xyz_string_x(x_mgeo, x_idx) and
+           _addition_xyz_string_x(y_mgeo, y_idx))
     return ret
 
 
@@ -308,6 +314,15 @@ def _addition_xyz_string_x(mgeo, x_idx):
                 for xn2_idx in atom_neighborhood_indices(mgrph, xn1_idx)
                 if xn2_idx != x_idx)
     idxs = next(_2chainz, None)
+
+    # allow for broken chains, if not enough connected atoms
+    if not idxs:
+        _broken_chains = ((x1_idx, x2_idx)
+                          for x1_idx in atom_neighborhood_indices(mgrph, x_idx)
+                          for x2_idx in graph_indices(mgrph)
+                          if x2_idx not in (x_idx, x1_idx))
+        idxs = next(_broken_chains, None)
+
     if idxs:
         xn1_idx, xn2_idx = idxs
         dxyz = xyz_string(mgeo, {x_idx: 2, xn1_idx: 1, xn2_idx: 3})

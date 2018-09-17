@@ -460,7 +460,9 @@ def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
             logger.info('reaction {:d}: {:s}'.format(idx, rid))
 
             sids = tuple(row[list(sid_cols)])
+            logger.info(sids)
             idxs = tuple(row[list(idx_cols)])
+            logger.info(idxs)
             logger.info('  indices: {:s}'.format(str(idxs)))
 
             dxyz_dct = reaction_xyz_strings(sids, idxs, mgeo_dct)

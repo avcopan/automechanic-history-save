@@ -12,7 +12,7 @@ from .parse import repeat_range
 from .parse import named_capture
 from .parse import group_dictionary
 from .parse import ANY_CHAR
-from .parse import WHITESPACE
+from .parse import SPACE
 from .parse import PLUS
 from .parse import NON_NEWLINE
 from .parse import NEWLINE
@@ -23,11 +23,11 @@ from .parse import STRING_START
 from .parse import LINE_START
 
 
-WHITESPACES = one_or_more(WHITESPACE, greedy=False)
+SPACES = one_or_more(SPACE, greedy=False)
 ARROW = maybe(escape('<')) + escape('=') + maybe(escape('>'))
-PADDED_PLUS = maybe(WHITESPACES) + PLUS + maybe(WHITESPACES)
-PADDED_ARROW = maybe(WHITESPACES) + ARROW + maybe(WHITESPACES)
-PADDED_EM = maybe(WHITESPACES) + 'M' + maybe(WHITESPACES)
+PADDED_PLUS = maybe(SPACES) + PLUS + maybe(SPACES)
+PADDED_ARROW = maybe(SPACES) + ARROW + maybe(SPACES)
+PADDED_EM = maybe(SPACES) + 'M' + maybe(SPACES)
 
 
 def remove_comments(mech_str):
@@ -55,8 +55,8 @@ def block(mech_str, name):
     :returns: block string
     :rtype: str
     """
-    head = name + zero_or_more(WHITESPACE)
-    foot = zero_or_more(WHITESPACE) + 'END'
+    head = name + zero_or_more(SPACE)
+    foot = zero_or_more(SPACE) + 'END'
     contents = one_or_more(ANY_CHAR, greedy=False)
     block_pattern = head + named_capture(contents, name='contents') + foot
 
@@ -147,7 +147,8 @@ def reactions(mech_str, specs=None):
     reag_pattern = _en_reagents_pattern(specs)
     reac_pattern = _reaction_pattern(reag_pattern)
     reac_block_str = reactions_block(mech_str)
-    return re.findall(reac_pattern, reac_block_str)
+    reacs = [reac.strip() for reac in re.findall(reac_pattern, reac_block_str)]
+    return reacs
 
 
 def therm_data_strings(mech_str):
@@ -215,12 +216,12 @@ def split_therm_data(poly, specs):
     coef_lines = '\n'.join(lines[1:])
 
     reag_pattern = named_capture(_reagent_pattern(specs), 'species')
-    temps_pattern = WHITESPACES.join([named_capture(FLOAT, 'temp_lo'),
-                                      named_capture(FLOAT, 'temp_hi'),
-                                      named_capture(FLOAT, 'temp_cross')])
+    temps_pattern = SPACES.join([named_capture(FLOAT, 'temp_lo'),
+                                 named_capture(FLOAT, 'temp_hi'),
+                                 named_capture(FLOAT, 'temp_cross')])
 
-    pattern = WHITESPACES.join([reag_pattern, one_or_more(NON_NEWLINE),
-                                temps_pattern])
+    pattern = SPACES.join([reag_pattern, one_or_more(NON_NEWLINE),
+                           temps_pattern])
 
     gdct = group_dictionary(pattern, head_line)
 
@@ -290,18 +291,18 @@ def _long_to_short(iterable):
 
 def _therm_data_pattern(specs):
     reagent = _reagent_pattern(specs)
-    maybe_spaces = maybe(WHITESPACES)
+    maybe_spaces = maybe(SPACES)
     exp = FLOAT + one_of_these(['E', 'e']) + maybe(SIGN) + INTEGER
 
     thermo_pattern = maybe_spaces.join(
-        [LINE_START, reagent, WHITESPACE, one_or_more(NON_NEWLINE),
-         FLOAT, WHITESPACE, FLOAT, WHITESPACE, FLOAT,
+        [LINE_START, reagent, SPACE, one_or_more(NON_NEWLINE),
+         FLOAT, SPACE, FLOAT, SPACE, FLOAT,
          zero_or_more(NON_NEWLINE),
-         WHITESPACE, maybe(INTEGER), '1', NEWLINE,
+         SPACE, maybe(INTEGER), '1', NEWLINE,
          exp, exp, exp, exp, exp,
-         WHITESPACE, '2', NEWLINE,
+         SPACE, '2', NEWLINE,
          exp, exp, exp, exp, exp,
-         WHITESPACE, '3', NEWLINE,
+         SPACE, '3', NEWLINE,
          exp, exp, exp, exp, maybe(exp),
-         WHITESPACE, '4', NEWLINE])
+         SPACE, '4', NEWLINE])
     return thermo_pattern

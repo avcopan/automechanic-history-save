@@ -52,7 +52,15 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
     rxn_strs = chemkin_reactions(mech_str)
     rxn_rows = []
     mis_rows = []
+    seen = []
     for num, rxn_str in enumerate(rxn_strs):
+
+        if rxn_str in seen:
+            logger.info("Ignoring duplicate reaction {:s}".format(rxn_str))
+            continue
+        else:
+            seen.append(rxn_str)
+
         rid = translate_chemkin_reaction(rxn_str, sid_dct)
         if rid:
             rid = canonical_reaction_identifier(rid)

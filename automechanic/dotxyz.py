@@ -1,7 +1,7 @@
 """ .xyz-based functions
 """
 import re
-from .parse import WHITESPACE
+from .parse import SPACE
 from .parse import INTEGER
 from .parse import STRING_START
 from .parse import LINE_START
@@ -12,13 +12,13 @@ from .parse import maybe
 from .parse import one_or_more
 from .parse import named_capture
 
-WHITESPACES = one_or_more(WHITESPACE)
+SPACES = one_or_more(SPACE)
 
 
 def number_of_atoms(dxyz):
     """ number of atoms from a .xyz string
     """
-    natms_pattern = maybe(WHITESPACES).join(
+    natms_pattern = maybe(SPACES).join(
         [STRING_START, named_capture(INTEGER, 'natms'), LINE_END])
     match = re.search(natms_pattern, dxyz, re.MULTILINE)
     assert match
@@ -32,7 +32,7 @@ def geometry(dxyz):
     """
     natms = number_of_atoms(dxyz)
     atomic_symbol = LETTER + maybe(LETTER)
-    atom_pattern = WHITESPACES.join(
+    atom_pattern = SPACES.join(
         [named_capture(atomic_symbol, 'asymb'), named_capture(FLOAT, 'x'),
          named_capture(FLOAT, 'y'), named_capture(FLOAT, 'z')])
     line_pattern = LINE_START + atom_pattern + LINE_END

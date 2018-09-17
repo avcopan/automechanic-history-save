@@ -7,6 +7,17 @@ from re import MULTILINE
 
 
 # pattern makers
+def not_followed_by(pattern):
+    """ a pattern to exclude after a match
+
+    :param pattern: an `re` pattern
+    :type pattern: str
+
+    :rtype: str
+    """
+    return r'(?!{:s})'.format(pattern)
+
+
 def maybe(pattern):
     """ a pattern that may or may not be present
 
@@ -134,7 +145,8 @@ ANY_CHAR = r'[\s\S]'
 NEWLINE = r'\n'
 NON_NEWLINE = r'[^\n]'
 
-WHITESPACE = r'[ \t]'
+SPACE = r'[ \t]'
+SPACE_OR_NEWLINE = r'.'
 
 UPPERCASE_LETTER = r'[A-Z]'
 LETTER = r'[a-zA-Z]'

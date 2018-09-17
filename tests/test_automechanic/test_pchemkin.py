@@ -77,14 +77,13 @@ def test__split_therm_data():
             == (spec, cfts_lo, cfts_hi, temp_cross, temp_lo, temp_hi))
 
 
-def test__therm_datas():
-    """ test pchemkin.therm_datas
+def test__therm_data_strings():
+    """ test pchemkin.therm_data_strings
     """
-    therm_fpath = os.path.join(DATA_PATH, 'heptane_thermo_data.txt')
-    therm_str = open(therm_fpath).read()
-    specs = ['AR', 'N2', 'HE', 'H', 'O2', 'O', 'OH']
-    assert len(pchemkin.therm_datas(therm_str, specs=specs)) == len(specs)
+    mech_fpath = os.path.join(DATA_PATH, 'mechanism.txt')
+    mech_str = open(mech_fpath).read()
+    assert len(pchemkin.therm_data_strings(mech_str)) == 19
 
 
 if __name__ == '__main__':
-    test__therm_datas()
+    test__therm_data_strings()

@@ -52,7 +52,7 @@ def translate_chemkin_thermo_data(thd_str, sid_dct):
 
     if thd:
         spc, cfts_lo, cfts_hi, t_cross, t_lo, t_hi = thd
-        assert t_lo < t_298 < t_hi
+        assert t_lo < t_cross < t_hi
         cfts = cfts_lo if t_298 <= t_cross else cfts_hi
         sid = sid_dct[spc]
         h_298 = therm_enthalpy(t_298, cfts)

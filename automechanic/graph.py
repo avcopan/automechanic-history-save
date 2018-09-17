@@ -299,7 +299,39 @@ def forward_abstraction_indices(qh_mgrph, q_mgrph):
 
 
 def addition_indices(x_mgrph, y_mgrph, xy_mgrph):
-    """ find addition indices
+    """ find addition indices (all kinds)
+    """
+    idxs = multibond_addition_indices(x_mgrph, y_mgrph, xy_mgrph)
+
+    if not idxs:
+        idxs = radical_addition_indices(x_mgrph, y_mgrph, xy_mgrph)
+
+    return idxs
+
+
+def radical_addition_indices(x_mgrph, y_mgrph, xy_mgrph):
+    """ find indices for additions to radical sites
+    """
+    idxs = None
+
+    x_idxs = radical_sites(x_mgrph)
+    y_idxs = radical_sites(y_mgrph)
+
+    for x_idx, y_idx in product(x_idxs, y_idxs):
+        xy_mgrph_ = bind(x_mgrph, y_mgrph, x_idx, y_idx)
+        for xy_res_mgrph in multibond_forming_resonances(xy_mgrph_):
+            iso = isomorphism(xy_mgrph, xy_res_mgrph)
+            if iso:
+                natms_y = len(atoms(y_mgrph))
+                xy_idx_y = int(iso[y_idx])
+                xy_idx_x = int(iso[natms_y + x_idx])
+                idxs = (x_idx, y_idx, xy_idx_x, xy_idx_y)
+
+    return idxs
+
+
+def multibond_addition_indices(x_mgrph, y_mgrph, xy_mgrph):
+    """ find indices for additions to multiple bonds
     """
     idxs = None
 

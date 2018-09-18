@@ -1,21 +1,76 @@
 """ functions for working with pandas DataFrames
 """
 from itertools import chain
+from collections import OrderedDict
 from more_itertools import unique_everseen
 import pandas
+
+
+def column(table_df, col_key):
+    """ table column
+    """
+    assert col_key in column_keys(table_df)
+    return tuple(table_df[col_key])
+
+
+def rows(table_df):
+    """ rows of a table
+    """
+    return tuple(iterate_rows(table_df))
+
+
+def iterate_rows(table_df):
+    """ iterate over rows of a table, as tuples to preserve order
+    """
+    for _, row in table_df.iterrows():
+        yield dict(row.items())
+
+
+def append_column_keys(table_df, col_keys):
+    """ append columns to a table
+    """
+    col_keys_out = tuple(column_keys(table_df)) + tuple(col_keys)
+    return table_df.reindex(columns=col_keys_out)
+
+
+def columns_like(table_df):
+    """ return an empty table with columns like this one
+    """
+    return empty(column_keys(table_df))
+
+
+def column_keys(table_df):
+    """ get the column keys of a table
+    """
+    return tuple(table_df.columns)
+
+
+def empty(col_keys):
+    """ construct an empty pandas.DataFrame
+    """
+    return pandas.DataFrame(columns=col_keys)
 
 
 def from_columns(cols, col_keys):
     """ construct a pandas.DataFrame from columns
     """
+    assert len(cols) == len(col_keys)
     col_dct = dict(zip(col_keys, cols))
     return pandas.DataFrame(col_dct, columns=col_keys)
 
 
-def from_rows(rows, col_keys):
+def from_rows(row_dcts, col_keys):
     """ construct a pandas.DataFrame from rows
     """
-    return pandas.DataFrame(rows, columns=col_keys)
+    return pandas.DataFrame(list(row_dcts), columns=col_keys)
+
+
+def append_rows(table_df, row_dcts):
+    """ append rows to a table
+    """
+    col_keys = column_keys(table_df)
+    row_dcts = tuple(rows(table_df)) + tuple(row_dcts)
+    return from_rows(row_dcts, col_keys=col_keys)
 
 
 def reindex(table_df):
@@ -57,12 +112,28 @@ def merge(table_dfs, col_key):
 def lookup_dictionary(table_df, col_key):
     """ look up table rows by column value
     """
-    other_col_keys = [key for key in table_df.columns
-                      if key != col_key]
-    _, rows = zip(*table_df[other_col_keys].iterrows())
-    lookup_keys = table_df[col_key]
-    lookup_values = map(dict, rows)
-    return dict(zip(lookup_keys, lookup_values))
+    lkp_col_vals = column(table_df, col_key)
+    rows_ = rows(table_df)
+    return OrderedDict(zip(lkp_col_vals, rows_))
+
+
+def from_lookup_dictionary(table_lkp, col_keys):
+    """ rectonstruct a table from a lookup dictionary
+    """
+    rows_ = table_lkp.values()
+    return from_rows(rows_, col_keys=col_keys)
+
+
+def lookup_update(table_df, lookup_item, update_item):
+    """ lookup row by column value and update an entry
+    """
+    col_keys = column_keys(table_df)
+    lkp_col_key, lkp_col_val = lookup_item
+    upd_col_key, upd_col_val = update_item
+    assert lkp_col_key in col_keys and upd_col_key in col_keys
+    table_lkp = lookup_dictionary(table_df, lkp_col_key)
+    table_lkp[lkp_col_val][upd_col_key] = upd_col_val
+    return from_lookup_dictionary(table_lkp, col_keys)
 
 
 def move_column_to_front(table_df, col_key):
@@ -72,3 +143,10 @@ def move_column_to_front(table_df, col_key):
     col_keys = [col_key] + list(key for key in table_df.columns
                                 if key != col_key)
     return table_df[col_keys]
+
+
+if __name__ == '__main__':
+    TAB = empty(('a', 'b'))
+    TAB = append_rows(TAB, [{'a': 1, 'b': 2}])
+    TAB = append_rows(TAB, [{'a': 3, 'b': 4}])
+    print TAB

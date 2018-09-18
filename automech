@@ -437,7 +437,7 @@ def divide(argv):
     """ divide into binary categories, by key
     """
     keys = ('rad-rad', 'high-spin')
-    parser = _action_parser(prog='automech abstractions divide',
+    parser = _action_parser(prog='automech divide',
                             log_file_name='divide.log',
                             prefix=True)
     parser.add_argument('key',

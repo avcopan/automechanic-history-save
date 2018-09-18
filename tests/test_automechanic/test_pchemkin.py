@@ -66,14 +66,13 @@ def test__split_therm_data():
 -7.45375000E+02 4.37967491E+00 2.50000000E+00 0.00000000E+00 0.00000000E+00  3
  0.00000000E+00 0.00000000E+00-7.45375000E+02 4.37967491E+00 0.00000000E+00  4
  """
-    specs = ['AR']
     spec = 'AR'
     cfts_lo = (2.5, 0.0, 0.0, 0.0, 0.0, -745.375, 4.37967491)
     cfts_hi = (2.5, 0.0, 0.0, 0.0, 0.0, -745.375, 4.37967491)
     temp_cross = 1000.
     temp_lo = 200.
     temp_hi = 6000.
-    assert (pchemkin.split_therm_data(poly, specs)
+    assert (pchemkin.split_therm_data(poly)
             == (spec, cfts_lo, cfts_hi, temp_cross, temp_lo, temp_hi))
 
 

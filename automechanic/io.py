@@ -20,6 +20,12 @@ from .iohelp import migration_candidate
 from .iohelp import migration
 from .iohelp import migration_xyz_strings
 from .iohelp import migration_input_string
+from .table import lookup_update as table_lookup_update
+from .table import columns_like as table_with_columns_like
+from .table import append_column_keys as append_table_column_keys
+from .table import append_rows as append_table_rows
+from .table import column_keys as table_column_keys
+from .table import iterate_rows as iterate_table_rows
 from .table import from_columns as table_from_columns
 from .table import from_rows as table_from_rows
 from .table import reindex as reindex_table
@@ -34,6 +40,7 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
     from .iohelp import translate_chemkin_reaction
     from .iohelp import thermo_value_dictionary
     from .pchemkin import reactions as chemkin_reactions
+    from .pchemkin import thermo_block as chemkin_thermo_block
     from .pchemkin import therm_data_strings as chemkin_therm_data_strings
 
     logger.info("Reading in {:s}".format(mech_txt))
@@ -47,6 +54,19 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
     sid_dct = dict(zip(spcs, sids))
 
     spc_df['species_id'] = sids
+
+    if not without_thermo:
+        if therm_txt is None and chemkin_thermo_block(mech_str):
+            therm_str = mech_str
+        else:
+            logger.info("Reading in {:s}".format(therm_txt))
+            therm_str = read_file(therm_txt)
+        if not therm_str:
+            raise ValueError("No thermo data found! Either specify the thermo "
+                             "file or turn thermo off.")
+        thd_strs = chemkin_therm_data_strings(therm_str)
+        thv_dct = thermo_value_dictionary(thd_strs, sid_dct)
+        spc_df['therm_val'] = map(thv_dct.__getitem__, spc_df['species_id'])
 
     logger.info("Finding reactions")
     rxn_strs = chemkin_reactions(mech_str)
@@ -69,16 +89,6 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
         else:
             logger.info("Failed to translate reaction {:s}".format(rxn_str))
             mis_rows.append((num+1, rxn_str))
-
-    if not without_thermo:
-        if therm_txt is None:
-            therm_str = mech_str
-        else:
-            logger.info("Reading in {:s}".format(therm_txt))
-            therm_str = read_file(therm_txt)
-        thd_strs = chemkin_therm_data_strings(therm_str)
-        thv_dct = thermo_value_dictionary(thd_strs, sid_dct)
-        spc_df['therm_val'] = map(thv_dct.__getitem__, spc_df['species_id'])
 
     spc_df = initialize_geometries(spc_df, geom_dir, id2path, logger)
 
@@ -372,6 +382,8 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
     def _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
         logger.info("Reading in {:s}".format(rxn_csv))
         rxn_df = pandas.read_csv(rxn_csv)
+        if 'class' not in table_column_keys(rxn_df):
+            rxn_df = append_table_column_keys(rxn_df, col_keys=('class',))
 
         logger.info("Reading in species geometries from {:s}".format(spc_csv))
         mgeo_dct = read_geometries(spc_csv)
@@ -381,12 +393,17 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
         if not thv_dct:
             logger.info("No thermo data found.")
 
-        logger.info("Iterating over candidates")
-        rxn_rows = []
-        cdt_rows = []
-        for idx, rid in rxn_df['reaction_id'].iteritems():
+        rxn_df_out = table_with_columns_like(rxn_df)
+        cdt_df_out = table_with_columns_like(rxn_df)
+        rxn_df_out = append_table_column_keys(rxn_df_out,
+                                              col_keys=sid_cols+idx_cols)
+        cdt_df_out = append_table_column_keys(cdt_df_out,
+                                              col_keys=('exception',))
+
+        for rxn_row in iterate_table_rows(rxn_df):
+            rid = rxn_row['reaction_id']
             if is_candidate(rid):
-                logger.info('reaction {:d}: {:s}'.format(idx, rid))
+                logger.info('reaction: {:s}'.format(rid))
 
                 err = None
                 try:
@@ -399,7 +416,6 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
                     sids, idxs = rxn
 
                     logger.info('  found {:s}!'.format(cls))
-                    rxn_df.loc[idx, 'class'] = cls
 
                     log_sids = ', '.join(
                         '{:s}: {:s}'.format(sid_col, sid)
@@ -410,20 +426,22 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
 
                     logger.info('  {:s}\n  {:s}'.format(log_sids, log_idxs))
 
-                    rxn_rows.append((rid,) + sids + idxs)
+                    rxn_df = table_lookup_update(rxn_df, ('reaction_id', rid),
+                                                 ('class', cls))
+
+                    rxn_row.update(zip(sid_cols, sids))
+                    rxn_row.update(zip(idx_cols, idxs))
+                    rxn_df_out = append_table_rows(rxn_df_out, (rxn_row,))
                 else:
-                    cdt_rows.append((rid, err))
+                    rxn_row['exception'] = err
+                    cdt_df_out = append_table_rows(cdt_df_out, (rxn_row,))
 
         logger.info("Writing {:s} reactions to {:s}"
                     .format(cls, os.path.abspath(rxn_csv_out)))
-        col_keys = (('reaction_id',) + sid_cols + idx_cols)
-        rxn_df_out = table_from_rows(rxn_rows, col_keys)
         write_table_to_csv(rxn_df_out, rxn_csv_out)
 
         logger.info("Writing left-over candidates to {:s}"
                     .format(os.path.abspath(cdt_csv_out)))
-        cdt_col_keys = ('reaction_id', 'exception')
-        cdt_df_out = table_from_rows(cdt_rows, cdt_col_keys)
         write_table_to_csv(cdt_df_out, cdt_csv_out)
 
         logger.info("Writing updated reaction table to {:s}".format(rxn_csv))

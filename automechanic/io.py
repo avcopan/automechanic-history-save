@@ -40,6 +40,7 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
     from .iohelp import translate_chemkin_reaction
     from .iohelp import thermo_value_dictionary
     from .pchemkin import reactions as chemkin_reactions
+    from .pchemkin import thermo_block as chemkin_thermo_block
     from .pchemkin import therm_data_strings as chemkin_therm_data_strings
 
     logger.info("Reading in {:s}".format(mech_txt))
@@ -53,6 +54,19 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
     sid_dct = dict(zip(spcs, sids))
 
     spc_df['species_id'] = sids
+
+    if not without_thermo:
+        if therm_txt is None and chemkin_thermo_block(mech_str):
+            therm_str = mech_str
+        else:
+            logger.info("Reading in {:s}".format(therm_txt))
+            therm_str = read_file(therm_txt)
+        if not therm_str:
+            raise ValueError("No thermo data found! Either specify the thermo "
+                             "file or turn thermo off.")
+        thd_strs = chemkin_therm_data_strings(therm_str)
+        thv_dct = thermo_value_dictionary(thd_strs, sid_dct)
+        spc_df['therm_val'] = map(thv_dct.__getitem__, spc_df['species_id'])
 
     logger.info("Finding reactions")
     rxn_strs = chemkin_reactions(mech_str)
@@ -75,16 +89,6 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
         else:
             logger.info("Failed to translate reaction {:s}".format(rxn_str))
             mis_rows.append((num+1, rxn_str))
-
-    if not without_thermo:
-        if therm_txt is None:
-            therm_str = mech_str
-        else:
-            logger.info("Reading in {:s}".format(therm_txt))
-            therm_str = read_file(therm_txt)
-        thd_strs = chemkin_therm_data_strings(therm_str)
-        thv_dct = thermo_value_dictionary(thd_strs, sid_dct)
-        spc_df['therm_val'] = map(thv_dct.__getitem__, spc_df['species_id'])
 
     spc_df = initialize_geometries(spc_df, geom_dir, id2path, logger)
 

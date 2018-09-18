@@ -6,7 +6,7 @@ import pybel
 def canonical(smi):
     """ canonical smiles string
     """
-    pbmol = _pybel_molecule(smi)
+    pbmol = _pybel_molecule(smi, geom=False)
     can_smi = pbmol.write('can').strip()
     return can_smi
 

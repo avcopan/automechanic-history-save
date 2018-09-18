@@ -24,7 +24,7 @@ def translate_chemkin_reaction(rxn_str, sid_dct):
     rid = None
 
     spcs = sid_dct.keys()
-    rcts, prds = split_chemkin_reaction(rxn_str, spcs)
+    rcts, prds = split_chemkin_reaction(rxn_str)
     if set(rcts) | set(prds) < set(spcs):
         rct_sids = map(sid_dct.__getitem__, rcts)
         prd_sids = map(sid_dct.__getitem__, prds)
@@ -36,31 +36,30 @@ def translate_chemkin_reaction(rxn_str, sid_dct):
 def thermo_value_dictionary(thd_strs, sid_dct):
     """ a dictionary of thermo values
     """
-    thv_dct = dict(translate_chemkin_thermo_data(thd_str, sid_dct)
-                   for thd_str in thd_strs)
+    thv_dct = dict((sid_dct[spc], val) for spc, val in
+                   map(translate_chemkin_thermo_data, thd_strs)
+                   if spc in sid_dct)
     return thv_dct
 
 
-def translate_chemkin_thermo_data(thd_str, sid_dct):
+def translate_chemkin_thermo_data(thd_str):
     """ determine the heat of formation from a CHEMKIN NASA polynomial
     """
     t_298 = 298.
     ret = None
 
-    spcs = sid_dct.keys()
-    thd = split_therm_data(thd_str, spcs)
+    thd = split_therm_data(thd_str)
 
-    if thd:
-        spc, cfts_lo, cfts_hi, t_cross, t_lo, t_hi = thd
-        assert t_lo < t_cross < t_hi
-        cfts = cfts_lo if t_298 <= t_cross else cfts_hi
-        sid = sid_dct[spc]
-        h_298 = therm_enthalpy(t_298, cfts)
-        ret = (sid, h_298)
-    else:
+    if not thd:
         raise ValueError("Failed to parse thermo data:\n{:s}"
                          .format(str(thd_str)))
 
+    spc, cfts_lo, cfts_hi, t_cross, t_lo, t_hi = thd
+
+    assert t_lo < t_cross < t_hi
+    cfts = cfts_lo if t_298 <= t_cross else cfts_hi
+    h_298 = therm_enthalpy(t_298, cfts)
+    ret = (spc, h_298)
     return ret
 
 

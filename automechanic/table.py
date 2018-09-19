@@ -89,6 +89,26 @@ def sort(table_df, col_key, descending=False):
     return table_df
 
 
+def intersect(table_dfs, col_key):
+    """ intsc tables by column
+    """
+    col_key_vals = list(unique_everseen(chain(*(
+        table_df[col_key] for table_df in table_dfs))))
+    lookup_dcts = [lookup_dictionary(table_df, col_key)
+                   for table_df in table_dfs]
+
+    intscd_rows = []
+    for val in col_key_vals:
+        row = {}
+        if val and all(val in lookup_dct for lookup_dct in lookup_dcts):
+            for lookup_dct in lookup_dcts:
+                row.update(lookup_dct[val])
+            intscd_rows.append(row)
+    intscd_col_keys = list(unique_everseen(chain(*table_dfs)))
+    intscd_df = pandas.DataFrame.from_dict(intscd_rows)[intscd_col_keys]
+    return intscd_df
+
+
 def merge(table_dfs, col_key):
     """ merge tables by column
     """

@@ -31,6 +31,7 @@ from .table import from_rows as table_from_rows
 from .table import reindex as reindex_table
 from .table import sort as sort_table
 from .table import merge as merge_tables
+from .table import intersect as intersect_tables
 
 
 def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
@@ -81,14 +82,16 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
         else:
             seen.append(rxn_str)
 
+        ck_num = num + 1
         rid = translate_chemkin_reaction(rxn_str, sid_dct)
         if rid:
             rid = canonical_reaction_identifier(rid)
-            logger.info("Found reaction {:s}".format(rid))
-            rxn_rows.append((rid, num+1, rxn_str))
+            logger.info("Found reaction {:d}: {:s}".format(ck_num, rid))
+            rxn_rows.append((rid, ck_num, rxn_str))
         else:
-            logger.info("Failed to translate reaction {:s}".format(rxn_str))
-            mis_rows.append((num+1, rxn_str))
+            logger.info("Failed to translate reaction {:d}: {:s}"
+                        .format(ck_num, rxn_str))
+            mis_rows.append((ck_num, rxn_str))
 
     spc_df = initialize_geometries(spc_df, geom_dir, id2path, logger)
 
@@ -252,11 +255,11 @@ def migrations_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
     return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
 
 
-def abstractions_run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,
-                     run_dir, id2path, job_argv, logger):
+def abstractions_run_batch(spc_csv, batch_csv, rxn_csv, tmp_txt,
+                           tmp_keyval_str, run_dir, id2path, job_argv, logger):
     """ run abstractions
     """
-    _run = reactions_runner(
+    _run = reactions_batch_runner(
         cls='abstraction',
         reaction_xyz_strings=abstraction_xyz_strings,
         reaction_input_string=abstraction_input_string,
@@ -267,11 +270,11 @@ def abstractions_run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,
                 id2path, job_argv, logger)
 
 
-def additions_run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,
-                  run_dir, id2path, job_argv, logger):
+def additions_run_batch(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,
+                        run_dir, id2path, job_argv, logger):
     """ run additions
     """
-    _run = reactions_runner(
+    _run = reactions_batch_runner(
         cls='addition',
         reaction_xyz_strings=addition_xyz_strings,
         reaction_input_string=addition_input_string,
@@ -282,11 +285,11 @@ def additions_run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,
                 id2path, job_argv, logger)
 
 
-def migrations_run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,
-                   run_dir, id2path, job_argv, logger):
+def migrations_run_batch(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,
+                         run_dir, id2path, job_argv, logger):
     """ run migrations
     """
-    _run = reactions_runner(
+    _run = reactions_batch_runner(
         cls='migration',
         reaction_xyz_strings=migration_xyz_strings,
         reaction_input_string=migration_input_string,
@@ -356,6 +359,21 @@ def csv_sort(table_csv, col_key, descending, logger):
 
     logger.info("Writing updated {:s}".format(table_csv))
     write_table_to_csv(table_df, table_csv)
+
+
+def csv_intersect(table_csvs, col_key, table_csv_out, logger):
+    """ intersect tables by column
+    """
+    table_dfs = []
+    for table_csv in table_csvs:
+        logger.info("Reading in {:s}".format(table_csv))
+        table_df = pandas.read_csv(table_csv)
+        table_dfs.append(table_df)
+
+    table_df_out = intersect_tables(table_dfs, col_key)
+
+    logger.info("Writing {:s}".format(table_csv_out))
+    write_table_to_csv(table_df_out, table_csv_out)
 
 
 def csv_merge(table_csvs, col_key, table_csv_out, logger):
@@ -450,8 +468,8 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
     return _init
 
 
-def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
-                     sid_cols, idx_cols):
+def reactions_batch_runner(cls, reaction_xyz_strings, reaction_input_string,
+                           sid_cols, idx_cols):
     """ run reactions
     """
     assert cls in ('abstraction', 'addition', 'migration')

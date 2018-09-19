@@ -38,7 +38,7 @@ def test__automech__syngas_from_rmg():
                            os.path.join(tmp_path, 'species.csv'),
                            '-P', os.path.join(tmp_path, 'migrations'),
                            '-p'])
-    subprocess.check_call(['automech', 'additions', 'run',
+    subprocess.check_call(['automech', 'additions', 'run_batch',
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'addition.txt'),
                            '-s', os.path.join(tmp_path, 'species.csv'),
@@ -50,7 +50,7 @@ def test__automech__syngas_from_rmg():
                            '-p',
                            '-y', 'nodes:d',
                            'cmd', 'ls'])
-    subprocess.check_call(['automech', 'migrations', 'run',
+    subprocess.check_call(['automech', 'migrations', 'run_batch',
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'migration.txt'),
                            '-s', os.path.join(tmp_path, 'species.csv'),
@@ -77,7 +77,7 @@ def test__automech__syngas_from_rmg():
                            '-P', os.path.join(tmp_path, 'abstractions',
                                               'rad-rad'),
                            '-p'])
-    subprocess.check_call(['automech', 'abstractions', 'run',
+    subprocess.check_call(['automech', 'abstractions', 'run_batch',
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'abstraction.txt'),
                            '-s', os.path.join(tmp_path, 'species.csv'),
@@ -90,7 +90,7 @@ def test__automech__syngas_from_rmg():
                            '-y', 'nodes:d',
                            '-p',
                            'cmd', 'ls'])
-    subprocess.check_call(['automech', 'abstractions', 'run',
+    subprocess.check_call(['automech', 'abstractions', 'run_batch',
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'abstraction.txt'),
                            '-s', os.path.join(tmp_path, 'species.csv'),
@@ -133,7 +133,7 @@ def test__automech__syngas_from_chemkin():
                            os.path.join(tmp_path, 'species.csv'),
                            '-P', os.path.join(tmp_path, 'migrations'),
                            '-p'])
-    subprocess.check_call(['automech', 'additions', 'run',
+    subprocess.check_call(['automech', 'additions', 'run_batch',
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'addition.txt'),
                            '-s', os.path.join(tmp_path, 'species.csv'),
@@ -145,7 +145,7 @@ def test__automech__syngas_from_chemkin():
                            '-p',
                            '-y', 'nodes:d',
                            'cmd', 'ls'])
-    subprocess.check_call(['automech', 'migrations', 'run',
+    subprocess.check_call(['automech', 'migrations', 'run_batch',
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'migration.txt'),
                            '-s', os.path.join(tmp_path, 'species.csv'),
@@ -172,7 +172,7 @@ def test__automech__syngas_from_chemkin():
                            '-P', os.path.join(tmp_path, 'abstractions',
                                               'rad-rad'),
                            '-p'])
-    subprocess.check_call(['automech', 'abstractions', 'run',
+    subprocess.check_call(['automech', 'abstractions', 'run_batch',
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'abstraction.txt'),
                            '-s', os.path.join(tmp_path, 'species.csv'),
@@ -185,7 +185,7 @@ def test__automech__syngas_from_chemkin():
                            '-y', 'nodes:d',
                            '-p',
                            'cmd', 'ls'])
-    subprocess.check_call(['automech', 'abstractions', 'run',
+    subprocess.check_call(['automech', 'abstractions', 'run_batch',
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'abstraction.txt'),
                            '-s', os.path.join(tmp_path, 'species.csv'),

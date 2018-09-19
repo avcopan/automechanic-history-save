@@ -128,7 +128,8 @@ def csv_main(argv):
         subcmd_dct={
             'reindex': csv_reindex,
             'sort': csv_sort,
-            'merge': csv_merge
+            'merge': csv_merge,
+            'intersect': csv_intersect
         }
     )
 
@@ -232,6 +233,45 @@ def csv_merge(argv):
         )
 
 
+def csv_intersect(argv):
+    """ intersect reaction csv files
+    """
+    parser = _action_parser(prog='automech csv intersect',
+                            log_file_name='intersect.log',
+                            prefix=True)
+    parser.add_argument(dest='<table_csvs>',
+                        type=str,
+                        nargs='+',
+                        help="[i] csv files")
+    parser.add_argument(dest='<col_key>',
+                        type=str,
+                        help="the name of the colum to sort by")
+    parser.add_argument('-T', '--table_csv_out',
+                        type=str,
+                        default='table.csv',
+                        help="[o] csv file")
+    _get_help(parser, argv)
+
+    args = vars(parser.parse_args(argv))
+
+    table_csvs = args['<table_csvs>']
+    assert len(table_csvs) > 1
+    table_csvs = tuple(map(os.path.abspath, table_csvs))
+
+    with _ChangeDirectory(args['prefix']):
+        logger = _logger(
+            log_file_name=args['log_file_name'],
+            log_level=args['log_level'],
+            print_out=args['print_out']
+        )
+        automechanic.io.csv_intersect(
+            table_csvs=table_csvs,
+            col_key=args['<col_key>'],
+            table_csv_out=args['table_csv_out'],
+            logger=logger
+        )
+
+
 def additions_main(argv):
     """ main function for additions
     """
@@ -240,7 +280,7 @@ def additions_main(argv):
         cmd='automech additions',
         subcmd_dct={
             'init': additions_init,
-            'run': additions_run
+            'run_batch': additions_run_batch
         }
     )
 
@@ -253,7 +293,7 @@ def abstractions_main(argv):
         cmd='automech abstractions',
         subcmd_dct={
             'init': abstractions_init,
-            'run': abstractions_run,
+            'run_batch': abstractions_run_batch
         }
     )
 
@@ -266,7 +306,7 @@ def migrations_main(argv):
         cmd='automech migrations',
         subcmd_dct={
             'init': migrations_init,
-            'run': migrations_run
+            'run_batch': migrations_run_batch
         }
     )
 
@@ -343,7 +383,7 @@ def migrations_init(argv):
         )
 
 
-def abstractions_run(argv):
+def abstractions_run_batch(argv):
     """ runner for abstractions
     """
     parser = _reactions_run_parser('abstractions')
@@ -356,7 +396,7 @@ def abstractions_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io.abstractions_run(
+        automechanic.io.abstractions_run_batch(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -373,7 +413,7 @@ def abstractions_run(argv):
         )
 
 
-def additions_run(argv):
+def additions_run_batch(argv):
     """ runner for additions
     """
     parser = _reactions_run_parser('additions')
@@ -386,7 +426,7 @@ def additions_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io.additions_run(
+        automechanic.io.additions_run_batch(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -403,7 +443,7 @@ def additions_run(argv):
         )
 
 
-def migrations_run(argv):
+def migrations_run_batch(argv):
     """ runner for migrations
     """
     parser = _reactions_run_parser('migrations')
@@ -416,7 +456,7 @@ def migrations_run(argv):
             log_level=args['log_level'],
             print_out=args['print_out']
         )
-        automechanic.io.migrations_run(
+        automechanic.io.migrations_run_batch(
             spc_csv=os.path.join(
                 locator.working_directory, args['species_csv']),
             batch_csv=os.path.join(
@@ -546,7 +586,7 @@ def _init_parser(*arginfo_lst):
 
 
 def _reactions_run_parser(cls):
-    parser = _action_parser(prog='automech {:s} run'.format(cls),
+    parser = _action_parser(prog='automech {:s} run_batch'.format(cls),
                             log_file_name='run.log',
                             prefix=True)
 

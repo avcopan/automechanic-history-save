@@ -20,6 +20,7 @@ def main(argv):
             'init': init,
             'init_from_rmg': init_from_rmg,
             'divide': divide,
+            'get': get_main,
             'csv': csv_main,
             'additions': additions_main,
             'abstractions': abstractions_main,
@@ -119,12 +120,51 @@ def init_from_rmg(argv):
         )
 
 
+def get_main(argv):
+    """ main function for getters
+    """
+    _route_subcommand(
+        argv=argv,
+        cmd='automech get',
+        subcmd_dct={
+            'arrhenius': get_arrhenius
+        }
+    )
+
+
+def get_arrhenius(argv):
+    """ get arrhenius paramaters
+    """
+    parser = _action_parser(prog='automech get arrhenius',
+                            log_file_name='arrhenius.log',
+                            prefix=True)
+    parser.add_argument(dest='<reactions_csv>',
+                        type=str,
+                        default='reactions.csv',
+                        help="[i(o)] csv with 'reaction_id' column")
+    _get_help(parser, argv)
+
+    args = vars(parser.parse_args(argv))
+
+    with _ChangeDirectory(args['prefix']) as locator:
+        logger = _logger(
+            log_file_name=args['log_file_name'],
+            log_level=args['log_level'],
+            print_out=args['print_out']
+        )
+        automechanic.io.get_arrhenius(
+            rxn_csv=os.path.join(
+                locator.working_directory, args['<reactions_csv>']),
+            logger=logger
+        )
+
+
 def csv_main(argv):
     """ main function for csv operations
     """
     _route_subcommand(
         argv=argv,
-        cmd='automech databse',
+        cmd='automech csv',
         subcmd_dct={
             'reindex': csv_reindex,
             'sort': csv_sort,
@@ -280,6 +320,7 @@ def additions_main(argv):
         cmd='automech additions',
         subcmd_dct={
             'init': additions_init,
+            'run': additions_run,
             'run_batch': additions_run_batch
         }
     )
@@ -338,7 +379,7 @@ def abstractions_init(argv):
 def additions_init(argv):
     """ initialization for additions
     """
-    parser = _reactions_init_parser('abstractions')
+    parser = _reactions_init_parser('additions')
     _get_help(parser, argv)
     args = vars(parser.parse_args(argv))
     with _ChangeDirectory(args['prefix']) as locator:
@@ -383,10 +424,39 @@ def migrations_init(argv):
         )
 
 
+def additions_run(argv):
+    """ runner for additions
+    """
+    parser = _reactions_run_parser('additions')
+    _get_help(parser, argv)
+    automech_argv, job_argv = _split_command_args(argv)
+    args = vars(parser.parse_args(automech_argv))
+    with _ChangeDirectory(args['prefix']) as locator:
+        logger = _logger(
+            log_file_name=args['log_file_name'],
+            log_level=args['log_level'],
+            print_out=args['print_out']
+        )
+
+        automechanic.io.additions_run(
+            spc_csv=os.path.join(
+                locator.working_directory, args['<species_csv>']),
+            rxn_csv=os.path.join(
+                locator.working_directory, args['<reactions_csv>']),
+            tpl_txt=os.path.join(
+                locator.working_directory, args['<template_txt>']),
+            job_argv=job_argv,
+            run_dir=args['run_dir'],
+            rxn_idxs=args['indices'],
+            nodes=args['nodes'],
+            logger=logger
+        )
+
+
 def abstractions_run_batch(argv):
     """ runner for abstractions
     """
-    parser = _reactions_run_parser('abstractions')
+    parser = _reactions_run_batch_parser('abstractions')
     _get_help(parser, argv)
     automech_argv, job_argv = _split_command_args(argv)
     args = vars(parser.parse_args(automech_argv))
@@ -416,7 +486,7 @@ def abstractions_run_batch(argv):
 def additions_run_batch(argv):
     """ runner for additions
     """
-    parser = _reactions_run_parser('additions')
+    parser = _reactions_run_batch_parser('additions')
     _get_help(parser, argv)
     automech_argv, job_argv = _split_command_args(argv)
     args = vars(parser.parse_args(automech_argv))
@@ -446,7 +516,7 @@ def additions_run_batch(argv):
 def migrations_run_batch(argv):
     """ runner for migrations
     """
-    parser = _reactions_run_parser('migrations')
+    parser = _reactions_run_batch_parser('migrations')
     _get_help(parser, argv)
     automech_argv, job_argv = _split_command_args(argv)
     args = vars(parser.parse_args(automech_argv))
@@ -585,7 +655,7 @@ def _init_parser(*arginfo_lst):
     return parser
 
 
-def _reactions_run_parser(cls):
+def _reactions_run_batch_parser(cls):
     parser = _action_parser(prog='automech {:s} run_batch'.format(cls),
                             log_file_name='run.log',
                             prefix=True)
@@ -646,6 +716,44 @@ def _reactions_init_parser(cls):
                         type=str,
                         default='candidates.csv',
                         help="[o] csv file with 'reaction_id' column")
+    return parser
+
+
+def _reactions_run_parser(cls):
+    parser = _action_parser(prog='automech {:s} run'.format(cls),
+                            log_file_name='run.log',
+                            prefix=True)
+
+    parser.add_argument(dest='<template_txt>',
+                        type=str,
+                        default='template.txt',
+                        help='[i] txt with str.format() replacement fields')
+    parser.add_argument(dest='<reactions_csv>',
+                        type=str,
+                        default='reactions.csv',
+                        help="[i(o)] csv with 'reaction_id' and 'index' "
+                             "columns")
+    parser.add_argument(dest='<species_csv>',
+                        type=str,
+                        default='species.csv',
+                        help="[i] csv with 'species_id' and 'path' columns")
+    parser.add_argument('-n', '--nodes',
+                        type=str,
+                        nargs='+',
+                        default='d',
+                        help="one or more nodes to run on")
+    parser.add_argument('-i', '--indices',
+                        type=str,
+                        nargs='+',
+                        default='0-',
+                        help="indices and index ranges for the 'index' "
+                             "column in <reactions_csv>")
+    parser.add_argument('-D', '--run_dir',
+                        type=str,
+                        default='runs',
+                        help="[o] directory for running reaction jobs")
+
+    parser.add_argument('cmd <commands for individual job>')
     return parser
 
 

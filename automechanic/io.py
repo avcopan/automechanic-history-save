@@ -22,7 +22,7 @@ from .iohelp import migration_xyz_strings
 from .iohelp import migration_input_string
 from .table import lookup_update as table_lookup_update
 from .table import columns_like as table_with_columns_like
-from .table import append_column_keys as append_table_column_keys
+from .table import update_column_keys as update_table_column_keys
 from .table import append_rows as append_table_rows
 from .table import column_keys as table_column_keys
 from .table import iterate_rows as iterate_table_rows
@@ -255,6 +255,21 @@ def migrations_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
     return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
 
 
+def additions_run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs,
+                  nodes, logger):
+    """ run addition reactions
+    """
+    _run = reactions_runner(
+        cls='addition',
+        reaction_xyz_strings=addition_xyz_strings,
+        reaction_input_string=addition_input_string,
+        sid_cols=('x', 'y', 'xy'),
+        idx_cols=('x_idx', 'y_idx', 'xy_idx_x', 'xy_idx_y')
+    )
+    return _run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs, nodes,
+                logger)
+
+
 def abstractions_run_batch(spc_csv, batch_csv, rxn_csv, tmp_txt,
                            tmp_keyval_str, run_dir, id2path, job_argv, logger):
     """ run abstractions
@@ -376,6 +391,46 @@ def csv_intersect(table_csvs, col_key, table_csv_out, logger):
     write_table_to_csv(table_df_out, table_csv_out)
 
 
+def get_arrhenius(rxn_csv, logger):
+    """ get arrhenius parameters from job directories
+    """
+    from .ptorsscan import arrhenius as arrhenius_from_plog
+
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+
+    col_keys = table_column_keys(rxn_df)
+    assert 'reaction_id' in col_keys and 'path' in col_keys
+
+    prefix = os.path.dirname(rxn_csv)
+
+    def _get(rxn_row):
+        arrh = None
+        rid = rxn_row['reaction_id']
+        path = os.path.join(prefix, rxn_row['path'])
+        logger.info("reaction {:s}".format(rid))
+        plog_path = os.path.join(path, 'rate.plog')
+        if os.path.isfile(plog_path):
+            logger.info(plog_path)
+            plog_str = read_file(plog_path)
+            arrh = arrhenius_from_plog(plog_str)
+            if arrh:
+                logger.info("A={:f}, b={:f}, Ea={:f}".format(*arrh))
+        else:
+            logger.info("No rate.plog file found")
+        return arrh if arrh else (None, None, None)
+
+    arrh_col_keys = ('arrh_a', 'arrh_b', 'arrh_e')
+    rxn_df = update_table_column_keys(rxn_df, col_keys=arrh_col_keys)
+    arrh_as, arrh_bs, arrh_es = zip(*map(_get, iterate_table_rows(rxn_df)))
+    rxn_df['arrh_a'] = arrh_as
+    rxn_df['arrh_b'] = arrh_bs
+    rxn_df['arrh_e'] = arrh_es
+
+    logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
+    write_table_to_csv(rxn_df, rxn_csv)
+
+
 def csv_merge(table_csvs, col_key, table_csv_out, logger):
     """ merge tables by column
     """
@@ -400,8 +455,6 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
     def _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
         logger.info("Reading in {:s}".format(rxn_csv))
         rxn_df = pandas.read_csv(rxn_csv)
-        if 'class' not in table_column_keys(rxn_df):
-            rxn_df = append_table_column_keys(rxn_df, col_keys=('class',))
 
         logger.info("Reading in species geometries from {:s}".format(spc_csv))
         mgeo_dct = read_geometries(spc_csv)
@@ -413,10 +466,12 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
 
         rxn_df_out = table_with_columns_like(rxn_df)
         cdt_df_out = table_with_columns_like(rxn_df)
-        rxn_df_out = append_table_column_keys(rxn_df_out,
+        rxn_df_out = update_table_column_keys(rxn_df_out,
                                               col_keys=sid_cols+idx_cols)
-        cdt_df_out = append_table_column_keys(cdt_df_out,
+        cdt_df_out = update_table_column_keys(cdt_df_out,
                                               col_keys=('exception',))
+
+        rxn_df = update_table_column_keys(rxn_df, col_keys=('class',))
 
         for rxn_row in iterate_table_rows(rxn_df):
             rid = rxn_row['reaction_id']
@@ -466,6 +521,34 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
         write_table_to_csv(rxn_df, rxn_csv)
 
     return _init
+
+
+def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
+                     sid_cols, idx_cols):
+    """ run reactions
+    """
+    assert cls in ('abstraction', 'addition', 'migration')
+
+    def _run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs, nodes,
+             logger):
+        logger.info("Reading in {:s}".format(rxn_csv))
+        rxn_df = pandas.read_csv(rxn_csv)
+
+        logger.info(rxn_df)
+        logger.info(spc_csv)
+        logger.info(rxn_csv)
+        logger.info(tpl_txt)
+        logger.info(job_argv)
+        logger.info(run_dir)
+        logger.info(rxn_idxs)
+        logger.info(nodes)
+        logger.info(cls)
+        logger.info(reaction_xyz_strings)
+        logger.info(reaction_input_string)
+        logger.info(sid_cols)
+        logger.info(idx_cols)
+
+    return _run
 
 
 def reactions_batch_runner(cls, reaction_xyz_strings, reaction_input_string,

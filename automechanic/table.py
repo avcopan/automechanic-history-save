@@ -26,10 +26,13 @@ def iterate_rows(table_df):
         yield dict(row.items())
 
 
-def append_column_keys(table_df, col_keys):
-    """ append columns to a table
+def update_column_keys(table_df, col_keys):
+    """ update column keys, adding new ones to the end
     """
-    col_keys_out = tuple(column_keys(table_df)) + tuple(col_keys)
+    col_keys_in = column_keys(table_df)
+    col_keys_upd = tuple(col_key for col_key in col_keys
+                         if col_key not in col_keys_in)
+    col_keys_out = col_keys_in + col_keys_upd
     return table_df.reindex(columns=col_keys_out)
 
 

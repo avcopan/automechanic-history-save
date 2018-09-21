@@ -4,7 +4,6 @@ import re
 from .parse import SPACE
 from .parse import INTEGER
 from .parse import STRING_START
-from .parse import LINE_START
 from .parse import LINE_END
 from .parse import LETTER
 from .parse import FLOAT
@@ -35,7 +34,7 @@ def geometry(dxyz):
     atom_pattern = SPACES.join(
         [named_capture(atomic_symbol, 'asymb'), named_capture(FLOAT, 'x'),
          named_capture(FLOAT, 'y'), named_capture(FLOAT, 'z')])
-    line_pattern = LINE_START + atom_pattern + LINE_END
+    line_pattern = atom_pattern + maybe(SPACES) + LINE_END
 
     mgeo = []
     for match in re.finditer(line_pattern, dxyz, re.MULTILINE):

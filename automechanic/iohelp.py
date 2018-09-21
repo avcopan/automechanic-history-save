@@ -325,6 +325,10 @@ def _addition_xyz_string_x(mgeo, x_idx):
     if idxs:
         xn1_idx, xn2_idx = idxs
         dxyz = xyz_string(mgeo, {x_idx: 2, xn1_idx: 1, xn2_idx: 3})
+    # another exception, to allow for diatoms
+    elif len(graph_indices(mgrph)) == 2:
+        other_idx = next(idx for idx in graph_indices(mgrph) if idx != x_idx)
+        dxyz = xyz_string(mgeo, {x_idx: 2, other_idx: 1})
     return dxyz
 
 

@@ -9,6 +9,152 @@ import logging
 import from_qtc.obtools
 import automechanic.io
 
+# required arguments
+MECH_TXT_REQ_INP_AINF = (
+    (),
+    (('dest', '<mechanism_txt>'),
+     ('type', str),
+     ('help', "[i] CHEMKIN mechanism file"))
+)
+SPC_CSV_REQ_INP_AINF = (
+    (),
+    (('dest', '<species_csv>'),
+     ('type', str),
+     ('help', "[i] CSV with species information"))
+)
+RXN_JSON_REQ_INP_AINF = (
+    (),
+    (('dest', '<reactions_json>'),
+     ('type', str),
+     ('help', "[i] RMG's reaction queue JSON file"))
+)
+SPC_JSON_REQ_INP_AINF = (
+    (),
+    (('dest', '<species_json>'),
+     ('type', str),
+     ('help', "[i] RMG's species queue JSON file"))
+)
+
+# optional arguments
+SPC_CSV_OPT_OUT_AINF = (
+    ('-S', '--species_csv_out'),
+    (('type', str),
+     ('default', 'species.csv'),
+     ('help', "[o] CSV with species information"))
+)
+RXN_CSV_OPT_OUT_AINF = (
+    ('-R', '--reactions_csv_out'),
+    (('type', str),
+     ('default', 'reactions.csv'),
+     ('help', "[o] CSV with reactions information"))
+)
+GEOM_DIR_AINF = (
+    ('-D', '--geom_dir'),
+    (('type', str),
+     ('default', 'geoms'),
+     ('help', "[o] directory for storing geometry xyz files"))
+)
+
+# generic action options
+PREFIX_AINF = (
+    ('-P', '--prefix'),
+    (('type', str),
+     ('default', '.'),
+     ('help', "[o] prefix for all output"))
+)
+LOG_FILE_NAME_AINF = (
+    ('-L', '--log_file_name'),
+    (('type', str),
+     ('help', "[o] name of the log file for automech output"))
+)
+LOG_LEVEL_AINF = (
+    ('-v', '--log_level'),
+    (('type', int),
+     ('default', 20),
+     ('help', "log verbosity: 20=INFO, 10=DEBUG"))
+)
+PRINT_OUT_AINF = (
+    ('-p', '--print_out'),
+    (('action', 'store_true'),
+     ('help', "print log output to screen"))
+)
+
+
+def _parser(prog, ainf_lst=()):
+    parser = ArgumentParser(prog=prog, formatter_class=Formatter,
+                            add_help=False)
+
+    for args, kwargs in ainf_lst:
+        args = tuple(args)
+        kwargs = dict(kwargs)
+        parser.add_argument(*args, **kwargs)
+
+    return parser
+
+
+def _get_help(parser, argv):
+    if len(argv) == 1 and ('-h' in argv or '--help' in argv):
+        parser.print_help()
+        parser.exit()
+
+
+def _argument_dictionary(argv, prog, ainf_lst=()):
+    parser = _parser(prog, ainf_lst)
+    _get_help(parser, argv)
+    arg_dct = vars(parser.parse_args(argv))
+    return arg_dct
+
+
+def _freeze_dictionary(items):
+    return tuple(dict(items).items())
+
+
+def _unfreeze_dictionary(items):
+    return dict(items)
+
+
+def _freeze_arginfo(ainf):
+    args, kwargs = ainf
+    frozen_kwargs = _freeze_dictionary(kwargs)
+    return (args, frozen_kwargs)
+
+
+def _unfreeze_arginfo(ainf):
+    args, kwargs = ainf
+    unfrozen_kwargs = _unfreeze_dictionary(kwargs)
+    return (args, unfrozen_kwargs)
+
+
+def _arginfo_add_help(ainf, help_str):
+    args, kwargs = _unfreeze_arginfo(ainf)
+    kwargs['help'] += '; {:s}'.format(help_str)
+    return _freeze_arginfo((args, kwargs))
+
+
+def _arginfo_set_default(ainf, default_val):
+    args, kwargs = _unfreeze_arginfo(ainf)
+    kwargs['default'] = default_val
+    return _freeze_arginfo((args, kwargs))
+
+
+def _arginfo_key(ainf):
+    key = None
+
+    args, kwargs = _unfreeze_arginfo(ainf)
+    if args and args[-1].startswith('--'):
+        key = args[-1][2:]
+    elif 'dest' in kwargs:
+        key = kwargs['dest']
+    else:
+        raise ValueError("Invalid argument information.")
+
+    return key
+
+
+def _arginfo_value(arg_dct, ainf):
+    key = _arginfo_key(ainf)
+    return arg_dct[key]
+
 
 def main(argv):
     """ main function
@@ -20,6 +166,7 @@ def main(argv):
             'init': init,
             'init_from_rmg': init_from_rmg,
             'divide': divide,
+            'chemkin': chemkin_main,
             'get': get_main,
             'csv': csv_main,
             'additions': additions_main,
@@ -32,16 +179,9 @@ def main(argv):
 def init(argv):
     """ initialize a mechanism
     """
-    mech_txt_arginfo = ((), {
-        'dest': '<mech_txt>',
-        'type': str,
-        'help': "[i] CHEMKIN mechanism file"
-    })
-    spc_csv_arginfo = ((), {
-        'dest': '<species_csv>',
-        'type': str,
-        'help': "[i] csv with 'species_id' column"
-    })
+    spc_csv_ainf = _arginfo_add_help(
+        SPC_CSV_REQ_INP_AINF,
+        help_str="columns: 'species', 'species_id'")
     therm_txt_arginfo = (('-t', '--therm_txt'), {
         'type': str,
         'default': None,
@@ -51,13 +191,13 @@ def init(argv):
         'action': 'store_true',
         'help': "Initialize without thermo data"
     })
-    parser = _init_parser(mech_txt_arginfo, spc_csv_arginfo, therm_txt_arginfo,
-                          no_thermo_arginfo)
+    parser = _init_parser(MECH_TXT_REQ_INP_AINF, spc_csv_ainf,
+                          therm_txt_arginfo, no_thermo_arginfo)
     _get_help(parser, argv)
 
     args = vars(parser.parse_args(argv))
 
-    mech_txt = args['<mech_txt>']
+    mech_txt = args['<mechanism_txt>']
     spc_csv = args['<species_csv>']
     therm_txt = args['therm_txt']
     abs_mech_txt = os.path.abspath(mech_txt)
@@ -86,38 +226,75 @@ def init(argv):
 def init_from_rmg(argv):
     """ initialize a mechanism from an RMG json file
     """
-    mech_json_arginfo = ((), {
-        'dest': '<mech_json>',
-        'type': str,
-        'help': "[i] RMG's mechanism JSON file"
-    })
-    species_json_arginfo = ((), {
-        'dest': '<species_json>',
-        'type': str,
-        'help': "[i] RMG's species JSON file"
-    })
-    parser = _init_parser(mech_json_arginfo, species_json_arginfo)
-    _get_help(parser, argv)
+    prog = 'automech init_from_rmg'
+    ainf_lst = (
+        RXN_JSON_REQ_INP_AINF,
+        SPC_JSON_REQ_INP_AINF,
+        _arginfo_add_help(RXN_CSV_OPT_OUT_AINF,
+                          help_str="columns: 'reaction_id'"),
+        _arginfo_add_help(SPC_CSV_OPT_OUT_AINF,
+                          help_str="columns: 'species_id', 'path'"),
+        GEOM_DIR_AINF,
+        PREFIX_AINF,
+        _arginfo_set_default(LOG_FILE_NAME_AINF,
+                             default_val='init.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
+    arg_dct = _argument_dictionary(argv, prog, ainf_lst)
 
-    args = vars(parser.parse_args(argv))
+    rxn_json_val = os.path.abspath(
+        _arginfo_value(arg_dct, RXN_JSON_REQ_INP_AINF))
+    spc_json_val = os.path.abspath(
+        _arginfo_value(arg_dct, SPC_JSON_REQ_INP_AINF))
+    rxn_csv_out_val = (
+        _arginfo_value(arg_dct, RXN_CSV_OPT_OUT_AINF))
+    spc_csv_out_val = (
+        _arginfo_value(arg_dct, SPC_CSV_OPT_OUT_AINF))
+    geom_dir_val = (
+        _arginfo_value(arg_dct, GEOM_DIR_AINF))
+    prefix_val = (
+        _arginfo_value(arg_dct, PREFIX_AINF))
+    log_file_name_val = (
+        _arginfo_value(arg_dct, LOG_FILE_NAME_AINF))
+    log_level_val = (
+        _arginfo_value(arg_dct, LOG_LEVEL_AINF))
+    print_out_val = (
+        _arginfo_value(arg_dct, PRINT_OUT_AINF))
 
-    with _ChangeDirectory(args['prefix']) as locator:
+    with _ChangeDirectory(prefix_val):
         logger = _logger(
-            log_file_name=args['log_file_name'],
-            log_level=args['log_level'],
-            print_out=args['print_out']
+            log_file_name=log_file_name_val,
+            log_level=log_level_val,
+            print_out=print_out_val
         )
         automechanic.io.init_from_rmg(
-            mech_json=os.path.join(
-                locator.working_directory, args['<mech_json>']),
-            spc_json=os.path.join(
-                locator.working_directory, args['<species_json>']),
-            rxn_csv_out=args['reactions_csv_out'],
-            spc_csv_out=args['species_csv_out'],
-            geom_dir=args['geom_dir'],
+            mech_json=rxn_json_val,
+            spc_json=spc_json_val,
+            rxn_csv_out=rxn_csv_out_val,
+            spc_csv_out=spc_csv_out_val,
+            geom_dir=geom_dir_val,
             id2path=from_qtc.obtools.get_smiles_filename,
             logger=logger
         )
+
+
+def chemkin_main(argv):
+    """ main function for operating on chemkin files
+    """
+    _route_subcommand(
+        argv=argv,
+        cmd='automech chemkin',
+        subcmd_dct={
+            'to_csv': chemkin_to_csv
+        }
+    )
+
+
+def chemkin_to_csv(argv):
+    """ get chemkin reactions
+    """
+    raise NotImplementedError(argv)
 
 
 def get_main(argv):
@@ -612,12 +789,6 @@ def _route_subcommand(argv, cmd, subcmd_dct):
     subcmd_dct[subcmd](argv[1:])
 
 
-def _get_help(parser, argv):
-    if len(argv) == 1 and ('-h' in argv or '--help' in argv):
-        parser.print_help()
-        parser.exit()
-
-
 def _split_command_args(argv):
     automech_argv = argv
     job_argv = None
@@ -630,28 +801,19 @@ def _split_command_args(argv):
     return automech_argv, job_argv
 
 
-def _init_parser(*arginfo_lst):
-    parser = _action_parser(prog='automech init',
-                            log_file_name='init.log',
-                            prefix=True)
-
-    for args, kwargs in arginfo_lst:
-        parser.add_argument(*args, **kwargs)
-
-    parser.add_argument('-D', '--geom_dir',
-                        type=str,
-                        default='geoms',
-                        help="[o] directory for storing geometry xyz files")
-    parser.add_argument('-S', '--species_csv_out',
-                        type=str,
-                        default='species.csv',
-                        help="[o] csv with 'species_id' and 'path' columns")
-    parser.add_argument('-R',
-                        '--reactions_csv_out',
-                        type=str,
-                        default='reactions.csv',
-                        help="[o] csv file with 'reaction_id' column")
-
+def _init_parser(*ainf_lst):
+    spc_out_help_str = "columns: 'species_id', 'path'"
+    rxn_out_help_str = "columns: 'reaction_id'"
+    ainf_lst += (
+        _arginfo_add_help(SPC_CSV_OPT_OUT_AINF, spc_out_help_str),
+        _arginfo_add_help(RXN_CSV_OPT_OUT_AINF, rxn_out_help_str),
+        GEOM_DIR_AINF,
+        PREFIX_AINF,
+        _arginfo_set_default(LOG_FILE_NAME_AINF, 'init.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
+    parser = _parser(prog='automech init', ainf_lst=ainf_lst)
     return parser
 
 
@@ -757,33 +919,27 @@ def _reactions_run_parser(cls):
     return parser
 
 
-def _action_parser(prog, log_file_name, prefix=False):
-    parser = _empty_parser(prog)
-    parser.add_argument('-p', '--print_out',
-                        dest='print_out',
-                        action='store_true',
-                        help="print to screen")
-    parser.add_argument('-v', '--log_level',
-                        type=int,
-                        default=20,
-                        help="log level: 20=INFO, 10=DEBUG")
-    parser.add_argument('-L', '--log_file_name',
-                        type=str,
-                        default=log_file_name,
-                        help="[o] name of the log file for automech output")
-
-    if prefix:
-        parser.add_argument('-P', '--prefix',
-                            type=str,
-                            default='.',
-                            help="[o] prefix for all output")
-
-    return parser
-
-
 def _empty_parser(prog):
     parser = ArgumentParser(prog=prog, formatter_class=Formatter,
                             add_help=False)
+    return parser
+
+
+def _action_parser(prog, log_file_name, prefix=False):
+    parser = _empty_parser(prog)
+    log_file_name_arginfo = _arginfo_set_default(
+        LOG_FILE_NAME_AINF, log_file_name)
+    parser.add_argument(*PRINT_OUT_AINF[0],
+                        **dict(PRINT_OUT_AINF[1]))
+    parser.add_argument(*LOG_LEVEL_AINF[0],
+                        **dict(LOG_LEVEL_AINF[1]))
+    parser.add_argument(*log_file_name_arginfo[0],
+                        **dict(log_file_name_arginfo[1]))
+
+    if prefix:
+        parser.add_argument(*PREFIX_AINF[0],
+                            **dict(PREFIX_AINF[1]))
+
     return parser
 
 

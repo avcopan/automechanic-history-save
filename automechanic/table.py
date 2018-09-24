@@ -13,6 +13,14 @@ def column(table_df, col_key):
     return tuple(table_df[col_key])
 
 
+def columns(table_df):
+    """ columns of a table, in order
+    """
+    cols = tuple(column(table_df, col_key)
+                 for col_key in column_keys(table_df))
+    return cols
+
+
 def rows(table_df):
     """ rows of a table
     """
@@ -74,6 +82,14 @@ def append_rows(table_df, row_dcts):
     col_keys = column_keys(table_df)
     row_dcts = tuple(rows(table_df)) + tuple(row_dcts)
     return from_rows(row_dcts, col_keys=col_keys)
+
+
+def append_columns(table_df, cols, col_keys):
+    """ append columns to a table
+    """
+    col_keys = tuple(column_keys(table_df)) + tuple(col_keys)
+    cols = tuple(columns(table_df)) + tuple(cols)
+    return from_columns(cols, col_keys=col_keys)
 
 
 def reindex(table_df):

@@ -4,6 +4,7 @@ import re
 from re import escape
 from itertools import chain
 from more_itertools import windowed
+import numpy
 from .parse import maybe
 from .parse import capture
 from .parse import zero_or_more
@@ -24,12 +25,25 @@ from .parse import STRING_END
 
 
 SPACES = one_or_more(SPACE, greedy=False)
+
+PADDING = zero_or_more(SPACE, greedy=False)
 ARROW = maybe(escape('<')) + escape('=') + maybe(escape('>'))
-PADDED_PLUS = maybe(SPACES) + PLUS + maybe(SPACES)
-PADDED_ARROW = maybe(SPACES) + ARROW + maybe(SPACES)
-PADDED_EM = maybe(SPACES) + 'M' + maybe(SPACES)
+PADDED_PLUS = PADDING + PLUS + PADDING
+PADDED_ARROW = PADDING + ARROW + PADDING
+PADDED_EM = PADDING + 'M' + PADDING
 PLUS_EM = PADDED_PLUS + PADDED_EM
 PAREN_PLUS_EM = escape('(') + PLUS_EM + escape(')')
+EXP = FLOAT + one_of_these(['E', 'e']) + maybe(SIGN) + INTEGER
+
+EA_UNIT_KEYS = ['KCAL/MOLE', 'CAL/MOLE', 'KJOULES/MOLE', 'JOULES/MOLE',
+                'KELVINS']
+A_UNIT_KEYS = ['MOLECULES', 'MOLES']
+EA_UNIT_CONVS = {'KCAL/MOLE': 1.e-3,
+                 'CAL/MOLE': 1.,
+                 'KJOULES/MOLE': 0.239006 * 1.e-3,
+                 'JOULES/MOLE': 0.239006,
+                 'KELVINS': 0.001987191686485529 * 1e-3}
+A_UNIT_CONVS = {'MOLECULES': 6.02214076e23, 'MOLES': 1}
 
 
 def remove_comments(mech_str):
@@ -150,8 +164,85 @@ def reactions(mech_str):
     reag_pattern = _en_reagents_pattern(specs)
     reac_pattern = _reaction_pattern(reag_pattern)
     reac_block_str = reactions_block(mech_str)
-    reacs = [reac.strip() for reac in re.findall(reac_pattern, reac_block_str)]
+    reacs = tuple(map(str.strip, re.findall(reac_pattern, reac_block_str)))
     return reacs
+
+
+def kinetics_unit_keys(mech_str):
+    """ kinetics unit keys
+    """
+    reac_block_str = reactions_block(mech_str)
+
+    unit_line = reac_block_str.splitlines()[0]
+
+    ea_unit_pattern = one_of_these(EA_UNIT_KEYS)
+    a_unit_pattern = one_of_these(A_UNIT_KEYS)
+    units_pattern = SPACES.join([named_capture(ea_unit_pattern, 'ea_unit'),
+                                 named_capture(a_unit_pattern, 'a_unit')])
+    units_gdct = group_dictionary(units_pattern, unit_line)
+
+    if units_gdct:
+        ea_unit = units_gdct['ea_unit']
+        a_unit = units_gdct['a_unit']
+    else:
+        ea_unit = 'CAL/MOLE'
+        a_unit = 'MOLES'
+
+    return ea_unit, a_unit
+
+
+def kinetics(mech_str):
+    """ kinetic data, by reaction
+    """
+    specs = species(mech_str)
+    reag_pattern = _en_reagents_pattern(specs)
+    reac_pattern = _reaction_pattern(reag_pattern)
+    reac_block_str = reactions_block(mech_str)
+    kdat_pattern = SPACES.join([capture(reac_pattern),
+                                capture(EXP),
+                                capture(FLOAT),
+                                capture(FLOAT)])
+    kdat_rows = group_lists(kdat_pattern, reac_block_str)
+    _, arrh_as, arrh_bs, arrh_eas = zip(*kdat_rows)
+    arrh_as = tuple(map(float, arrh_as))
+    arrh_bs = tuple(map(float, arrh_bs))
+    arrh_eas = tuple(map(float, arrh_eas))
+
+    ea_unit_key, a_unit_key = kinetics_unit_keys(mech_str)
+
+    arrh_as = tuple(numpy.multiply(arrh_as, A_UNIT_CONVS[a_unit_key]))
+    arrh_eas = tuple(numpy.multiply(arrh_eas, EA_UNIT_CONVS[ea_unit_key]))
+
+    arrh_cfts = tuple(zip(arrh_as, arrh_bs, arrh_eas))
+
+    return arrh_cfts
+
+
+def thermodynamics_dictionaries(mech_str):
+    """ thermodynamic data, as a dictionary
+    """
+    ret = None
+
+    tdat_strs = therm_data_strings(mech_str)
+
+    if tdat_strs:
+        tdat_rows = tuple(map(split_therm_data, tdat_strs))
+        assert all(n == 6 for n in map(len, tdat_rows))
+        (
+            specs,
+            cfts_lo_lst,
+            cfts_hi_lst,
+            temp_com_lst,
+            temp_lo_lst,
+            temp_hi_lst
+        ) = zip(*tdat_rows)
+        temps_lst = tuple(zip(temp_com_lst, temp_lo_lst, temp_hi_lst))
+        cfts_lo_dct = dict(zip(specs, cfts_lo_lst))
+        cfts_hi_dct = dict(zip(specs, cfts_hi_lst))
+        temps_dct = dict(zip(specs, temps_lst))
+        ret = (cfts_lo_dct, cfts_hi_dct, temps_dct)
+
+    return ret
 
 
 def therm_data_strings(mech_str):
@@ -163,20 +254,25 @@ def therm_data_strings(mech_str):
     :returns: reactions
     :rtype: list of strings
     """
-    polys = None
+    tdats = None
 
     ther_block_str = thermo_block(mech_str)
     if ther_block_str:
-        ther_lines = tuple(map(str.strip, ther_block_str.splitlines()))
-        polys = []
-        for stanza_lines in windowed(ther_lines, 4):
-            match = all(lin.endswith('{:d}'.format(num))
-                        for lin, num in zip(stanza_lines, range(1, 5)))
-            if match:
-                stanza = '\n'.join(stanza_lines)
-                polys.append(stanza)
+        tdats = _therm_data_strings_from_thermo_block(ther_block_str)
 
-    return polys
+    return tdats
+
+
+def _therm_data_strings_from_thermo_block(ther_block_str):
+    ther_lines = tuple(map(str.strip, ther_block_str.splitlines()))
+    tdats = []
+    for tdat_lines in windowed(ther_lines, 4):
+        match = all(str.endswith(tdat_line, str(i)) for tdat_line, i
+                    in zip(tdat_lines, range(1, 5)))
+        if match:
+            tdat = '\n'.join(tdat_lines)
+            tdats.append(tdat)
+    return tuple(tdats) if tdats else None
 
 
 def split_reaction(reac):
@@ -227,15 +323,14 @@ def split_therm_data(poly):
                                  named_capture(FLOAT, 'temp_cross')])
     temp_groups = group_lists(temps_pattern, head_line)
 
-    exp = FLOAT + one_of_these(['E', 'e']) + maybe(SIGN) + INTEGER
-    cfts = re.findall(exp, coef_lines)
+    cfts = re.findall(EXP, coef_lines)
 
     if temp_groups and len(cfts) in (14, 15):
         temps = map(float, temp_groups[-1])
-        temp_lo, temp_hi, temp_cross = temps
+        temp_lo, temp_hi, temp_com = temps
         cfts_hi = tuple(map(float, cfts[:7]))
         cfts_lo = tuple(map(float, cfts[7:14]))
-        poly_data = (spec, cfts_lo, cfts_hi, temp_cross, temp_lo, temp_hi)
+        poly_data = (spec, cfts_lo, cfts_hi, temp_com, temp_lo, temp_hi)
 
     return poly_data
 

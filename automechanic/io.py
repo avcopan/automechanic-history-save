@@ -24,6 +24,7 @@ from .table import lookup_update as table_lookup_update
 from .table import columns_like as table_with_columns_like
 from .table import update_column_keys as update_table_column_keys
 from .table import append_rows as append_table_rows
+from .table import append_columns as append_table_columns
 from .table import column_keys as table_column_keys
 from .table import iterate_rows as iterate_table_rows
 from .table import from_columns as table_from_columns
@@ -32,6 +33,37 @@ from .table import reindex as reindex_table
 from .table import sort as sort_table
 from .table import merge as merge_tables
 from .table import intersect as intersect_tables
+
+REACTION_SID_COL_KEYS = (
+    ('addition', ('x', 'y', 'xy')),
+    ('abstraction', ('q1h', 'q2', 'q1', 'q2h')),
+    ('migration', ('r', 'p'))
+)
+REACTION_IDX_COL_KEYS = (
+    ('addition', ('q1h_idx', 'q2_idx', 'q1_idx', 'q2h_idx')),
+    ('abstraction', ('x_idx', 'y_idx', 'xy_idx_x', 'xy_idx_y')),
+    ('migration', ('r_idx_h', 'r_idx_a', 'p_idx_h', 'p_idx_a'))
+)
+REACTION_CANDIDATE_FINDERS = (
+    ('addition', addition_candidate),
+    ('abstraction', abstraction_candidate),
+    ('migration', migration_candidate)
+)
+REACTION_FINDERS = (
+    ('addition', addition),
+    ('abstraction', abstraction),
+    ('migration', migration)
+)
+REACTION_XYZ_STRING_MAKERS = (
+    ('addition', addition_xyz_strings),
+    ('abstraction', abstraction_xyz_strings),
+    ('migration', migration_xyz_strings)
+)
+REACTION_INPUT_STRING_MAKERS = (
+    ('addition', addition_input_string),
+    ('abstraction', abstraction_input_string),
+    ('migration', migration_input_string)
+)
 
 
 def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
@@ -214,6 +246,116 @@ def read_thermo_data(spc_csv):
         thv_dct = dict(zip(spc_df['species_id'], spc_df['therm_val']))
 
     return thv_dct
+
+
+def chemkin_to_csv(mech_txt, thm_txt, rxn_csv_out, spc_csv_out, logger):
+    """ parse CHEMKIN files
+    """
+    from .pchemkin import species as chemkin_species
+    from .pchemkin import reactions as chemkin_reactions
+    from .pchemkin import (thermodynamics_dictionaries as
+                           chemkin_thermodynamics_dictionaries)
+    from .pchemkin import kinetics as chemkin_kinetics
+
+    logger.info("Reading in {:s}".format(mech_txt))
+    mech_str = read_file(mech_txt)
+
+    if thm_txt:
+        logger.info("Reading in {:s}".format(thm_txt))
+        thm_str = read_file(thm_txt)
+    else:
+        logger.info("No thermo file. Looking for thermo data in {:s}."
+                    .format(mech_txt))
+        thm_str = mech_str
+
+    logger.info("Finding species")
+    spcs = chemkin_species(mech_str)
+    spc_ck_idxs = tuple(range(1, len(spcs)+1))
+
+    logger.info("Finding reactions")
+    rxns = chemkin_reactions(mech_str)
+    rxn_ck_idxs = tuple(range(1, len(rxns)+1))
+
+    logger.info("Finding thermodynamics data")
+    thm_dcts = chemkin_thermodynamics_dictionaries(thm_str)
+
+    logger.info("Finding kinetics data")
+    kin_lst = chemkin_kinetics(mech_str)
+
+    spc_df = table_from_columns((spc_ck_idxs, spcs),
+                                ('chemkin_index', 'species'))
+    rxn_df = table_from_columns((rxn_ck_idxs, rxns),
+                                ('chemkin_indxs', 'reaction'))
+
+    if kin_lst:
+        assert len(kin_lst) == len(rxns)
+        arrh_col_keys = ('arrh_a', 'arrh_b', 'arrh_ea')
+        arrh_cols = tuple(zip(*kin_lst))
+        rxn_df = append_table_columns(rxn_df, arrh_cols, arrh_col_keys)
+
+    if thm_dcts:
+        nasa_lo_dct, nasa_hi_dct, nasa_t_dct = thm_dcts
+        nasa_lo_col_keys = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
+                            'nasa_lo_5', 'nasa_lo_6', 'nasa_lo_7')
+        nasa_hi_col_keys = ('nasa_hi_1', 'nasa_hi_2', 'nasa_hi_3', 'nasa_hi_4',
+                            'nasa_hi_5', 'nasa_hi_6', 'nasa_hi_7')
+        nasa_t_col_keys = ('nasa_t_com', 'nasa_t_lo', 'nasa_t_hi')
+        nasa_lo_cols = tuple(zip(*map(nasa_lo_dct.__getitem__, spcs)))
+        nasa_hi_cols = tuple(zip(*map(nasa_hi_dct.__getitem__, spcs)))
+        nasa_t_cols = tuple(zip(*map(nasa_t_dct.__getitem__, spcs)))
+
+        thm_col_keys = nasa_lo_col_keys + nasa_hi_col_keys + nasa_t_col_keys
+        thm_cols = nasa_lo_cols + nasa_hi_cols + nasa_t_cols
+        spc_df = append_table_columns(spc_df, thm_cols, thm_col_keys)
+
+    logger.info("Writing species to {:s}".format(spc_csv_out))
+    write_table_to_csv(spc_df, spc_csv_out)
+
+    logger.info("Writing reactions to {:s}".format(rxn_csv_out))
+    write_table_to_csv(rxn_df, rxn_csv_out)
+
+
+def reactions_init(cls, rxn_csv, spc_csv, rxn_csv_out, cdt_csv_out, logger):
+    """ initialize reactions
+    """
+    _init = reactions_initializer(
+        cls=cls,
+        is_candidate=dict(REACTION_CANDIDATE_FINDERS)[cls],
+        reaction=dict(REACTION_FINDERS)[cls],
+        sid_cols=dict(REACTION_SID_COL_KEYS)[cls],
+        idx_cols=dict(REACTION_IDX_COL_KEYS)[cls]
+    )
+    return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
+
+
+def reactions_run(cls, rxn_csv, spc_csv, tpl_txt, job_argv, run_dir, rxn_idxs,
+                  nodes, logger):
+    """ run addition reactions
+    """
+    _run = reactions_runner(
+        cls=cls,
+        reaction_xyz_strings=dict(REACTION_XYZ_STRING_MAKERS)[cls],
+        reaction_input_string=dict(REACTION_INPUT_STRING_MAKERS)[cls],
+        sid_cols=dict(REACTION_SID_COL_KEYS)[cls],
+        idx_cols=dict(REACTION_IDX_COL_KEYS)[cls]
+    )
+    return _run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs, nodes,
+                logger)
+
+
+def reactions_run_batch(cls, rxn_csv, spc_csv, batch_csv, tmp_txt,
+                        tmp_keyval_str, run_dir, id2path, job_argv, logger):
+    """ run additions
+    """
+    _run = reactions_batch_runner(
+        cls=cls,
+        reaction_xyz_strings=dict(REACTION_XYZ_STRING_MAKERS)[cls],
+        reaction_input_string=dict(REACTION_INPUT_STRING_MAKERS)[cls],
+        sid_cols=dict(REACTION_SID_COL_KEYS)[cls],
+        idx_cols=dict(REACTION_IDX_COL_KEYS)[cls]
+    )
+    return _run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str, run_dir,
+                id2path, job_argv, logger)
 
 
 def abstractions_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):

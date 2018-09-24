@@ -203,4 +203,5 @@ def test__automech__syngas_from_chemkin():
 
 
 if __name__ == '__main__':
-    test__automech__syngas_from_rmg()
+    # test__automech__syngas_from_rmg()
+    test__automech__syngas_from_chemkin()

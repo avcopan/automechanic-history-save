@@ -20,6 +20,9 @@ from .iohelp import migration_candidate
 from .iohelp import migration
 from .iohelp import migration_xyz_strings
 from .iohelp import migration_input_string
+from .table import is_empty_value as is_empty_table_value
+from .table import column as table_column
+from .table import columns as table_columns
 from .table import lookup_update as table_lookup_update
 from .table import columns_like as table_with_columns_like
 from .table import update_column_keys as update_table_column_keys
@@ -34,6 +37,12 @@ from .table import sort as sort_table
 from .table import merge as merge_tables
 from .table import intersect as intersect_tables
 
+ARRH_COL_KEYS = ('arrh_a', 'arrh_b', 'arrh_e')
+NASA_LO_COL_KEYS = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
+                    'nasa_lo_5', 'nasa_lo_6', 'nasa_lo_7')
+NASA_HI_COL_KEYS = ('nasa_hi_1', 'nasa_hi_2', 'nasa_hi_3', 'nasa_hi_4',
+                    'nasa_hi_5', 'nasa_hi_6', 'nasa_hi_7')
+NASA_T_COL_KEYS = ('nasa_t_com', 'nasa_t_lo', 'nasa_t_hi')
 REACTION_SID_COL_KEYS = (
     ('addition', ('x', 'y', 'xy')),
     ('abstraction', ('q1h', 'q2', 'q1', 'q2h')),
@@ -289,22 +298,16 @@ def chemkin_to_csv(mech_txt, thm_txt, rxn_csv_out, spc_csv_out, logger):
 
     if kin_lst:
         assert len(kin_lst) == len(rxns)
-        arrh_col_keys = ('arrh_a', 'arrh_b', 'arrh_ea')
         arrh_cols = tuple(zip(*kin_lst))
-        rxn_df = append_table_columns(rxn_df, arrh_cols, arrh_col_keys)
+        rxn_df = append_table_columns(rxn_df, arrh_cols, ARRH_COL_KEYS)
 
     if thm_dcts:
         nasa_lo_dct, nasa_hi_dct, nasa_t_dct = thm_dcts
-        nasa_lo_col_keys = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
-                            'nasa_lo_5', 'nasa_lo_6', 'nasa_lo_7')
-        nasa_hi_col_keys = ('nasa_hi_1', 'nasa_hi_2', 'nasa_hi_3', 'nasa_hi_4',
-                            'nasa_hi_5', 'nasa_hi_6', 'nasa_hi_7')
-        nasa_t_col_keys = ('nasa_t_com', 'nasa_t_lo', 'nasa_t_hi')
         nasa_lo_cols = tuple(zip(*map(nasa_lo_dct.__getitem__, spcs)))
         nasa_hi_cols = tuple(zip(*map(nasa_hi_dct.__getitem__, spcs)))
         nasa_t_cols = tuple(zip(*map(nasa_t_dct.__getitem__, spcs)))
 
-        thm_col_keys = nasa_lo_col_keys + nasa_hi_col_keys + nasa_t_col_keys
+        thm_col_keys = NASA_LO_COL_KEYS + NASA_HI_COL_KEYS + NASA_T_COL_KEYS
         thm_cols = nasa_lo_cols + nasa_hi_cols + nasa_t_cols
         spc_df = append_table_columns(spc_df, thm_cols, thm_col_keys)
 
@@ -313,6 +316,32 @@ def chemkin_to_csv(mech_txt, thm_txt, rxn_csv_out, spc_csv_out, logger):
 
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
     write_table_to_csv(rxn_df, rxn_csv_out)
+
+
+def chemkin_reactions_from_csv(rxn_csv, mech_txt_out, logger):
+    """ generate CHEMKIN files from CSVs
+    """
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+    rxn_col_keys = table_column_keys(rxn_df)
+
+    assert 'reaction' in rxn_col_keys
+    rxns = table_column(rxn_df, 'reaction')
+
+    assert all(col_key in rxn_col_keys for col_key in ARRH_COL_KEYS)
+    arrh_cfts_lst = zip(*table_columns(rxn_df, ARRH_COL_KEYS))
+
+    rxn_fmt = '{:{width}s} {:10.3e} {:8.3f} {:15.6f}'
+    rxn_wd = max(map(len, rxns)) + 5
+    format_ = partial(rxn_fmt.format, width=rxn_wd)
+    rxn_block_str = '\n'.join(
+        format_(rxn, *arrh_cfts) for rxn, arrh_cfts in zip(rxns, arrh_cfts_lst)
+        if not any(map(is_empty_table_value, arrh_cfts)))
+
+    mech_str = '\n'.join(['REACTIONS', rxn_block_str, 'END'])
+
+    logger.info("Writing reactions to {:s}".format(mech_txt_out))
+    write_file(mech_txt_out, mech_str)
 
 
 def reactions_init(cls, rxn_csv, spc_csv, rxn_csv_out, cdt_csv_out, logger):

@@ -35,6 +35,12 @@ RXN_CSV_REQ_INO_AINF = (
      ('type', str),
      ('help', "[i(o)] CSV with reaction information"))
 )
+RXN_CSV_REQ_INP_AINF = (
+    (),
+    (('dest', '<reactions_csv>'),
+     ('type', str),
+     ('help', "[i] CSV with reaction information"))
+)
 SPC_CSV_REQ_INP_AINF = (
     (),
     (('dest', '<species_csv>'),
@@ -77,6 +83,12 @@ CDT_CSV_OPT_OUT_AINF = (
     (('type', str),
      ('default', 'candidates.csv'),
      ('help', "[o] CSV with left-over reaction candidates"))
+)
+MECH_TXT_OPT_OUT_AINF = (
+    ('-M', '--mechanism_txt'),
+    (('type', str),
+     ('default', 'mechanism.txt'),
+     ('help', "[o] CHEMKIN mechanism file"))
 )
 GEOM_DIR_AINF = (
     ('-D', '--geom_dir'),
@@ -260,7 +272,8 @@ def chemkin_main(argv):
         argv=argv,
         cmd='automech chemkin',
         subcmd_dct={
-            'to_csv': chemkin_to_csv
+            'to_csv': chemkin_to_csv,
+            'reactions_from_csv': chemkin_reactions_from_csv
         }
     )
 
@@ -537,7 +550,7 @@ def _parse_runner_args(argv):
 def chemkin_to_csv(argv):
     """ parse CHEMKIN files
     """
-    prog = 'automech chemkin'
+    prog = 'automech chemkin to_csv'
     ainf_lst = (
         MECH_TXT_REQ_INP_AINF,
         THM_TXT_OPT_INP_AINF,
@@ -575,6 +588,40 @@ def chemkin_to_csv(argv):
             thm_txt=thm_txt_val,
             rxn_csv_out=rxn_csv_out_val,
             spc_csv_out=spc_csv_out_val,
+            logger=routine.logger
+        )
+
+
+def chemkin_reactions_from_csv(argv):
+    """ write CSV data to CHEMKIN file
+    """
+    prog = 'automech chemkin reactions_from_csv'
+    ainf_lst = (
+        RXN_CSV_REQ_INP_AINF,
+        MECH_TXT_OPT_OUT_AINF,
+        PREFIX_AINF,
+        _arginfo_adjust(LOG_FILE_NAME_AINF,
+                        default='reactions_from_csv.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
+
+    (
+        rxn_csv_val,
+        mech_txt_out_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
+
+    rxn_csv_val = os.path.abspath(rxn_csv_val)
+
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
+        automechanic.io.chemkin_reactions_from_csv(
+            rxn_csv=rxn_csv_val,
+            mech_txt_out=mech_txt_out_val,
             logger=routine.logger
         )
 

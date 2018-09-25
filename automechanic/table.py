@@ -6,6 +6,12 @@ from more_itertools import unique_everseen
 import pandas
 
 
+def is_empty_value(val):
+    """ check if a table value is missing, by value
+    """
+    return pandas.isna(val)
+
+
 def column(table_df, col_key):
     """ table column
     """
@@ -13,11 +19,13 @@ def column(table_df, col_key):
     return tuple(table_df[col_key])
 
 
-def columns(table_df):
+def columns(table_df, col_keys=None):
     """ columns of a table, in order
     """
-    cols = tuple(column(table_df, col_key)
-                 for col_key in column_keys(table_df))
+    if col_keys is None:
+        col_keys = column_keys(table_df)
+
+    cols = tuple(column(table_df, col_key) for col_key in col_keys)
     return cols
 
 

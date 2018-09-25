@@ -40,8 +40,8 @@ REACTION_SID_COL_KEYS = (
     ('migration', ('r', 'p'))
 )
 REACTION_IDX_COL_KEYS = (
-    ('addition', ('q1h_idx', 'q2_idx', 'q1_idx', 'q2h_idx')),
-    ('abstraction', ('x_idx', 'y_idx', 'xy_idx_x', 'xy_idx_y')),
+    ('addition', ('x_idx', 'y_idx', 'xy_idx_x', 'xy_idx_y')),
+    ('abstraction', ('q1h_idx', 'q2_idx', 'q1_idx', 'q2h_idx')),
     ('migration', ('r_idx_h', 'r_idx_a', 'p_idx_h', 'p_idx_a'))
 )
 REACTION_CANDIDATE_FINDERS = (

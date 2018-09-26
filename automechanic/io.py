@@ -20,6 +20,12 @@ from .iohelp import migration_candidate
 from .iohelp import migration
 from .iohelp import migration_xyz_strings
 from .iohelp import migration_input_string
+from .table import set_column as table_set_column
+from .table import is_empty_value as is_empty_table_value
+from .table import has_column_keys as table_has_column_keys
+from .table import column as table_column
+from .table import columns as table_columns
+from .table import lookup_row as table_lookup_row
 from .table import lookup_update as table_lookup_update
 from .table import columns_like as table_with_columns_like
 from .table import update_column_keys as update_table_column_keys
@@ -33,7 +39,15 @@ from .table import reindex as reindex_table
 from .table import sort as sort_table
 from .table import merge as merge_tables
 from .table import intersect as intersect_tables
+from .table import move_column_to_front as move_table_column_to_front
 
+ARRH_COL_KEYS = ('arrh_a', 'arrh_b', 'arrh_e')
+REF_ARRH_COL_KEYS = ('ref_arrh_a', 'ref_arrh_b', 'ref_arrh_e')
+NASA_LO_COL_KEYS = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
+                    'nasa_lo_5', 'nasa_lo_6', 'nasa_lo_7')
+NASA_HI_COL_KEYS = ('nasa_hi_1', 'nasa_hi_2', 'nasa_hi_3', 'nasa_hi_4',
+                    'nasa_hi_5', 'nasa_hi_6', 'nasa_hi_7')
+NASA_T_COL_KEYS = ('nasa_t_com', 'nasa_t_lo', 'nasa_t_hi')
 REACTION_SID_COL_KEYS = (
     ('addition', ('x', 'y', 'xy')),
     ('abstraction', ('q1h', 'q2', 'q1', 'q2h')),
@@ -285,26 +299,20 @@ def chemkin_to_csv(mech_txt, thm_txt, rxn_csv_out, spc_csv_out, logger):
     spc_df = table_from_columns((spc_ck_idxs, spcs),
                                 ('chemkin_index', 'species'))
     rxn_df = table_from_columns((rxn_ck_idxs, rxns),
-                                ('chemkin_indxs', 'reaction'))
+                                ('chemkin_index', 'reaction'))
 
     if kin_lst:
         assert len(kin_lst) == len(rxns)
-        arrh_col_keys = ('arrh_a', 'arrh_b', 'arrh_ea')
         arrh_cols = tuple(zip(*kin_lst))
-        rxn_df = append_table_columns(rxn_df, arrh_cols, arrh_col_keys)
+        rxn_df = append_table_columns(rxn_df, arrh_cols, ARRH_COL_KEYS)
 
     if thm_dcts:
         nasa_lo_dct, nasa_hi_dct, nasa_t_dct = thm_dcts
-        nasa_lo_col_keys = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
-                            'nasa_lo_5', 'nasa_lo_6', 'nasa_lo_7')
-        nasa_hi_col_keys = ('nasa_hi_1', 'nasa_hi_2', 'nasa_hi_3', 'nasa_hi_4',
-                            'nasa_hi_5', 'nasa_hi_6', 'nasa_hi_7')
-        nasa_t_col_keys = ('nasa_t_com', 'nasa_t_lo', 'nasa_t_hi')
         nasa_lo_cols = tuple(zip(*map(nasa_lo_dct.__getitem__, spcs)))
         nasa_hi_cols = tuple(zip(*map(nasa_hi_dct.__getitem__, spcs)))
         nasa_t_cols = tuple(zip(*map(nasa_t_dct.__getitem__, spcs)))
 
-        thm_col_keys = nasa_lo_col_keys + nasa_hi_col_keys + nasa_t_col_keys
+        thm_col_keys = NASA_LO_COL_KEYS + NASA_HI_COL_KEYS + NASA_T_COL_KEYS
         thm_cols = nasa_lo_cols + nasa_hi_cols + nasa_t_cols
         spc_df = append_table_columns(spc_df, thm_cols, thm_col_keys)
 
@@ -312,6 +320,124 @@ def chemkin_to_csv(mech_txt, thm_txt, rxn_csv_out, spc_csv_out, logger):
     write_table_to_csv(spc_df, spc_csv_out)
 
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
+    write_table_to_csv(rxn_df, rxn_csv_out)
+
+
+def chemkin_id_reactions(rxn_csv, spc_csv, rxn_csv_out, spc_csv_out, logger):
+    """ determine reaction identifiers for CHEMKIN reactions
+    """
+    from .iohelp import translate_chemkin_reaction
+
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+
+    logger.info("Reading in {:s}".format(spc_csv))
+    spc_df = pandas.read_csv(spc_csv)
+
+    assert table_has_column_keys(spc_df, ('species', 'species_id'))
+
+    logger.info("Canonicalizing species IDs")
+    sids = table_column(spc_df, 'species_id')
+    can_sids = tuple(map(canonical_species_identifier, sids))
+    spc_df = table_set_column(spc_df, 'species_id', can_sids)
+
+    sid_dct = dict(zip(*table_columns(spc_df, ('species', 'species_id'))))
+
+    rxns = table_column(rxn_df, 'reaction')
+    rids = tuple(translate_chemkin_reaction(rxn, sid_dct) for rxn in rxns)
+    can_rids = tuple(canonical_reaction_identifier(rid) if rid else None
+                     for rid in rids)
+    rxn_df = table_set_column(rxn_df, 'reaction_id', can_rids)
+
+    spc_df = move_table_column_to_front(spc_df, 'species_id')
+    rxn_df = move_table_column_to_front(rxn_df, 'reaction_id')
+
+    logger.info("Writing species to {:s}".format(spc_csv_out))
+    write_table_to_csv(spc_df, spc_csv_out)
+
+    logger.info("Writing reactions to {:s}".format(rxn_csv_out))
+    write_table_to_csv(rxn_df, rxn_csv_out)
+
+
+def chemkin_reactions_from_csv(rxn_csv, mech_txt_out, logger):
+    """ generate CHEMKIN files from CSVs
+    """
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+    rxn_col_keys = table_column_keys(rxn_df)
+
+    assert 'reaction' in rxn_col_keys
+    rxns = table_column(rxn_df, 'reaction')
+
+    assert all(col_key in rxn_col_keys for col_key in ARRH_COL_KEYS)
+    arrh_cfts_lst = zip(*table_columns(rxn_df, ARRH_COL_KEYS))
+
+    rxn_fmt = '{:{width}s} {:10.3e} {:8.3f} {:15.6f}'
+    rxn_wd = max(map(len, rxns)) + 5
+    format_ = partial(rxn_fmt.format, width=rxn_wd)
+    rxn_block_str = '\n'.join(
+        format_(rxn, *arrh_cfts) for rxn, arrh_cfts in zip(rxns, arrh_cfts_lst)
+        if not any(map(is_empty_table_value, arrh_cfts)))
+
+    mech_str = '\n'.join(['REACTIONS', rxn_block_str, 'END'])
+
+    logger.info("Writing reactions to {:s}".format(mech_txt_out))
+    write_file(mech_txt_out, mech_str)
+
+
+def plot_arrhenius(rxn_csv, rxn_csv_ref, rxn_csv_out, plot_dir, extension,
+                   tmp_rng, lbl_col_keys, id2path, logger):
+    """ make Arrhenius plots
+    """
+    from .plot import write_diagram
+    from .iohelp import arrhenius_diagram
+
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+    assert table_has_column_keys(rxn_df, ARRH_COL_KEYS)
+    assert table_has_column_keys(rxn_df, lbl_col_keys)
+    rxn_df = update_table_column_keys(rxn_df, ('plot_path',))
+
+    assert len(tmp_rng) == 2 and tmp_rng[0] < tmp_rng[1]
+    tmp_lo, tmp_hi = tmp_rng
+
+    if rxn_csv_ref:
+        logger.info("Reading in {:s}".format(rxn_csv_ref))
+        rxn_df_ref = pandas.read_csv(rxn_csv_ref)
+        assert table_has_column_keys(rxn_df_ref, ARRH_COL_KEYS)
+    else:
+        rxn_df_ref = None
+
+    if not os.path.exists(plot_dir):
+        os.mkdir(plot_dir)
+
+    for row in iterate_table_rows(rxn_df):
+        rid = row['reaction_id']
+        logger.info("reaction {:s}".format(rid))
+
+        cfts = tuple(map(row.__getitem__, ARRH_COL_KEYS))
+        lbls = tuple(map(row.__getitem__, lbl_col_keys))
+        ref_cfts = None
+        if rxn_df_ref is not None:
+            ref_row = table_lookup_row(rxn_df_ref, ('reaction_id', rid))
+            if ref_row:
+                ref_cfts = tuple(map(ref_row.__getitem__, ARRH_COL_KEYS))
+        arrh_dgm = arrhenius_diagram(cfts, ref_cfts, tmp_lo, tmp_hi, lbls)
+
+        if arrh_dgm:
+            fname = '{:s}.{:s}'.format(id2path(rid), extension)
+            fpath = os.path.join(plot_dir, fname)
+
+            logger.info("  writing plot to {:s}".format(fpath))
+            write_diagram(arrh_dgm, fpath, close=True)
+
+            rxn_df = table_lookup_update(rxn_df,
+                                         ('reaction_id', rid),
+                                         ('plot_path', fpath))
+        else:
+            logger.info("  missing Arrhenius coefficients; skipping...")
+
+    logger.info("Writing updated reaction table to {:s}".format(rxn_csv_out))
     write_table_to_csv(rxn_df, rxn_csv_out)
 
 
@@ -533,7 +659,7 @@ def csv_intersect(table_csvs, col_key, table_csv_out, logger):
     write_table_to_csv(table_df_out, table_csv_out)
 
 
-def get_arrhenius(rxn_csv, logger):
+def get_arrhenius(rxn_csv, rxn_csv_out, logger):
     """ get arrhenius parameters from job directories
     """
     from .ptorsscan import arrhenius as arrhenius_from_plog
@@ -549,17 +675,18 @@ def get_arrhenius(rxn_csv, logger):
     def _get(rxn_row):
         arrh = None
         rid = rxn_row['reaction_id']
-        path = os.path.join(prefix, rxn_row['path'])
-        logger.info("reaction {:s}".format(rid))
-        plog_path = os.path.join(path, 'rate.plog')
-        if os.path.isfile(plog_path):
-            logger.info(plog_path)
-            plog_str = read_file(plog_path)
-            arrh = arrhenius_from_plog(plog_str)
-            if arrh:
-                logger.info("A={:f}, b={:f}, Ea={:f}".format(*arrh))
-        else:
-            logger.info("No rate.plog file found")
+        if not is_empty_table_value(rxn_row['path']):
+            path = os.path.join(prefix, rxn_row['path'])
+            logger.info("reaction {:s}".format(rid))
+            plog_path = os.path.join(path, 'rate.plog')
+            if os.path.isfile(plog_path):
+                logger.info(plog_path)
+                plog_str = read_file(plog_path)
+                arrh = arrhenius_from_plog(plog_str)
+                if arrh:
+                    logger.info("A={:f}, b={:f}, Ea={:f}".format(*arrh))
+            else:
+                logger.info("No rate.plog file found")
         return arrh if arrh else (None, None, None)
 
     arrh_col_keys = ('arrh_a', 'arrh_b', 'arrh_e')
@@ -570,7 +697,7 @@ def get_arrhenius(rxn_csv, logger):
     rxn_df['arrh_e'] = arrh_es
 
     logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
-    write_table_to_csv(rxn_df, rxn_csv)
+    write_table_to_csv(rxn_df, rxn_csv_out)
 
 
 def csv_merge(table_csvs, col_key, table_csv_out, logger):

@@ -35,13 +35,43 @@ RXN_CSV_REQ_INO_AINF = (
      ('type', str),
      ('help', "[i(o)] CSV with reaction information"))
 )
+TAB_CSV_REQ_INO_AINF = (
+    (),
+    (('dest', '<table_csv>'),
+     ('type', str),
+     ('help', "[i(o)] CSV file"))
+)
+TAB_CSV_REQ_INP_AINF = (
+    (),
+    (('dest', '<table_csv>'),
+     ('type', str),
+     ('help', "[i] CSV file"))
+)
+RXN_CSV_REQ_INP_AINF = (
+    (),
+    (('dest', '<reactions_csv>'),
+     ('type', str),
+     ('help', "[i] CSV with reaction information"))
+)
 SPC_CSV_REQ_INP_AINF = (
     (),
     (('dest', '<species_csv>'),
      ('type', str),
      ('help', "[i] CSV with species information"))
 )
+COL_KEY_REQ_AINF = (
+    (),
+    (('dest', '<col_key>'),
+     ('type', str),
+     ('help', "CSV column key"))
+)
 # optional arguments
+RXN_CSV_OPT_INP_AINF = (
+    ('-r', '--reactions_csv'),
+    (('type', str),
+     ('default', 'reactions.csv'),
+     ('help', "[i] CSV with reaction information"))
+)
 SPC_CSV_OPT_INP_AINF = (
     ('-s', '--species_csv'),
     (('type', str),
@@ -78,6 +108,18 @@ CDT_CSV_OPT_OUT_AINF = (
      ('default', 'candidates.csv'),
      ('help', "[o] CSV with left-over reaction candidates"))
 )
+TAB_CSV_OPT_OUT_AINF = (
+    ('-T', '--table_csv_out'),
+    (('type', str),
+     ('default', 'table.csv'),
+     ('help', "[o] CSV file"))
+)
+MECH_TXT_OPT_OUT_AINF = (
+    ('-M', '--mechanism_txt'),
+    (('type', str),
+     ('default', 'mechanism.txt'),
+     ('help', "[o] CHEMKIN mechanism file"))
+)
 GEOM_DIR_AINF = (
     ('-D', '--geom_dir'),
     (('type', str),
@@ -90,10 +132,21 @@ RUN_DIR_AINF = (
      ('default', 'runs'),
      ('help', "[o] directory for running reaction jobs"))
 )
+PLOT_DIR_AINF = (
+    ('-D', '--plot_dir'),
+    (('type', str),
+     ('default', 'plots'),
+     ('help', "[o] directory for storing plots"))
+)
 NO_THM_AINF = (
     ('-w', '--no_thermodynamic_data'),
     (('action', 'store_true'),
      ('help', "Don't use thermodynamic data"))
+)
+CMD_KEY_AINF = (
+    (),
+    (('dest', '<key>'),
+     ('type', str))
 )
 CMD_AINF = (
     (),
@@ -176,15 +229,15 @@ def _arginfo_add_help(ainf, help_str):
     return _freeze_arginfo((args, kwargs))
 
 
-def _arginfo_set_default(ainf, default_val):
+def _arginfo_set(ainf, key, val):
     args, kwargs = _unfreeze_arginfo(ainf)
-    kwargs['default'] = default_val
+    kwargs[key] = val
     return _freeze_arginfo((args, kwargs))
 
 
 def _arginfo_adjust(ainf, default=None, extra_help=''):
     ainf = _arginfo_add_help(ainf, extra_help)
-    ainf = _arginfo_set_default(ainf, default)
+    ainf = _arginfo_set(ainf, 'default', default)
     return ainf
 
 
@@ -246,6 +299,7 @@ def main(argv):
             'chemkin': chemkin_main,
             'get': get_main,
             'csv': csv_main,
+            'plot': plot_main,
             'additions': partial(reactions_main, 'addition'),
             'abstractions': partial(reactions_main, 'abstraction'),
             'migrations': partial(reactions_main, 'migration')
@@ -260,7 +314,9 @@ def chemkin_main(argv):
         argv=argv,
         cmd='automech chemkin',
         subcmd_dct={
-            'to_csv': chemkin_to_csv
+            'to_csv': chemkin_to_csv,
+            'id_reactions': chemkin_id_reactions,
+            'from_csv': chemkin_reactions_from_csv
         }
     )
 
@@ -273,7 +329,6 @@ def reactions_main(cls, argv):
         cmd='automech {:s}s'.format(cls),
         subcmd_dct={
             'init': partial(reactions_init, cls),
-            # 'run': partial(reactions_run, cls),
             'run_batch': partial(reactions_run_batch, cls)
         }
     )
@@ -290,6 +345,18 @@ def csv_main(argv):
             'sort': csv_sort,
             'merge': csv_merge,
             'intersect': csv_intersect
+        }
+    )
+
+
+def plot_main(argv):
+    """ main function for plotting
+    """
+    _route_subcommand(
+        argv=argv,
+        cmd='automech plot',
+        subcmd_dct={
+            'arrhenius': plot_arrhenius
         }
     )
 
@@ -322,8 +389,7 @@ def init(argv):
                           help_str="columns: 'species_id', 'path'"),
         GEOM_DIR_AINF,
         PREFIX_AINF,
-        _arginfo_set_default(LOG_FILE_NAME_AINF,
-                             default_val='init.log'),
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'init.log'),
         LOG_LEVEL_AINF,
         PRINT_OUT_AINF
     )
@@ -374,8 +440,7 @@ def init_from_rmg(argv):
                           help_str="columns: 'species_id', 'path'"),
         GEOM_DIR_AINF,
         PREFIX_AINF,
-        _arginfo_set_default(LOG_FILE_NAME_AINF,
-                             default_val='init.log'),
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'init.log'),
         LOG_LEVEL_AINF,
         PRINT_OUT_AINF
     )
@@ -424,8 +489,7 @@ def reactions_init(cls, argv):
         _arginfo_add_help(CDT_CSV_OPT_OUT_AINF,
                           help_str="columns: 'reaction_id', 'exception'"),
         PREFIX_AINF,
-        _arginfo_set_default(LOG_FILE_NAME_AINF,
-                             default_val='init.log'),
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'init.log'),
         LOG_LEVEL_AINF,
         PRINT_OUT_AINF
     )
@@ -456,12 +520,6 @@ def reactions_init(cls, argv):
         )
 
 
-def reactions_run(cls, argv):
-    """ reactions runner
-    """
-    raise NotImplementedError((cls, argv))
-
-
 def reactions_run_batch(cls, argv):
     """ reactions batch runner
     """
@@ -480,8 +538,7 @@ def reactions_run_batch(cls, argv):
         TPL_KEYVALS_AINF,
         RUN_DIR_AINF,
         PREFIX_AINF,
-        _arginfo_set_default(LOG_FILE_NAME_AINF,
-                             default_val='run.log'),
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'run.log'),
         LOG_LEVEL_AINF,
         PRINT_OUT_AINF,
         CMD_AINF
@@ -537,7 +594,7 @@ def _parse_runner_args(argv):
 def chemkin_to_csv(argv):
     """ parse CHEMKIN files
     """
-    prog = 'automech chemkin'
+    prog = 'automech chemkin to_csv'
     ainf_lst = (
         MECH_TXT_REQ_INP_AINF,
         THM_TXT_OPT_INP_AINF,
@@ -579,214 +636,394 @@ def chemkin_to_csv(argv):
         )
 
 
+def chemkin_id_reactions(argv):
+    """ determine reaction identifiers
+    """
+    prog = 'automech chemkin id_reactions'
+    ainf_lst = (
+        RXN_CSV_REQ_INP_AINF,
+        SPC_CSV_REQ_INP_AINF,
+        RXN_CSV_OPT_OUT_AINF,
+        SPC_CSV_OPT_OUT_AINF,
+        PREFIX_AINF,
+        _arginfo_adjust(LOG_FILE_NAME_AINF,
+                        default='from_csv.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
+
+    (
+        rxn_csv_val,
+        spc_csv_val,
+        rxn_csv_out_val,
+        spc_csv_out_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
+
+    rxn_csv_val = os.path.abspath(rxn_csv_val)
+
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
+        automechanic.io.chemkin_id_reactions(
+            rxn_csv=rxn_csv_val,
+            spc_csv=spc_csv_val,
+            rxn_csv_out=rxn_csv_out_val,
+            spc_csv_out=spc_csv_out_val,
+            logger=routine.logger
+        )
+
+
+def chemkin_reactions_from_csv(argv):
+    """ write CSV data to CHEMKIN file
+    """
+    prog = 'automech chemkin from_csv'
+    ainf_lst = (
+        RXN_CSV_REQ_INP_AINF,
+        MECH_TXT_OPT_OUT_AINF,
+        PREFIX_AINF,
+        _arginfo_adjust(LOG_FILE_NAME_AINF,
+                        default='from_csv.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
+
+    (
+        rxn_csv_val,
+        mech_txt_out_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
+
+    rxn_csv_val = os.path.abspath(rxn_csv_val)
+
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
+        automechanic.io.chemkin_reactions_from_csv(
+            rxn_csv=rxn_csv_val,
+            mech_txt_out=mech_txt_out_val,
+            logger=routine.logger
+        )
+
+
 def get_arrhenius(argv):
     """ get arrhenius paramaters
     """
-    parser = _action_parser(prog='automech get arrhenius',
-                            log_file_name='arrhenius.log',
-                            prefix=True)
-    parser.add_argument(dest='<reactions_csv>',
-                        type=str,
-                        default='reactions.csv',
-                        help="[i(o)] csv with 'reaction_id' column")
-    _get_help(parser, argv)
+    prog = 'automech get arrhenius'
+    ainf_lst = (
+        RXN_CSV_REQ_INP_AINF,
+        RXN_CSV_OPT_OUT_AINF,
+        PREFIX_AINF,
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'get.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
 
-    args = vars(parser.parse_args(argv))
+    (
+        rxn_csv_val,
+        rxn_csv_out_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
 
-    with _ChangeDirectory(args['prefix']) as locator:
-        logger = _logger(
-            log_file_name=args['log_file_name'],
-            log_level=args['log_level'],
-            print_out=args['print_out']
-        )
+    rxn_csv_val = os.path.abspath(rxn_csv_val)
+
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
         automechanic.io.get_arrhenius(
-            rxn_csv=os.path.join(
-                locator.working_directory, args['<reactions_csv>']),
-            logger=logger
+            rxn_csv=rxn_csv_val,
+            rxn_csv_out=rxn_csv_out_val,
+            logger=routine.logger
         )
 
 
 def csv_reindex(argv):
     """ (over)write the 'index' column in a csv file
     """
-    parser = _action_parser(prog='automech csv reindex',
-                            log_file_name='reindex.log',
-                            prefix=True)
-    parser.add_argument(dest='<table_csv>',
-                        type=str,
-                        help="[i(o)] csv file")
-    _get_help(parser, argv)
+    prog = 'automech csv reindex'
+    ainf_lst = (
+        TAB_CSV_REQ_INO_AINF,
+        PREFIX_AINF,
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'reindex.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
 
-    args = vars(parser.parse_args(argv))
+    (
+        tab_csv_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
 
-    with _ChangeDirectory(args['prefix']) as locator:
-        logger = _logger(
-            log_file_name=args['log_file_name'],
-            log_level=args['log_level'],
-            print_out=args['print_out']
-        )
+    tab_csv_val = os.path.abspath(tab_csv_val)
+
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
         automechanic.io.csv_reindex(
-            table_csv=os.path.join(
-                locator.working_directory, args['<table_csv>']),
-            logger=logger
+            table_csv=tab_csv_val,
+            logger=routine.logger
         )
 
 
 def csv_sort(argv):
     """ sort a csv file by column
     """
-    parser = _action_parser(prog='automech csv sort',
-                            log_file_name='sort.log',
-                            prefix=True)
-    parser.add_argument(dest='<table_csv>',
-                        type=str,
-                        help="[i(o)] csv file")
-    parser.add_argument(dest='<col_key>',
-                        type=str,
-                        help="the name of the colum to sort by")
-    parser.add_argument('-d', '--descending',
-                        action='store_true',
-                        help="sort in descending order")
-    _get_help(parser, argv)
+    prog = 'automech csv sort'
+    dsc_ainf = (
+        ('-d', '--descending'),
+        (('action', 'store_true'),
+         ('help', "Sort CSV in descending order"))
+    )
+    ainf_lst = (
+        TAB_CSV_REQ_INO_AINF,
+        COL_KEY_REQ_AINF,
+        dsc_ainf,
+        PREFIX_AINF,
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'sort.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
 
-    args = vars(parser.parse_args(argv))
+    (
+        tab_csv_val,
+        col_key_val,
+        dsc_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
 
-    with _ChangeDirectory(args['prefix']) as locator:
-        logger = _logger(
-            log_file_name=args['log_file_name'],
-            log_level=args['log_level'],
-            print_out=args['print_out']
-        )
+    tab_csv_val = os.path.abspath(tab_csv_val)
+
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
         automechanic.io.csv_sort(
-            table_csv=os.path.join(
-                locator.working_directory, args['<table_csv>']),
-            col_key=args['<col_key>'],
-            descending=args['descending'],
-            logger=logger
+            table_csv=tab_csv_val,
+            col_key=col_key_val,
+            descending=dsc_val,
+            logger=routine.logger
         )
 
 
 def csv_merge(argv):
     """ merge reaction csv files
     """
-    parser = _action_parser(prog='automech csv merge',
-                            log_file_name='merge.log',
-                            prefix=True)
-    parser.add_argument(dest='<table_csvs>',
-                        type=str,
-                        nargs='+',
-                        help="[i] csv files")
-    parser.add_argument(dest='<col_key>',
-                        type=str,
-                        help="the name of the colum to sort by")
-    parser.add_argument('-T', '--table_csv_out',
-                        type=str,
-                        default='table.csv',
-                        help="[o] csv file")
-    _get_help(parser, argv)
+    prog = 'automech csv merge'
+    ainf_lst = (
+        _arginfo_set(TAB_CSV_REQ_INP_AINF, 'nargs', '+'),
+        COL_KEY_REQ_AINF,
+        TAB_CSV_OPT_OUT_AINF,
+        PREFIX_AINF,
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'merge.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
 
-    args = vars(parser.parse_args(argv))
+    (
+        tab_csvs_val,
+        col_key_val,
+        tab_csv_out_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
 
-    table_csvs = args['<table_csvs>']
-    assert len(table_csvs) > 1
-    table_csvs = tuple(map(os.path.abspath, table_csvs))
+    assert len(tab_csvs_val) > 1
+    tab_csvs_val = tuple(map(os.path.abspath, tab_csvs_val))
 
-    with _ChangeDirectory(args['prefix']):
-        logger = _logger(
-            log_file_name=args['log_file_name'],
-            log_level=args['log_level'],
-            print_out=args['print_out']
-        )
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
         automechanic.io.csv_merge(
-            table_csvs=table_csvs,
-            col_key=args['<col_key>'],
-            table_csv_out=args['table_csv_out'],
-            logger=logger
+            table_csvs=tab_csvs_val,
+            col_key=col_key_val,
+            table_csv_out=tab_csv_out_val,
+            logger=routine.logger
         )
 
 
 def csv_intersect(argv):
     """ intersect reaction csv files
     """
-    parser = _action_parser(prog='automech csv intersect',
-                            log_file_name='intersect.log',
-                            prefix=True)
-    parser.add_argument(dest='<table_csvs>',
-                        type=str,
-                        nargs='+',
-                        help="[i] csv files")
-    parser.add_argument(dest='<col_key>',
-                        type=str,
-                        help="the name of the colum to sort by")
-    parser.add_argument('-T', '--table_csv_out',
-                        type=str,
-                        default='table.csv',
-                        help="[o] csv file")
-    _get_help(parser, argv)
+    prog = 'automech csv intersect'
+    ainf_lst = (
+        _arginfo_set(TAB_CSV_REQ_INP_AINF, 'nargs', '+'),
+        COL_KEY_REQ_AINF,
+        TAB_CSV_OPT_OUT_AINF,
+        PREFIX_AINF,
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'merge.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
 
-    args = vars(parser.parse_args(argv))
+    (
+        tab_csvs_val,
+        col_key_val,
+        tab_csv_out_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
 
-    table_csvs = args['<table_csvs>']
-    assert len(table_csvs) > 1
-    table_csvs = tuple(map(os.path.abspath, table_csvs))
+    assert len(tab_csvs_val) > 1
+    tab_csvs_val = tuple(map(os.path.abspath, tab_csvs_val))
 
-    with _ChangeDirectory(args['prefix']):
-        logger = _logger(
-            log_file_name=args['log_file_name'],
-            log_level=args['log_level'],
-            print_out=args['print_out']
-        )
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
         automechanic.io.csv_intersect(
-            table_csvs=table_csvs,
-            col_key=args['<col_key>'],
-            table_csv_out=args['table_csv_out'],
-            logger=logger
+            table_csvs=tab_csvs_val,
+            col_key=col_key_val,
+            table_csv_out=tab_csv_out_val,
+            logger=routine.logger
+        )
+
+
+def plot_arrhenius(argv):
+    """ make Arrhenius plots
+    """
+    prog = 'automech plot arrhenius'
+    rxn_csv_ref_ainf = (
+        ('-r', '--reaction_csv_ref'),
+        (('type', str),
+         ('default', None),
+         ('help',
+          "[i] Secondary reactions CSV with reference values to plot against; "
+          "columns: 'reaction_id', 'arrh_a', 'arrh_b', 'arrh_e'"))
+    )
+    ext_ainf = (
+        ('-e', '--extension'),
+        (('type', str),
+         ('default', 'pdf'),
+         ('help', "Determines image format: png, pdf, ps, eps, svg"))
+    )
+    tmp_rng_ainf = (
+        ('-x', '--temperature_range'),
+        (('type', float),
+         ('nargs', 2),
+         ('default', [100, 1000]),
+         ('help', "Temperature range over which to plot."))
+    )
+    col_key_opt_ainf = (
+        ('-k', '--column_key'),
+        (('type', str),
+         ('nargs', '+'),
+         ('default', []),
+         ('help', "CSV column key(s) for plot labeling"))
+    )
+    ainf_lst = (
+        _arginfo_add_help(RXN_CSV_REQ_INP_AINF,
+                          help_str="columns: 'reaction_id', 'arrh_a', "
+                                   "'arrh_b', 'arrh_e'"),
+        rxn_csv_ref_ainf,
+        _arginfo_add_help(RXN_CSV_OPT_OUT_AINF,
+                          help_str="columns: 'reaction_id', 'arrh_a', "
+                                   "'arrh_b', 'arrh_e', 'plot_path'"),
+        PLOT_DIR_AINF,
+        ext_ainf,
+        tmp_rng_ainf,
+        col_key_opt_ainf,
+        PREFIX_AINF,
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'plot.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
+
+    (
+        rxn_csv_val,
+        rxn_csv_ref_val,
+        rxn_csv_out_val,
+        plot_dir_val,
+        ext_val,
+        tmp_rng_val,
+        col_keys_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
+
+    rxn_csv_val = os.path.abspath(rxn_csv_val)
+    rxn_csv_ref_val = (os.path.abspath(rxn_csv_ref_val) if rxn_csv_ref_val
+                       else None)
+
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
+        automechanic.io.plot_arrhenius(
+            rxn_csv=rxn_csv_val,
+            rxn_csv_ref=rxn_csv_ref_val,
+            rxn_csv_out=rxn_csv_out_val,
+            plot_dir=plot_dir_val,
+            extension=ext_val,
+            tmp_rng=tmp_rng_val,
+            lbl_col_keys=col_keys_val,
+            id2path=from_qtc.obtools.get_smiles_filename,
+            logger=routine.logger
         )
 
 
 def divide(argv):
     """ divide into binary categories, by key
     """
-    keys = ('rad-rad', 'high-spin')
-    parser = _action_parser(prog='automech divide',
-                            log_file_name='divide.log',
-                            prefix=True)
-    parser.add_argument('key',
-                        type=str,
-                        help="options: {:s}".format(', '.join(keys)))
-    parser.add_argument('dir1',
-                        type=str,
-                        help="directory name for reactions in category")
-    parser.add_argument('dir2',
-                        type=str,
-                        help="directory name for reactions out of category")
-    parser.add_argument('-r', '--reactions_csv',
-                        type=str,
-                        default='reactions.csv',
-                        help="[i(o)] csv file with 'reaction_id' column")
-    parser.add_argument('-R',
-                        '--reactions_csv_out',
-                        type=str,
-                        default='reactions.csv',
-                        help="[o] csv file with 'reaction_id' column")
-    _get_help(parser, argv)
-    args = vars(parser.parse_args(argv))
+    prog = 'automech divide'
+    dir_in_ainf = (
+        (),
+        (('dest', '<dir_in>'),
+         ('type', str),
+         ('help', 'directory for in-category reactions'))
+    )
+    dir_out_ainf = (
+        (),
+        (('dest', '<dir_out>'),
+         ('type', str),
+         ('help', 'directory for out-of-category reactions'))
+    )
+    cmd_keys = ('rad-rad', 'high-spin')
+    cmd_keys_help_str = 'options: {:s}'.format(', '.join(cmd_keys))
+    ainf_lst = (
+        _arginfo_set(CMD_KEY_AINF, 'help', cmd_keys_help_str),
+        dir_in_ainf,
+        dir_out_ainf,
+        RXN_CSV_OPT_INO_AINF,
+        RXN_CSV_OPT_OUT_AINF,
+        PREFIX_AINF,
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'divide.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
 
-    with _ChangeDirectory(args['prefix']) as locator:
-        logger = _logger(
-            log_file_name=args['log_file_name'],
-            log_level=args['log_level'],
-            print_out=args['print_out']
-        )
+    (
+        cmd_key_val,
+        dir_in_val,
+        dir_out_val,
+        rxn_csv_val,
+        rxn_csv_out_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
 
+    rxn_csv_val = os.path.abspath(rxn_csv_val)
+
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
         automechanic.io.divide(
-            key=args['key'],
-            dir1=args['dir1'],
-            dir2=args['dir2'],
-            rxn_csv=os.path.join(
-                locator.working_directory, args['reactions_csv']),
-            rxn_csv_out=args['reactions_csv_out'],
-            logger=logger
+            key=cmd_key_val,
+            dir1=dir_in_val,
+            dir2=dir_out_val,
+            rxn_csv=rxn_csv_val,
+            rxn_csv_out=rxn_csv_out_val,
+            logger=routine.logger
         )
 
 
@@ -823,24 +1060,6 @@ def _split_command_args(argv):
     else:
         automech_argv.append('cmd')
     return automech_argv, job_argv
-
-
-def _action_parser(prog, log_file_name, prefix=False):
-    parser = _parser(prog)
-    log_file_name_arginfo = _arginfo_set_default(
-        LOG_FILE_NAME_AINF, log_file_name)
-    parser.add_argument(*PRINT_OUT_AINF[0],
-                        **dict(PRINT_OUT_AINF[1]))
-    parser.add_argument(*LOG_LEVEL_AINF[0],
-                        **dict(LOG_LEVEL_AINF[1]))
-    parser.add_argument(*log_file_name_arginfo[0],
-                        **dict(log_file_name_arginfo[1]))
-
-    if prefix:
-        parser.add_argument(*PREFIX_AINF[0],
-                            **dict(PREFIX_AINF[1]))
-
-    return parser
 
 
 def _logger(log_file_name, log_level=logging.INFO, print_out=False):
@@ -885,22 +1104,6 @@ class _AutomechRoutine(object):
             log_level=self.log_level,
             print_out=self.print_out
         )
-        return self
-
-    def __exit__(self, _type, _value, _traceback):
-        os.chdir(self.working_directory)
-
-
-class _ChangeDirectory(object):
-
-    def __init__(self, path):
-        self.working_directory = os.getcwd()
-        self.other_directory = os.path.abspath(path)
-
-    def __enter__(self):
-        if not os.path.exists(self.other_directory):
-            os.mkdir(self.other_directory)
-        os.chdir(self.other_directory)
         return self
 
     def __exit__(self, _type, _value, _traceback):

@@ -42,6 +42,13 @@ def iterate_rows(table_df):
         yield dict(row.items())
 
 
+def set_column(table_df, col_key, col):
+    """ change the value of a table column
+    """
+    table_df[col_key] = col
+    return table_df
+
+
 def update_column_keys(table_df, col_keys):
     """ update column keys, adding new ones to the end
     """
@@ -62,6 +69,12 @@ def column_keys(table_df):
     """ get the column keys of a table
     """
     return tuple(table_df.columns)
+
+
+def has_column_keys(table_df, col_keys):
+    """ determine whether the table has a set of column keys
+    """
+    return set(col_keys) <= set(column_keys(table_df))
 
 
 def empty(col_keys):
@@ -169,6 +182,16 @@ def from_lookup_dictionary(table_lkp, col_keys):
     """
     rows_ = table_lkp.values()
     return from_rows(rows_, col_keys=col_keys)
+
+
+def lookup_row(table_df, lookup_item):
+    """ lookup row by column value
+    """
+    col_keys = column_keys(table_df)
+    col_key, col_val = lookup_item
+    assert col_key in col_keys
+    table_lkp = lookup_dictionary(table_df, col_key)
+    return table_lkp[col_val] if col_val in table_lkp else None
 
 
 def lookup_update(table_df, lookup_item, update_item):

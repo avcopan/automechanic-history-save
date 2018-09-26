@@ -38,11 +38,11 @@ EXP = FLOAT + one_of_these(['E', 'e']) + maybe(SIGN) + INTEGER
 EA_UNIT_KEYS = ['KCAL/MOLE', 'CAL/MOLE', 'KJOULES/MOLE', 'JOULES/MOLE',
                 'KELVINS']
 A_UNIT_KEYS = ['MOLECULES', 'MOLES']
-EA_UNIT_CONVS = {'KCAL/MOLE': 1.e-3,
+EA_UNIT_CONVS = {'KCAL/MOLE': 1.e+3,
                  'CAL/MOLE': 1.,
-                 'KJOULES/MOLE': 0.239006 * 1.e-3,
+                 'KJOULES/MOLE': 0.239006 * 1.e+3,
                  'JOULES/MOLE': 0.239006,
-                 'KELVINS': 0.001987191686485529 * 1e-3}
+                 'KELVINS': 0.001987191686485529 * 1e+3}
 A_UNIT_CONVS = {'MOLECULES': 6.02214076e23, 'MOLES': 1}
 
 
@@ -194,14 +194,16 @@ def kinetics_unit_keys(mech_str):
 def kinetics(mech_str):
     """ kinetic data, by reaction
     """
+    exp_or_float = one_of_these([EXP, FLOAT])
     specs = species(mech_str)
     reag_pattern = _en_reagents_pattern(specs)
     reac_pattern = _reaction_pattern(reag_pattern)
     reac_block_str = reactions_block(mech_str)
     kdat_pattern = SPACES.join([capture(reac_pattern),
                                 capture(EXP),
-                                capture(FLOAT),
-                                capture(FLOAT)])
+                                capture(exp_or_float),
+                                capture(exp_or_float)])
+
     kdat_rows = group_lists(kdat_pattern, reac_block_str)
     _, arrh_as, arrh_bs, arrh_eas = zip(*kdat_rows)
     arrh_as = tuple(map(float, arrh_as))

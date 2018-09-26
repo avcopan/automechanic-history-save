@@ -1,9 +1,38 @@
 """ plotting functions
 """
-from matplotlib.pyplot import subplots as pyplot_diagram
+from matplotlib import pyplot
 
 
-def _diagram():
+def add_line(diag, x_vals, y_vals):
+    """ add line plot to diagram
+    """
+    _, axs = diag
+    axs.plot(x_vals, y_vals)
+
+
+def add_text(diag, text_str, left=True, top=True, margin=0.05):
+    """ add text to diagram
+    """
+    xpos = margin if left else 1. - margin
+    xaln = 'left' if left else 'right'
+    ypos = margin if not top else 1. - margin
+    yaln = 'bottom' if not top else 'top'
+
+    _, axs = diag
+    axs.annotate(text_str, xy=(xpos, ypos), xycoords='axes fraction',
+                 ha=xaln, va=yaln)
+
+
+def write_diagram(diag, fname, close=False):
+    """ write diagram to a file
+    """
+    fig, _ = diag
+    fig.savefig(fname)
+    if close:
+        pyplot.close(fig)
+
+
+def empty_diagram():
     """ canvas = (figure, axes)
     """
-    return pyplot_diagram()
+    return pyplot.subplots()

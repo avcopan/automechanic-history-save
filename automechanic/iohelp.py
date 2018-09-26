@@ -1,6 +1,7 @@
 """ helpers for the io module
 """
 from itertools import permutations
+import numpy
 from .pchemkin import split_reaction as split_chemkin_reaction
 from .pchemkin import split_therm_data
 from .strid import split_reaction_identifier
@@ -14,7 +15,12 @@ from .geom import migration_indices
 from .graph import indices as graph_indices
 from .graph import atom_neighborhood_indices
 from .form import subtract as subtract_formulas
-from .therm import enthalpy as therm_enthalpy
+from .func import nasa_enthalpy
+from .func import arrhenius_log_rate
+from .plot import empty_diagram
+from .plot import add_line as add_line_to_diagram
+from .plot import add_text as add_text_to_diagram
+from .table import is_empty_value as is_empty_table_value
 from .timeout import timeout
 
 
@@ -58,9 +64,34 @@ def translate_chemkin_thermo_data(thd_str):
 
     assert t_lo < t_cross < t_hi
     cfts = cfts_lo if t_298 <= t_cross else cfts_hi
-    h_298 = therm_enthalpy(t_298, cfts)
+    h_298 = nasa_enthalpy(t_298, cfts)
     ret = (spc, h_298)
     return ret
+
+
+def add_arrhenius_plot_to_diagram(dgm, cfts, temp_lo, temp_hi):
+    """ add an Arrhenius plot to a diagram
+    """
+    temps = numpy.linspace(temp_lo, temp_hi)
+    rates = arrhenius_log_rate(temps, cfts)
+    add_line_to_diagram(dgm, x_vals=temps, y_vals=rates)
+    return dgm
+
+
+def arrhenius_diagram(cfts, ref_cfts, tmp_lo, tmp_hi, lbls):
+    """ make an arrhenius plot
+    """
+    dgm = None
+    if not any(map(is_empty_table_value, cfts)):
+        dgm = empty_diagram()
+        add_arrhenius_plot_to_diagram(dgm, cfts, tmp_lo, tmp_hi)
+        if ref_cfts is not None and not any(map(is_empty_table_value, ref_cfts)):
+            add_arrhenius_plot_to_diagram(dgm, ref_cfts, tmp_lo, tmp_hi)
+
+        lbl_str = '\n\n'.join(lbls)
+        add_text_to_diagram(dgm, lbl_str)
+
+    return dgm
 
 
 def abstraction_candidate(rid):

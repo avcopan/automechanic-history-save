@@ -300,6 +300,9 @@ def main(argv):
             'get': get_main,
             'csv': csv_main,
             'plot': plot_main,
+            'species': species_main,
+            'reactions': reactions_new_main,
+            # combine these into the 'reactions' subcommand
             'additions': partial(reactions_main, 'addition'),
             'abstractions': partial(reactions_main, 'abstraction'),
             'migrations': partial(reactions_main, 'migration')
@@ -315,8 +318,30 @@ def chemkin_main(argv):
         cmd='automech chemkin',
         subcmd_dct={
             'to_csv': chemkin_to_csv,
-            'id_reactions': chemkin_id_reactions,
-            'from_csv': chemkin_reactions_from_csv
+            'id_reactions': chemkin_id_reactions
+        }
+    )
+
+
+def species_main(argv):
+    """ main function for species routines
+    """
+    _route_subcommand(
+        argv=argv,
+        cmd='automech species',
+        subcmd_dct={
+        }
+    )
+
+
+def reactions_new_main(argv):
+    """ main function for reactions routines
+    """
+    _route_subcommand(
+        argv=argv,
+        cmd='automech reactions',
+        subcmd_dct={
+            'to_chemkin': reactions_to_chemkin
         }
     )
 
@@ -647,7 +672,7 @@ def chemkin_id_reactions(argv):
         SPC_CSV_OPT_OUT_AINF,
         PREFIX_AINF,
         _arginfo_adjust(LOG_FILE_NAME_AINF,
-                        default='from_csv.log'),
+                        default='id_reactions.log'),
         LOG_LEVEL_AINF,
         PRINT_OUT_AINF
     )
@@ -676,16 +701,16 @@ def chemkin_id_reactions(argv):
         )
 
 
-def chemkin_reactions_from_csv(argv):
-    """ write CSV data to CHEMKIN file
+def reactions_to_chemkin(argv):
+    """ write CSV reaction data to CHEMKIN file
     """
-    prog = 'automech chemkin from_csv'
+    prog = 'automech reactions to_chemkin'
     ainf_lst = (
         RXN_CSV_REQ_INP_AINF,
         MECH_TXT_OPT_OUT_AINF,
         PREFIX_AINF,
         _arginfo_adjust(LOG_FILE_NAME_AINF,
-                        default='from_csv.log'),
+                        default='to_chemkin.log'),
         LOG_LEVEL_AINF,
         PRINT_OUT_AINF
     )
@@ -703,7 +728,7 @@ def chemkin_reactions_from_csv(argv):
 
     with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
                           print_out_val) as routine:
-        automechanic.io.chemkin_reactions_from_csv(
+        automechanic.io.reactions_to_chemkin(
             rxn_csv=rxn_csv_val,
             mech_txt_out=mech_txt_out_val,
             logger=routine.logger

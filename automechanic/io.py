@@ -359,7 +359,7 @@ def chemkin_id_reactions(rxn_csv, spc_csv, rxn_csv_out, spc_csv_out, logger):
     write_table_to_csv(rxn_df, rxn_csv_out)
 
 
-def chemkin_reactions_from_csv(rxn_csv, mech_txt_out, logger):
+def reactions_to_chemkin(rxn_csv, mech_txt_out, logger):
     """ generate CHEMKIN files from CSVs
     """
     logger.info("Reading in {:s}".format(rxn_csv))
@@ -372,7 +372,7 @@ def chemkin_reactions_from_csv(rxn_csv, mech_txt_out, logger):
     assert all(col_key in rxn_col_keys for col_key in ARRH_COL_KEYS)
     arrh_cfts_lst = zip(*table_columns(rxn_df, ARRH_COL_KEYS))
 
-    rxn_fmt = '{:{width}s} {:10.3e} {:8.3f} {:15.6f}'
+    rxn_fmt = '{:{width}s} {:10.3e} {:8.3f} {:12.3f}'
     rxn_wd = max(map(len, rxns)) + 5
     format_ = partial(rxn_fmt.format, width=rxn_wd)
     rxn_block_str = '\n'.join(

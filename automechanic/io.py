@@ -20,7 +20,7 @@ from .iohelp import migration_candidate
 from .iohelp import migration
 from .iohelp import migration_xyz_strings
 from .iohelp import migration_input_string
-from .table import set_column as table_set_column
+from .table import set_column as set_table_column
 from .table import is_empty_value as is_empty_table_value
 from .table import has_column_keys as table_has_column_keys
 from .table import column as table_column
@@ -41,6 +41,9 @@ from .table import merge as merge_tables
 from .table import intersect as intersect_tables
 from .table import move_column_to_front as move_table_column_to_front
 
+ADD_XYZ_EXTENSION = '{:s}.xyz'.format
+SID_COL_KEY = 'species_id'
+GEOM_PATH_COL_KEY = 'geom_path'
 ARRH_COL_KEYS = ('arrh_a', 'arrh_b', 'arrh_e')
 REF_ARRH_COL_KEYS = ('ref_arrh_a', 'ref_arrh_b', 'ref_arrh_e')
 NASA_LO_COL_KEYS = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
@@ -250,6 +253,33 @@ def read_geometries(spc_csv):
     return mgeo_dct
 
 
+def species_find_geometries(spc_csv, spc_csv_out, geom_dir, id2path, logger):
+    """ find species .xyz files
+    """
+
+    logger.info("Reading in {:s}".format(spc_csv))
+    spc_df = pandas.read_csv(spc_csv)
+
+    spc_df = update_table_column_keys(spc_df, (GEOM_PATH_COL_KEY,))
+
+    sids = table_column(spc_df, SID_COL_KEY)
+    to_path_ = partial(os.path.join, geom_dir)
+    fpaths = tuple(map(to_path_, map(ADD_XYZ_EXTENSION, map(id2path, sids))))
+
+    for sid, fpath in zip(sids, fpaths):
+        logger.info("species {:s}".format(sid))
+        if os.path.exists(fpath):
+            logger.info("  geometry file found at {:s}".format(fpath))
+            spc_df = table_lookup_update(spc_df,
+                                         (SID_COL_KEY, sid),
+                                         (GEOM_PATH_COL_KEY, fpath))
+        else:
+            logger.info("  no geometry file found.")
+
+    logger.info("Writing species to {:s}".format(spc_csv_out))
+    write_table_to_csv(spc_df, spc_csv_out)
+
+
 def read_thermo_data(spc_csv):
     """ a dictionary of thermo values (H298), indexed by species ID
     """
@@ -339,7 +369,7 @@ def chemkin_id_reactions(rxn_csv, spc_csv, rxn_csv_out, spc_csv_out, logger):
     logger.info("Canonicalizing species IDs")
     sids = table_column(spc_df, 'species_id')
     can_sids = tuple(map(canonical_species_identifier, sids))
-    spc_df = table_set_column(spc_df, 'species_id', can_sids)
+    spc_df = set_table_column(spc_df, 'species_id', can_sids)
 
     sid_dct = dict(zip(*table_columns(spc_df, ('species', 'species_id'))))
 
@@ -347,7 +377,7 @@ def chemkin_id_reactions(rxn_csv, spc_csv, rxn_csv_out, spc_csv_out, logger):
     rids = tuple(translate_chemkin_reaction(rxn, sid_dct) for rxn in rxns)
     can_rids = tuple(canonical_reaction_identifier(rid) if rid else None
                      for rid in rids)
-    rxn_df = table_set_column(rxn_df, 'reaction_id', can_rids)
+    rxn_df = set_table_column(rxn_df, 'reaction_id', can_rids)
 
     spc_df = move_table_column_to_front(spc_df, 'species_id')
     rxn_df = move_table_column_to_front(rxn_df, 'reaction_id')
@@ -454,21 +484,6 @@ def reactions_init(cls, rxn_csv, spc_csv, rxn_csv_out, cdt_csv_out, logger):
     return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
 
 
-def reactions_run(cls, rxn_csv, spc_csv, tpl_txt, job_argv, run_dir, rxn_idxs,
-                  nodes, logger):
-    """ run addition reactions
-    """
-    _run = reactions_runner(
-        cls=cls,
-        reaction_xyz_strings=dict(REACTION_XYZ_STRING_MAKERS)[cls],
-        reaction_input_string=dict(REACTION_INPUT_STRING_MAKERS)[cls],
-        sid_cols=dict(REACTION_SID_COL_KEYS)[cls],
-        idx_cols=dict(REACTION_IDX_COL_KEYS)[cls]
-    )
-    return _run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs, nodes,
-                logger)
-
-
 def reactions_run_batch(cls, rxn_csv, spc_csv, batch_csv, tmp_txt,
                         tmp_keyval_str, run_dir, id2path, job_argv, logger):
     """ run additions
@@ -521,21 +536,6 @@ def migrations_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
         idx_cols=('r_idx_h', 'r_idx_a', 'p_idx_h', 'p_idx_a')
     )
     return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
-
-
-def additions_run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs,
-                  nodes, logger):
-    """ run addition reactions
-    """
-    _run = reactions_runner(
-        cls='addition',
-        reaction_xyz_strings=addition_xyz_strings,
-        reaction_input_string=addition_input_string,
-        sid_cols=('x', 'y', 'xy'),
-        idx_cols=('x_idx', 'y_idx', 'xy_idx_x', 'xy_idx_y')
-    )
-    return _run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs, nodes,
-                logger)
 
 
 def abstractions_run_batch(spc_csv, batch_csv, rxn_csv, tmp_txt,
@@ -790,34 +790,6 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
         write_table_to_csv(rxn_df, rxn_csv)
 
     return _init
-
-
-def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
-                     sid_cols, idx_cols):
-    """ run reactions
-    """
-    assert cls in ('abstraction', 'addition', 'migration')
-
-    def _run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs, nodes,
-             logger):
-        logger.info("Reading in {:s}".format(rxn_csv))
-        rxn_df = pandas.read_csv(rxn_csv)
-
-        logger.info(rxn_df)
-        logger.info(spc_csv)
-        logger.info(rxn_csv)
-        logger.info(tpl_txt)
-        logger.info(job_argv)
-        logger.info(run_dir)
-        logger.info(rxn_idxs)
-        logger.info(nodes)
-        logger.info(cls)
-        logger.info(reaction_xyz_strings)
-        logger.info(reaction_input_string)
-        logger.info(sid_cols)
-        logger.info(idx_cols)
-
-    return _run
 
 
 def reactions_batch_runner(cls, reaction_xyz_strings, reaction_input_string,

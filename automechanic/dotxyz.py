@@ -2,7 +2,7 @@
 """
 import re
 from .parse import SPACE
-from .parse import INTEGER
+from .parse import UNSIGNED_INTEGER
 from .parse import STRING_START
 from .parse import LINE_END
 from .parse import LETTER
@@ -18,7 +18,7 @@ def number_of_atoms(dxyz):
     """ number of atoms from a .xyz string
     """
     natms_pattern = maybe(SPACES).join(
-        [STRING_START, named_capture(INTEGER, 'natms'), LINE_END])
+        [STRING_START, named_capture(UNSIGNED_INTEGER, 'natms'), LINE_END])
     match = re.search(natms_pattern, dxyz, re.MULTILINE)
     assert match
     gdct = match.groupdict()

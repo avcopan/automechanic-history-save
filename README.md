@@ -33,44 +33,55 @@ To test your installation, run the tests as follows.
 ```
 
 
-## How to run the examples
+## Instructions for plotting:
 
-The examples are found in `examples/` in this directory.
-Here we outline the procedure for `examples/syngas`.
-
-The `automech` program has a subcommand structure similar to programs like `git`.
-You can see the available subcommands with `automech -h` or `automech --help`.
-
-A mechanism is initialized with the `init` subcommand, which requires one of two
-sets of inputs:
- 1. A JSON-format mechanism file from RMG (flag: `-j`).
-    Example:
-    ```
-    (amenv) automech init -j mechanism.json -P syngas/
-    ```
- 2. A CHEMKIN mechanism file (flag: `-m`).
-    In this case, you must also provide a CSV file for translating your CHEMKIN
-    names into meaning full species identifiers (SMILES and multiplicity).
-    The CHEMKIN name should be under the column header `species` and the
-    species ID should be under the column header `species_id` in the format
-    `<SMILES>_m<multiplicity>`.
-    Example:
-    ```
-    (amenv) automech init -m mechanism.txt -s species.csv -P syngas/
-    ```
-
-This initialization step will create a file called `reactions.csv` (flag: `-R`)
-with all of the reactions in the mechanism.
-It will also create a directory (flag: `-D`) of `.xyz` files with the
-geometries for all species in the mechanism, whose paths will be written to
-`species.csv` under the column header `path`.
-
+To parse Arrhenius parameters from a CHEMKIN file:
 ```
-(amenv) cd syngas/
-(amenv) automech additions init -s species.csv -r reactions.csv -P additions/ -p
-(amenv) cd additions/
-# Pick reactions in reactions.csv and put them in batches/b1.csv along with a
-# template input file at batches/t1.txt
-(amenv) automech additions run -s ../species.csv -r reactions.csv -b batches/b1.csv -t batches/t1.txt -y nodes:d -p cmd ls
+automech chemkin to_csv mechanism.txt -p
 ```
-(The `-p` flag prints the log to screen)
+For our purposes, let's add the flags `-R ck_reactions.csv -S ck_species.csv`
+to rename the outputs.
+To get the reaction IDs you must have a `species.csv` file with the species IDs
+for each CHEMKIN species name, in which case you can run
+```
+automech chemkin id_reactions ck_reactions.csv species.csv -R ck_reactions.csv -p
+```
+to add a `reaction_id` column to `ck_reactions.csv`.
+
+To extract Arrhenius parameters from the output files after a run:
+```
+automech reactions find_arrhenius reactions.csv -p
+```
+where `reactions.csv` contains the paths to the run directories.
+You may then want to perform a sort on one of the Arrhenius coefficient
+columns:
+```
+automech csv sort reactions.csv arrh_a -p
+```
+which will move the non-empty rows to the top of the file.
+
+To write the Arrhenius parameters in CHEMKIN format:
+```
+automech reactions to_chemkin reactions.csv -p
+```
+which will generate a file `mechanism.txt`.
+
+To plot the Arrhenius parameters:
+```
+automech reactions plot_arrhenius reactions.csv -p
+```
+which will create a directory of image files and write their paths to
+`reactions.csv`.
+To open the files, you may need to install an image viewer:
+```
+pip install pygame image-view
+```
+after which you can open the images using `image-view /path/to/file`.
+
+More elaborate Arrhenius plots can also be generated:
+```
+automech reactions plot_arrhenius reactions.csv -r path/to/ck_reactions.csv -k reaction reaction_id -x 100 2000 -e png -p
+```
+This will plot the calculated rate coefficient (blue) against the one found in
+the CHEMKIN file (orange), which we wrote to `ck_reactions.csv` above, and print
+both the reaction ID and the CHEMKIN reaction name on the figure.

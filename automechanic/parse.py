@@ -152,12 +152,14 @@ UPPERCASE_LETTER = r'[A-Z]'
 LETTER = r'[a-zA-Z]'
 
 DIGIT = r'[0-9]'
-INTEGER = one_or_more(DIGIT)
 
-PERIOD = escape('.')
 PLUS = escape('+')
 MINUS = escape('-')
 SIGN = one_of_these([PLUS, MINUS])
+UNSIGNED_INTEGER = one_or_more(DIGIT)
+INTEGER = maybe(SIGN) + UNSIGNED_INTEGER
+
+PERIOD = escape('.')
 UNSIGNED_FLOAT = one_of_these(
     [zero_or_more(DIGIT) + PERIOD + one_or_more(DIGIT),
      one_or_more(DIGIT) + PERIOD + zero_or_more(DIGIT)])

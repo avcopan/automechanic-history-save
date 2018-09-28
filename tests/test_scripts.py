@@ -202,6 +202,22 @@ def test__automech__syngas_from_chemkin():
                            'cmd', 'ls'])
 
 
+def test__automech_csv_to_from_chemkin():
+    """ test the conversion between CHEMKIN format TXTs and CSVs
+    """
+    tmp_path = tempfile.mkdtemp()
+
+    print(tmp_path)
+
+    subprocess.check_call(['automech', 'chemkin', 'to_csv',
+                           os.path.join(SYNGAS_PATH, 'mechanism.txt'),
+                           '-P', tmp_path, '-p'])
+    subprocess.check_call(['automech', 'reactions', 'to_chemkin',
+                           os.path.join(tmp_path, 'reactions.csv'),
+                           '-P', tmp_path, '-p'])
+
+
 if __name__ == '__main__':
     # test__automech__syngas_from_rmg()
-    test__automech__syngas_from_chemkin()
+    # test__automech__syngas_from_chemkin()
+    test__automech_csv_to_from_chemkin()

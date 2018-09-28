@@ -20,7 +20,7 @@ from .iohelp import migration_candidate
 from .iohelp import migration
 from .iohelp import migration_xyz_strings
 from .iohelp import migration_input_string
-from .table import set_column as table_set_column
+from .table import set_column as set_table_column
 from .table import is_empty_value as is_empty_table_value
 from .table import has_column_keys as table_has_column_keys
 from .table import column as table_column
@@ -41,6 +41,9 @@ from .table import merge as merge_tables
 from .table import intersect as intersect_tables
 from .table import move_column_to_front as move_table_column_to_front
 
+ADD_XYZ_EXTENSION = '{:s}.xyz'.format
+SID_COL_KEY = 'species_id'
+GEOM_PATH_COL_KEY = 'geom_path'
 ARRH_COL_KEYS = ('arrh_a', 'arrh_b', 'arrh_e')
 REF_ARRH_COL_KEYS = ('ref_arrh_a', 'ref_arrh_b', 'ref_arrh_e')
 NASA_LO_COL_KEYS = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
@@ -250,143 +253,77 @@ def read_geometries(spc_csv):
     return mgeo_dct
 
 
-def read_thermo_data(spc_csv):
-    """ a dictionary of thermo values (H298), indexed by species ID
+def species_find_geometries(spc_csv, spc_csv_out, geom_dir, id2path, logger):
+    """ find species .xyz files
     """
-    thv_dct = None
-
-    spc_df = pandas.read_csv(spc_csv)
-    if 'therm_val' in spc_df:
-        thv_dct = dict(zip(spc_df['species_id'], spc_df['therm_val']))
-
-    return thv_dct
-
-
-def chemkin_to_csv(mech_txt, thm_txt, rxn_csv_out, spc_csv_out, logger):
-    """ parse CHEMKIN files
-    """
-    from .pchemkin import species as chemkin_species
-    from .pchemkin import reactions as chemkin_reactions
-    from .pchemkin import (thermodynamics_dictionaries as
-                           chemkin_thermodynamics_dictionaries)
-    from .pchemkin import kinetics as chemkin_kinetics
-
-    logger.info("Reading in {:s}".format(mech_txt))
-    mech_str = read_file(mech_txt)
-
-    if thm_txt:
-        logger.info("Reading in {:s}".format(thm_txt))
-        thm_str = read_file(thm_txt)
-    else:
-        logger.info("No thermo file. Looking for thermo data in {:s}."
-                    .format(mech_txt))
-        thm_str = mech_str
-
-    logger.info("Finding species")
-    spcs = chemkin_species(mech_str)
-    spc_ck_idxs = tuple(range(1, len(spcs)+1))
-
-    logger.info("Finding reactions")
-    rxns = chemkin_reactions(mech_str)
-    rxn_ck_idxs = tuple(range(1, len(rxns)+1))
-
-    logger.info("Finding thermodynamics data")
-    thm_dcts = chemkin_thermodynamics_dictionaries(thm_str)
-
-    logger.info("Finding kinetics data")
-    kin_lst = chemkin_kinetics(mech_str)
-
-    spc_df = table_from_columns((spc_ck_idxs, spcs),
-                                ('chemkin_index', 'species'))
-    rxn_df = table_from_columns((rxn_ck_idxs, rxns),
-                                ('chemkin_index', 'reaction'))
-
-    if kin_lst:
-        assert len(kin_lst) == len(rxns)
-        arrh_cols = tuple(zip(*kin_lst))
-        rxn_df = append_table_columns(rxn_df, arrh_cols, ARRH_COL_KEYS)
-
-    if thm_dcts:
-        nasa_lo_dct, nasa_hi_dct, nasa_t_dct = thm_dcts
-        nasa_lo_cols = tuple(zip(*map(nasa_lo_dct.__getitem__, spcs)))
-        nasa_hi_cols = tuple(zip(*map(nasa_hi_dct.__getitem__, spcs)))
-        nasa_t_cols = tuple(zip(*map(nasa_t_dct.__getitem__, spcs)))
-
-        thm_col_keys = NASA_LO_COL_KEYS + NASA_HI_COL_KEYS + NASA_T_COL_KEYS
-        thm_cols = nasa_lo_cols + nasa_hi_cols + nasa_t_cols
-        spc_df = append_table_columns(spc_df, thm_cols, thm_col_keys)
-
-    logger.info("Writing species to {:s}".format(spc_csv_out))
-    write_table_to_csv(spc_df, spc_csv_out)
-
-    logger.info("Writing reactions to {:s}".format(rxn_csv_out))
-    write_table_to_csv(rxn_df, rxn_csv_out)
-
-
-def chemkin_id_reactions(rxn_csv, spc_csv, rxn_csv_out, spc_csv_out, logger):
-    """ determine reaction identifiers for CHEMKIN reactions
-    """
-    from .iohelp import translate_chemkin_reaction
-
-    logger.info("Reading in {:s}".format(rxn_csv))
-    rxn_df = pandas.read_csv(rxn_csv)
 
     logger.info("Reading in {:s}".format(spc_csv))
     spc_df = pandas.read_csv(spc_csv)
 
-    assert table_has_column_keys(spc_df, ('species', 'species_id'))
+    spc_df = update_table_column_keys(spc_df, (GEOM_PATH_COL_KEY,))
 
-    logger.info("Canonicalizing species IDs")
-    sids = table_column(spc_df, 'species_id')
-    can_sids = tuple(map(canonical_species_identifier, sids))
-    spc_df = table_set_column(spc_df, 'species_id', can_sids)
+    sids = table_column(spc_df, SID_COL_KEY)
+    to_path_ = partial(os.path.join, geom_dir)
+    fpaths = tuple(map(to_path_, map(ADD_XYZ_EXTENSION, map(id2path, sids))))
 
-    sid_dct = dict(zip(*table_columns(spc_df, ('species', 'species_id'))))
-
-    rxns = table_column(rxn_df, 'reaction')
-    rids = tuple(translate_chemkin_reaction(rxn, sid_dct) for rxn in rxns)
-    can_rids = tuple(canonical_reaction_identifier(rid) if rid else None
-                     for rid in rids)
-    rxn_df = table_set_column(rxn_df, 'reaction_id', can_rids)
-
-    spc_df = move_table_column_to_front(spc_df, 'species_id')
-    rxn_df = move_table_column_to_front(rxn_df, 'reaction_id')
+    for sid, fpath in zip(sids, fpaths):
+        logger.info("species {:s}".format(sid))
+        if os.path.exists(fpath):
+            logger.info("  geometry file found at {:s}".format(fpath))
+            spc_df = table_lookup_update(spc_df,
+                                         (SID_COL_KEY, sid),
+                                         (GEOM_PATH_COL_KEY, fpath))
+        else:
+            logger.info("  no geometry file found.")
 
     logger.info("Writing species to {:s}".format(spc_csv_out))
     write_table_to_csv(spc_df, spc_csv_out)
 
-    logger.info("Writing reactions to {:s}".format(rxn_csv_out))
+
+def reactions_find_arrhenius(rxn_csv, rxn_csv_out, logger):
+    """ get arrhenius parameters from job directories
+    """
+    from .ptorsscan import arrhenius as arrhenius_from_plog
+
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+
+    col_keys = table_column_keys(rxn_df)
+    assert 'reaction_id' in col_keys and 'path' in col_keys
+
+    prefix = os.path.dirname(rxn_csv)
+
+    def _get(rxn_row):
+        arrh = None
+        rid = rxn_row['reaction_id']
+        if not is_empty_table_value(rxn_row['path']):
+            path = os.path.join(prefix, rxn_row['path'])
+            logger.info("reaction {:s}".format(rid))
+            plog_path = os.path.join(path, 'rate.plog')
+            if os.path.isfile(plog_path):
+                logger.info(plog_path)
+                plog_str = read_file(plog_path)
+                arrh = arrhenius_from_plog(plog_str)
+                if arrh:
+                    logger.info("A={:f}, b={:f}, Ea={:f}".format(*arrh))
+            else:
+                logger.info("No rate.plog file found")
+        return arrh if arrh else (None, None, None)
+
+    arrh_col_keys = ('arrh_a', 'arrh_b', 'arrh_e')
+    rxn_df = update_table_column_keys(rxn_df, col_keys=arrh_col_keys)
+    arrh_as, arrh_bs, arrh_es = zip(*map(_get, iterate_table_rows(rxn_df)))
+    rxn_df['arrh_a'] = arrh_as
+    rxn_df['arrh_b'] = arrh_bs
+    rxn_df['arrh_e'] = arrh_es
+
+    logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
     write_table_to_csv(rxn_df, rxn_csv_out)
 
 
-def chemkin_reactions_from_csv(rxn_csv, mech_txt_out, logger):
-    """ generate CHEMKIN files from CSVs
-    """
-    logger.info("Reading in {:s}".format(rxn_csv))
-    rxn_df = pandas.read_csv(rxn_csv)
-    rxn_col_keys = table_column_keys(rxn_df)
-
-    assert 'reaction' in rxn_col_keys
-    rxns = table_column(rxn_df, 'reaction')
-
-    assert all(col_key in rxn_col_keys for col_key in ARRH_COL_KEYS)
-    arrh_cfts_lst = zip(*table_columns(rxn_df, ARRH_COL_KEYS))
-
-    rxn_fmt = '{:{width}s} {:10.3e} {:8.3f} {:15.6f}'
-    rxn_wd = max(map(len, rxns)) + 5
-    format_ = partial(rxn_fmt.format, width=rxn_wd)
-    rxn_block_str = '\n'.join(
-        format_(rxn, *arrh_cfts) for rxn, arrh_cfts in zip(rxns, arrh_cfts_lst)
-        if not any(map(is_empty_table_value, arrh_cfts)))
-
-    mech_str = '\n'.join(['REACTIONS', rxn_block_str, 'END'])
-
-    logger.info("Writing reactions to {:s}".format(mech_txt_out))
-    write_file(mech_txt_out, mech_str)
-
-
-def plot_arrhenius(rxn_csv, rxn_csv_ref, rxn_csv_out, plot_dir, extension,
-                   tmp_rng, lbl_col_keys, id2path, logger):
+def reactions_plot_arrhenius(rxn_csv, rxn_csv_ref, rxn_csv_out, plot_dir,
+                             extension, tmp_rng, lbl_col_keys, id2path,
+                             logger):
     """ make Arrhenius plots
     """
     from .plot import write_diagram
@@ -441,6 +378,145 @@ def plot_arrhenius(rxn_csv, rxn_csv_ref, rxn_csv_out, plot_dir, extension,
     write_table_to_csv(rxn_df, rxn_csv_out)
 
 
+def read_thermo_data(spc_csv):
+    """ a dictionary of thermo values (H298), indexed by species ID
+    """
+    thv_dct = None
+
+    spc_df = pandas.read_csv(spc_csv)
+    if 'therm_val' in spc_df:
+        thv_dct = dict(zip(spc_df['species_id'], spc_df['therm_val']))
+
+    return thv_dct
+
+
+def chemkin_to_csv(mech_txt, thm_txt, rxn_csv_out, spc_csv_out, logger):
+    """ parse CHEMKIN files
+    """
+    from .pchemkin import species as chemkin_species
+    from .pchemkin import reactions as chemkin_reactions
+    from .pchemkin import (thermodynamics_dictionaries as
+                           chemkin_thermodynamics_dictionaries)
+    from .pchemkin import kinetics as chemkin_kinetics
+
+    logger.info("Reading in {:s}".format(mech_txt))
+    mech_str = read_file(mech_txt)
+
+    if thm_txt:
+        logger.info("Reading in {:s}".format(thm_txt))
+        thm_str = read_file(thm_txt)
+    else:
+        logger.info("No thermo file. Looking for thermo data in {:s}."
+                    .format(mech_txt))
+        thm_str = mech_str
+
+    logger.info("Finding species")
+    spcs = chemkin_species(mech_str)
+    spc_ck_idxs = tuple(range(1, len(spcs)+1))
+
+    logger.info("Finding reactions")
+    rxns = chemkin_reactions(mech_str)
+    rxn_ck_idxs = tuple(range(1, len(rxns)+1))
+
+    logger.info("Finding thermodynamics data")
+    thm_dcts = chemkin_thermodynamics_dictionaries(thm_str)
+
+    logger.info("Finding kinetics data")
+    kin_lst, reacs = chemkin_kinetics(mech_str)
+
+    spc_df = table_from_columns((spc_ck_idxs, spcs),
+                                ('chemkin_index', 'species'))
+    rxn_df = table_from_columns((rxn_ck_idxs, rxns),
+                                ('chemkin_index', 'reaction'))
+
+    for rxn in rxns:
+        if rxn not in reacs:
+            logger.info(rxn)
+
+    if kin_lst:
+        assert len(kin_lst) == len(rxns)
+        arrh_cols = tuple(zip(*kin_lst))
+        rxn_df = append_table_columns(rxn_df, arrh_cols, ARRH_COL_KEYS)
+
+    if thm_dcts:
+        nasa_lo_dct, nasa_hi_dct, nasa_t_dct = thm_dcts
+        nasa_lo_cols = tuple(zip(*map(nasa_lo_dct.__getitem__, spcs)))
+        nasa_hi_cols = tuple(zip(*map(nasa_hi_dct.__getitem__, spcs)))
+        nasa_t_cols = tuple(zip(*map(nasa_t_dct.__getitem__, spcs)))
+
+        thm_col_keys = NASA_LO_COL_KEYS + NASA_HI_COL_KEYS + NASA_T_COL_KEYS
+        thm_cols = nasa_lo_cols + nasa_hi_cols + nasa_t_cols
+        spc_df = append_table_columns(spc_df, thm_cols, thm_col_keys)
+
+    logger.info("Writing species to {:s}".format(spc_csv_out))
+    write_table_to_csv(spc_df, spc_csv_out)
+
+    logger.info("Writing reactions to {:s}".format(rxn_csv_out))
+    write_table_to_csv(rxn_df, rxn_csv_out)
+
+
+def chemkin_id_reactions(rxn_csv, spc_csv, rxn_csv_out, spc_csv_out, logger):
+    """ determine reaction identifiers for CHEMKIN reactions
+    """
+    from .iohelp import translate_chemkin_reaction
+
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+
+    logger.info("Reading in {:s}".format(spc_csv))
+    spc_df = pandas.read_csv(spc_csv)
+
+    assert table_has_column_keys(spc_df, ('species', 'species_id'))
+
+    logger.info("Canonicalizing species IDs")
+    sids = table_column(spc_df, 'species_id')
+    can_sids = tuple(map(canonical_species_identifier, sids))
+    spc_df = set_table_column(spc_df, 'species_id', can_sids)
+
+    sid_dct = dict(zip(*table_columns(spc_df, ('species', 'species_id'))))
+
+    rxns = table_column(rxn_df, 'reaction')
+    rids = tuple(translate_chemkin_reaction(rxn, sid_dct) for rxn in rxns)
+    can_rids = tuple(canonical_reaction_identifier(rid) if rid else None
+                     for rid in rids)
+    rxn_df = set_table_column(rxn_df, 'reaction_id', can_rids)
+
+    spc_df = move_table_column_to_front(spc_df, 'species_id')
+    rxn_df = move_table_column_to_front(rxn_df, 'reaction_id')
+
+    logger.info("Writing species to {:s}".format(spc_csv_out))
+    write_table_to_csv(spc_df, spc_csv_out)
+
+    logger.info("Writing reactions to {:s}".format(rxn_csv_out))
+    write_table_to_csv(rxn_df, rxn_csv_out)
+
+
+def reactions_to_chemkin(rxn_csv, mech_txt_out, logger):
+    """ generate CHEMKIN files from CSVs
+    """
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+    rxn_col_keys = table_column_keys(rxn_df)
+
+    assert 'reaction' in rxn_col_keys
+    rxns = table_column(rxn_df, 'reaction')
+
+    assert all(col_key in rxn_col_keys for col_key in ARRH_COL_KEYS)
+    arrh_cfts_lst = zip(*table_columns(rxn_df, ARRH_COL_KEYS))
+
+    rxn_fmt = '{:{width}s} {:10.3e} {:8.3f} {:12.3f}'
+    rxn_wd = max(map(len, rxns)) + 5
+    format_ = partial(rxn_fmt.format, width=rxn_wd)
+    rxn_block_str = '\n'.join(
+        format_(rxn, *arrh_cfts) for rxn, arrh_cfts in zip(rxns, arrh_cfts_lst)
+        if not any(map(is_empty_table_value, arrh_cfts)))
+
+    mech_str = '\n'.join(['REACTIONS', rxn_block_str, 'END'])
+
+    logger.info("Writing reactions to {:s}".format(mech_txt_out))
+    write_file(mech_txt_out, mech_str)
+
+
 def reactions_init(cls, rxn_csv, spc_csv, rxn_csv_out, cdt_csv_out, logger):
     """ initialize reactions
     """
@@ -452,21 +528,6 @@ def reactions_init(cls, rxn_csv, spc_csv, rxn_csv_out, cdt_csv_out, logger):
         idx_cols=dict(REACTION_IDX_COL_KEYS)[cls]
     )
     return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
-
-
-def reactions_run(cls, rxn_csv, spc_csv, tpl_txt, job_argv, run_dir, rxn_idxs,
-                  nodes, logger):
-    """ run addition reactions
-    """
-    _run = reactions_runner(
-        cls=cls,
-        reaction_xyz_strings=dict(REACTION_XYZ_STRING_MAKERS)[cls],
-        reaction_input_string=dict(REACTION_INPUT_STRING_MAKERS)[cls],
-        sid_cols=dict(REACTION_SID_COL_KEYS)[cls],
-        idx_cols=dict(REACTION_IDX_COL_KEYS)[cls]
-    )
-    return _run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs, nodes,
-                logger)
 
 
 def reactions_run_batch(cls, rxn_csv, spc_csv, batch_csv, tmp_txt,
@@ -521,21 +582,6 @@ def migrations_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
         idx_cols=('r_idx_h', 'r_idx_a', 'p_idx_h', 'p_idx_a')
     )
     return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
-
-
-def additions_run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs,
-                  nodes, logger):
-    """ run addition reactions
-    """
-    _run = reactions_runner(
-        cls='addition',
-        reaction_xyz_strings=addition_xyz_strings,
-        reaction_input_string=addition_input_string,
-        sid_cols=('x', 'y', 'xy'),
-        idx_cols=('x_idx', 'y_idx', 'xy_idx_x', 'xy_idx_y')
-    )
-    return _run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs, nodes,
-                logger)
 
 
 def abstractions_run_batch(spc_csv, batch_csv, rxn_csv, tmp_txt,
@@ -659,47 +705,6 @@ def csv_intersect(table_csvs, col_key, table_csv_out, logger):
     write_table_to_csv(table_df_out, table_csv_out)
 
 
-def get_arrhenius(rxn_csv, rxn_csv_out, logger):
-    """ get arrhenius parameters from job directories
-    """
-    from .ptorsscan import arrhenius as arrhenius_from_plog
-
-    logger.info("Reading in {:s}".format(rxn_csv))
-    rxn_df = pandas.read_csv(rxn_csv)
-
-    col_keys = table_column_keys(rxn_df)
-    assert 'reaction_id' in col_keys and 'path' in col_keys
-
-    prefix = os.path.dirname(rxn_csv)
-
-    def _get(rxn_row):
-        arrh = None
-        rid = rxn_row['reaction_id']
-        if not is_empty_table_value(rxn_row['path']):
-            path = os.path.join(prefix, rxn_row['path'])
-            logger.info("reaction {:s}".format(rid))
-            plog_path = os.path.join(path, 'rate.plog')
-            if os.path.isfile(plog_path):
-                logger.info(plog_path)
-                plog_str = read_file(plog_path)
-                arrh = arrhenius_from_plog(plog_str)
-                if arrh:
-                    logger.info("A={:f}, b={:f}, Ea={:f}".format(*arrh))
-            else:
-                logger.info("No rate.plog file found")
-        return arrh if arrh else (None, None, None)
-
-    arrh_col_keys = ('arrh_a', 'arrh_b', 'arrh_e')
-    rxn_df = update_table_column_keys(rxn_df, col_keys=arrh_col_keys)
-    arrh_as, arrh_bs, arrh_es = zip(*map(_get, iterate_table_rows(rxn_df)))
-    rxn_df['arrh_a'] = arrh_as
-    rxn_df['arrh_b'] = arrh_bs
-    rxn_df['arrh_e'] = arrh_es
-
-    logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
-    write_table_to_csv(rxn_df, rxn_csv_out)
-
-
 def csv_merge(table_csvs, col_key, table_csv_out, logger):
     """ merge tables by column
     """
@@ -790,34 +795,6 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
         write_table_to_csv(rxn_df, rxn_csv)
 
     return _init
-
-
-def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
-                     sid_cols, idx_cols):
-    """ run reactions
-    """
-    assert cls in ('abstraction', 'addition', 'migration')
-
-    def _run(spc_csv, rxn_csv, tpl_txt, job_argv, run_dir, rxn_idxs, nodes,
-             logger):
-        logger.info("Reading in {:s}".format(rxn_csv))
-        rxn_df = pandas.read_csv(rxn_csv)
-
-        logger.info(rxn_df)
-        logger.info(spc_csv)
-        logger.info(rxn_csv)
-        logger.info(tpl_txt)
-        logger.info(job_argv)
-        logger.info(run_dir)
-        logger.info(rxn_idxs)
-        logger.info(nodes)
-        logger.info(cls)
-        logger.info(reaction_xyz_strings)
-        logger.info(reaction_input_string)
-        logger.info(sid_cols)
-        logger.info(idx_cols)
-
-    return _run
 
 
 def reactions_batch_runner(cls, reaction_xyz_strings, reaction_input_string,

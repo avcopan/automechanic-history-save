@@ -280,6 +280,104 @@ def species_find_geometries(spc_csv, spc_csv_out, geom_dir, id2path, logger):
     write_table_to_csv(spc_df, spc_csv_out)
 
 
+def reactions_find_arrhenius(rxn_csv, rxn_csv_out, logger):
+    """ get arrhenius parameters from job directories
+    """
+    from .ptorsscan import arrhenius as arrhenius_from_plog
+
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+
+    col_keys = table_column_keys(rxn_df)
+    assert 'reaction_id' in col_keys and 'path' in col_keys
+
+    prefix = os.path.dirname(rxn_csv)
+
+    def _get(rxn_row):
+        arrh = None
+        rid = rxn_row['reaction_id']
+        if not is_empty_table_value(rxn_row['path']):
+            path = os.path.join(prefix, rxn_row['path'])
+            logger.info("reaction {:s}".format(rid))
+            plog_path = os.path.join(path, 'rate.plog')
+            if os.path.isfile(plog_path):
+                logger.info(plog_path)
+                plog_str = read_file(plog_path)
+                arrh = arrhenius_from_plog(plog_str)
+                if arrh:
+                    logger.info("A={:f}, b={:f}, Ea={:f}".format(*arrh))
+            else:
+                logger.info("No rate.plog file found")
+        return arrh if arrh else (None, None, None)
+
+    arrh_col_keys = ('arrh_a', 'arrh_b', 'arrh_e')
+    rxn_df = update_table_column_keys(rxn_df, col_keys=arrh_col_keys)
+    arrh_as, arrh_bs, arrh_es = zip(*map(_get, iterate_table_rows(rxn_df)))
+    rxn_df['arrh_a'] = arrh_as
+    rxn_df['arrh_b'] = arrh_bs
+    rxn_df['arrh_e'] = arrh_es
+
+    logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
+    write_table_to_csv(rxn_df, rxn_csv_out)
+
+
+def reactions_plot_arrhenius(rxn_csv, rxn_csv_ref, rxn_csv_out, plot_dir,
+                             extension, tmp_rng, lbl_col_keys, id2path,
+                             logger):
+    """ make Arrhenius plots
+    """
+    from .plot import write_diagram
+    from .iohelp import arrhenius_diagram
+
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+    assert table_has_column_keys(rxn_df, ARRH_COL_KEYS)
+    assert table_has_column_keys(rxn_df, lbl_col_keys)
+    rxn_df = update_table_column_keys(rxn_df, ('plot_path',))
+
+    assert len(tmp_rng) == 2 and tmp_rng[0] < tmp_rng[1]
+    tmp_lo, tmp_hi = tmp_rng
+
+    if rxn_csv_ref:
+        logger.info("Reading in {:s}".format(rxn_csv_ref))
+        rxn_df_ref = pandas.read_csv(rxn_csv_ref)
+        assert table_has_column_keys(rxn_df_ref, ARRH_COL_KEYS)
+    else:
+        rxn_df_ref = None
+
+    if not os.path.exists(plot_dir):
+        os.mkdir(plot_dir)
+
+    for row in iterate_table_rows(rxn_df):
+        rid = row['reaction_id']
+        logger.info("reaction {:s}".format(rid))
+
+        cfts = tuple(map(row.__getitem__, ARRH_COL_KEYS))
+        lbls = tuple(map(row.__getitem__, lbl_col_keys))
+        ref_cfts = None
+        if rxn_df_ref is not None:
+            ref_row = table_lookup_row(rxn_df_ref, ('reaction_id', rid))
+            if ref_row:
+                ref_cfts = tuple(map(ref_row.__getitem__, ARRH_COL_KEYS))
+        arrh_dgm = arrhenius_diagram(cfts, ref_cfts, tmp_lo, tmp_hi, lbls)
+
+        if arrh_dgm:
+            fname = '{:s}.{:s}'.format(id2path(rid), extension)
+            fpath = os.path.join(plot_dir, fname)
+
+            logger.info("  writing plot to {:s}".format(fpath))
+            write_diagram(arrh_dgm, fpath, close=True)
+
+            rxn_df = table_lookup_update(rxn_df,
+                                         ('reaction_id', rid),
+                                         ('plot_path', fpath))
+        else:
+            logger.info("  missing Arrhenius coefficients; skipping...")
+
+    logger.info("Writing updated reaction table to {:s}".format(rxn_csv_out))
+    write_table_to_csv(rxn_df, rxn_csv_out)
+
+
 def read_thermo_data(spc_csv):
     """ a dictionary of thermo values (H298), indexed by species ID
     """
@@ -324,12 +422,16 @@ def chemkin_to_csv(mech_txt, thm_txt, rxn_csv_out, spc_csv_out, logger):
     thm_dcts = chemkin_thermodynamics_dictionaries(thm_str)
 
     logger.info("Finding kinetics data")
-    kin_lst = chemkin_kinetics(mech_str)
+    kin_lst, reacs = chemkin_kinetics(mech_str)
 
     spc_df = table_from_columns((spc_ck_idxs, spcs),
                                 ('chemkin_index', 'species'))
     rxn_df = table_from_columns((rxn_ck_idxs, rxns),
                                 ('chemkin_index', 'reaction'))
+
+    for rxn in rxns:
+        if rxn not in reacs:
+            logger.info(rxn)
 
     if kin_lst:
         assert len(kin_lst) == len(rxns)
@@ -413,62 +515,6 @@ def reactions_to_chemkin(rxn_csv, mech_txt_out, logger):
 
     logger.info("Writing reactions to {:s}".format(mech_txt_out))
     write_file(mech_txt_out, mech_str)
-
-
-def plot_arrhenius(rxn_csv, rxn_csv_ref, rxn_csv_out, plot_dir, extension,
-                   tmp_rng, lbl_col_keys, id2path, logger):
-    """ make Arrhenius plots
-    """
-    from .plot import write_diagram
-    from .iohelp import arrhenius_diagram
-
-    logger.info("Reading in {:s}".format(rxn_csv))
-    rxn_df = pandas.read_csv(rxn_csv)
-    assert table_has_column_keys(rxn_df, ARRH_COL_KEYS)
-    assert table_has_column_keys(rxn_df, lbl_col_keys)
-    rxn_df = update_table_column_keys(rxn_df, ('plot_path',))
-
-    assert len(tmp_rng) == 2 and tmp_rng[0] < tmp_rng[1]
-    tmp_lo, tmp_hi = tmp_rng
-
-    if rxn_csv_ref:
-        logger.info("Reading in {:s}".format(rxn_csv_ref))
-        rxn_df_ref = pandas.read_csv(rxn_csv_ref)
-        assert table_has_column_keys(rxn_df_ref, ARRH_COL_KEYS)
-    else:
-        rxn_df_ref = None
-
-    if not os.path.exists(plot_dir):
-        os.mkdir(plot_dir)
-
-    for row in iterate_table_rows(rxn_df):
-        rid = row['reaction_id']
-        logger.info("reaction {:s}".format(rid))
-
-        cfts = tuple(map(row.__getitem__, ARRH_COL_KEYS))
-        lbls = tuple(map(row.__getitem__, lbl_col_keys))
-        ref_cfts = None
-        if rxn_df_ref is not None:
-            ref_row = table_lookup_row(rxn_df_ref, ('reaction_id', rid))
-            if ref_row:
-                ref_cfts = tuple(map(ref_row.__getitem__, ARRH_COL_KEYS))
-        arrh_dgm = arrhenius_diagram(cfts, ref_cfts, tmp_lo, tmp_hi, lbls)
-
-        if arrh_dgm:
-            fname = '{:s}.{:s}'.format(id2path(rid), extension)
-            fpath = os.path.join(plot_dir, fname)
-
-            logger.info("  writing plot to {:s}".format(fpath))
-            write_diagram(arrh_dgm, fpath, close=True)
-
-            rxn_df = table_lookup_update(rxn_df,
-                                         ('reaction_id', rid),
-                                         ('plot_path', fpath))
-        else:
-            logger.info("  missing Arrhenius coefficients; skipping...")
-
-    logger.info("Writing updated reaction table to {:s}".format(rxn_csv_out))
-    write_table_to_csv(rxn_df, rxn_csv_out)
 
 
 def reactions_init(cls, rxn_csv, spc_csv, rxn_csv_out, cdt_csv_out, logger):
@@ -657,47 +703,6 @@ def csv_intersect(table_csvs, col_key, table_csv_out, logger):
 
     logger.info("Writing {:s}".format(table_csv_out))
     write_table_to_csv(table_df_out, table_csv_out)
-
-
-def get_arrhenius(rxn_csv, rxn_csv_out, logger):
-    """ get arrhenius parameters from job directories
-    """
-    from .ptorsscan import arrhenius as arrhenius_from_plog
-
-    logger.info("Reading in {:s}".format(rxn_csv))
-    rxn_df = pandas.read_csv(rxn_csv)
-
-    col_keys = table_column_keys(rxn_df)
-    assert 'reaction_id' in col_keys and 'path' in col_keys
-
-    prefix = os.path.dirname(rxn_csv)
-
-    def _get(rxn_row):
-        arrh = None
-        rid = rxn_row['reaction_id']
-        if not is_empty_table_value(rxn_row['path']):
-            path = os.path.join(prefix, rxn_row['path'])
-            logger.info("reaction {:s}".format(rid))
-            plog_path = os.path.join(path, 'rate.plog')
-            if os.path.isfile(plog_path):
-                logger.info(plog_path)
-                plog_str = read_file(plog_path)
-                arrh = arrhenius_from_plog(plog_str)
-                if arrh:
-                    logger.info("A={:f}, b={:f}, Ea={:f}".format(*arrh))
-            else:
-                logger.info("No rate.plog file found")
-        return arrh if arrh else (None, None, None)
-
-    arrh_col_keys = ('arrh_a', 'arrh_b', 'arrh_e')
-    rxn_df = update_table_column_keys(rxn_df, col_keys=arrh_col_keys)
-    arrh_as, arrh_bs, arrh_es = zip(*map(_get, iterate_table_rows(rxn_df)))
-    rxn_df['arrh_a'] = arrh_as
-    rxn_df['arrh_b'] = arrh_bs
-    rxn_df['arrh_e'] = arrh_es
-
-    logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
-    write_table_to_csv(rxn_df, rxn_csv_out)
 
 
 def csv_merge(table_csvs, col_key, table_csv_out, logger):

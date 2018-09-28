@@ -10,7 +10,6 @@ from .parse import capture
 from .parse import zero_or_more
 from .parse import one_or_more
 from .parse import one_of_these
-from .parse import repeat_range
 from .parse import named_capture
 from .parse import group_lists
 from .parse import group_dictionary
@@ -18,7 +17,7 @@ from .parse import ANY_CHAR
 from .parse import SPACE
 from .parse import PLUS
 from .parse import FLOAT
-from .parse import SIGN
+from .parse import UNSIGNED_INTEGER
 from .parse import INTEGER
 from .parse import STRING_START
 from .parse import STRING_END
@@ -33,7 +32,7 @@ PADDED_ARROW = PADDING + ARROW + PADDING
 PADDED_EM = PADDING + 'M' + PADDING
 PLUS_EM = PADDED_PLUS + PADDED_EM
 PAREN_PLUS_EM = escape('(') + PLUS_EM + escape(')')
-EXP = FLOAT + one_of_these(['E', 'e']) + maybe(SIGN) + INTEGER
+EXP = one_of_these([FLOAT, INTEGER]) + one_of_these(['E', 'e']) + INTEGER
 
 EA_UNIT_KEYS = ['KCAL/MOLE', 'CAL/MOLE', 'KJOULES/MOLE', 'JOULES/MOLE',
                 'KELVINS']
@@ -194,18 +193,18 @@ def kinetics_unit_keys(mech_str):
 def kinetics(mech_str):
     """ kinetic data, by reaction
     """
-    exp_or_float = one_of_these([EXP, FLOAT])
+    number_pattern = one_of_these([EXP, FLOAT, INTEGER])
     specs = species(mech_str)
     reag_pattern = _en_reagents_pattern(specs)
     reac_pattern = _reaction_pattern(reag_pattern)
     reac_block_str = reactions_block(mech_str)
     kdat_pattern = SPACES.join([capture(reac_pattern),
-                                capture(EXP),
-                                capture(exp_or_float),
-                                capture(exp_or_float)])
+                                capture(number_pattern),
+                                capture(number_pattern),
+                                capture(number_pattern)])
 
     kdat_rows = group_lists(kdat_pattern, reac_block_str)
-    _, arrh_as, arrh_bs, arrh_eas = zip(*kdat_rows)
+    reacs, arrh_as, arrh_bs, arrh_eas = zip(*kdat_rows)
     arrh_as = tuple(map(float, arrh_as))
     arrh_bs = tuple(map(float, arrh_bs))
     arrh_eas = tuple(map(float, arrh_eas))
@@ -217,7 +216,7 @@ def kinetics(mech_str):
 
     arrh_cfts = tuple(zip(arrh_as, arrh_bs, arrh_eas))
 
-    return arrh_cfts
+    return arrh_cfts, reacs
 
 
 def thermodynamics_dictionaries(mech_str):
@@ -346,26 +345,26 @@ def _reaction_pattern(reag_pattern):
 
 
 def _reaction_pattern_without_em(reag_pattern):
-    reagents = reag_pattern + repeat_range(PADDED_PLUS + reag_pattern, 0, 2)
+    reagents = reag_pattern + zero_or_more(PADDED_PLUS + reag_pattern)
     reac_pattern = reagents + PADDED_ARROW + reagents
     return reac_pattern
 
 
 def _reaction_pattern_with_em(reag_pattern):
-    reagents = (reag_pattern + maybe(PADDED_PLUS + reag_pattern) + PLUS_EM)
+    reagents = (reag_pattern + zero_or_more(PADDED_PLUS + reag_pattern) + PLUS_EM)
     reac_pattern = reagents + PADDED_ARROW + reagents
     return reac_pattern
 
 
 def _reaction_pattern_with_parentheses_em(reag_pattern):
-    reagents = (reag_pattern + maybe(PADDED_PLUS + reag_pattern) +
+    reagents = (reag_pattern + zero_or_more(PADDED_PLUS + reag_pattern) +
                 PAREN_PLUS_EM)
     reac_pattern = reagents + PADDED_ARROW + reagents
     return reac_pattern
 
 
 def _expand_en_reagents(reag_str):
-    count_pattern = STRING_START + maybe(capture(INTEGER))
+    count_pattern = STRING_START + maybe(capture(UNSIGNED_INTEGER))
     count_pattern_ = named_capture(count_pattern, name='count')
     gdct = group_dictionary(count_pattern_, reag_str)
     count = int(gdct['count']) if gdct['count'] else 1
@@ -374,7 +373,7 @@ def _expand_en_reagents(reag_str):
 
 
 def _en_reagents_pattern(specs):
-    return maybe(INTEGER) + _reagent_pattern(specs)
+    return maybe(UNSIGNED_INTEGER) + _reagent_pattern(specs)
 
 
 def _reagent_pattern(specs):

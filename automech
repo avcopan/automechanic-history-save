@@ -958,7 +958,7 @@ def reactions_plot_arrhenius(argv):
         ('-x', '--temperature_range'),
         (('type', float),
          ('nargs', 2),
-         ('default', [100, 1000]),
+         ('default', [500, 2000]),
          ('help', "Temperature range over which to plot."))
     )
     col_key_opt_ainf = (

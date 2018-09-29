@@ -20,6 +20,7 @@ from .func import arrhenius_log_rate
 from .plot import empty_diagram
 from .plot import add_line as add_line_to_diagram
 from .plot import add_text as add_text_to_diagram
+from .plot import add_axis_labels
 from .table import is_empty_value as is_empty_table_value
 from .timeout import timeout
 
@@ -74,22 +75,32 @@ def add_arrhenius_plot_to_diagram(dgm, cfts, temp_lo, temp_hi):
     """
     temps = numpy.linspace(temp_lo, temp_hi)
     rates = arrhenius_log_rate(temps, cfts)
-    add_line_to_diagram(dgm, x_vals=temps, y_vals=rates)
+    scaled_inv_temps = 1000. / temps
+    add_line_to_diagram(dgm, x_vals=scaled_inv_temps, y_vals=rates)
     return dgm
 
 
 def arrhenius_diagram(cfts, ref_cfts, tmp_lo, tmp_hi, lbls):
     """ make an arrhenius plot
     """
+    log10 = r'$\log_{10}$'
+    invt = r'$1000/T$'
+    x_units = r'$\mathrm{cm}^3$ $\mathrm{mol}^{-1}$ $\mathrm{s}^{-1}$'
+    y_units = r'$1/\mathrm{K}$'
+    arrh_x_label = r'{:s}[$k$ ({:s})]'.format(log10, x_units)
+    arrh_y_label = r'{:s} ({:s})'.format(invt, y_units)
+
     dgm = None
     if not any(map(is_empty_table_value, cfts)):
         dgm = empty_diagram()
         add_arrhenius_plot_to_diagram(dgm, cfts, tmp_lo, tmp_hi)
-        if ref_cfts is not None and not any(map(is_empty_table_value, ref_cfts)):
+        if ref_cfts is not None and not any(
+                map(is_empty_table_value, ref_cfts)):
             add_arrhenius_plot_to_diagram(dgm, ref_cfts, tmp_lo, tmp_hi)
 
-        lbl_str = '\n\n'.join(lbls)
+        lbl_str = '\n\n'.join(map(str, lbls))
         add_text_to_diagram(dgm, lbl_str)
+        add_axis_labels(dgm, x_label=arrh_x_label, y_label=arrh_y_label)
 
     return dgm
 

@@ -10,6 +10,15 @@ def add_line(diag, x_vals, y_vals):
     axs.plot(x_vals, y_vals)
 
 
+def add_axis_labels(diag, x_label, y_label):
+    """ add axis labels to the diagram
+    """
+    _, axs = diag
+    axs.set_xlabel(x_label)
+    axs.set_ylabel(y_label)
+    return diag
+
+
 def add_text(diag, text_str, left=True, top=True, margin=0.05):
     """ add text to diagram
     """

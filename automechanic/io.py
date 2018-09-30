@@ -280,6 +280,46 @@ def species_find_geometries(spc_csv, spc_csv_out, geom_dir, id2path, logger):
     write_table_to_csv(spc_df, spc_csv_out)
 
 
+def species_fill_geometries(spc_csv, spc_csv_out, geom_dir, id2path, logger):
+    """ find species .xyz files
+    """
+    from .strid import xyz_string
+
+    logger.info("Reading in {:s}".format(spc_csv))
+    spc_df = pandas.read_csv(spc_csv)
+
+    if not os.path.exists(geom_dir):
+        os.mkdir(geom_dir)
+
+    spc_df = update_table_column_keys(spc_df, (GEOM_PATH_COL_KEY,))
+    sids = table_column(spc_df, SID_COL_KEY)
+    geom_fpaths = table_column(spc_df, GEOM_PATH_COL_KEY)
+
+    pathless_sids = tuple(sid for sid, fpath in zip(sids, geom_fpaths)
+                          if is_empty_table_value(fpath))
+
+    to_fpath_ = partial(os.path.join, geom_dir)
+    new_geom_fpaths = tuple(
+        map(to_fpath_, map(ADD_XYZ_EXTENSION, map(id2path, pathless_sids))))
+
+    for sid, fpath in zip(pathless_sids, new_geom_fpaths):
+        logger.info("species {:s}".format(sid))
+        if os.path.exists(fpath):
+            logger.info("  file already exists; use geometry finder to add "
+                        "  it to the database")
+        else:
+            logger.info("Writing geometry for {:s} to {:s}"
+                        .format(sid, fpath))
+            dxyz = xyz_string(sid)
+            write_file(fpath, contents=dxyz)
+            spc_df = table_lookup_update(spc_df,
+                                         (SID_COL_KEY, sid),
+                                         (GEOM_PATH_COL_KEY, fpath))
+
+    logger.info("Writing species to {:s}".format(spc_csv_out))
+    write_table_to_csv(spc_df, spc_csv_out)
+
+
 def reactions_find_arrhenius(rxn_csv, rxn_csv_out, logger):
     """ get arrhenius parameters from job directories
     """

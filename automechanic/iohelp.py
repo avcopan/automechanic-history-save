@@ -157,6 +157,7 @@ def addition(rid, mgeo_dct, _thv_dct=None):
                 addn_sids, addn_idxs = _add_switch_reactants(
                     addn_sids, addn_idxs)
             addn = (addn_sids, addn_idxs)
+            break
     return addn
 
 
@@ -371,6 +372,7 @@ def _addition_xyz_string_x(mgeo, x_idx):
     elif len(graph_indices(mgrph)) == 2:
         other_idx = next(idx for idx in graph_indices(mgrph) if idx != x_idx)
         dxyz = xyz_string(mgeo, {x_idx: 2, other_idx: 1})
+
     return dxyz
 
 

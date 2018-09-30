@@ -23,5 +23,5 @@ def arrhenius_log_rate(temp, cfts):
     """
     arrh_a, arrh_b, arrh_e = cfts
     k = (numpy.log(arrh_a) + numpy.log(temp) * arrh_b
-         - arrh_e / temp / GAS_CONSTANT_CAL) / 2.303
+         - arrh_e / temp / GAS_CONSTANT_CAL) / numpy.log(10.)
     return k

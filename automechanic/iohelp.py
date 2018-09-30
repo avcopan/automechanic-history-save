@@ -85,10 +85,10 @@ def arrhenius_diagram(cfts, ref_cfts, tmp_lo, tmp_hi, lbls):
     """
     log10 = r'$\log_{10}$'
     invt = r'$1000/T$'
-    x_units = r'$\mathrm{cm}^3$ $\mathrm{mol}^{-1}$ $\mathrm{s}^{-1}$'
-    y_units = r'$1/\mathrm{K}$'
-    arrh_x_label = r'{:s}[$k$ ({:s})]'.format(log10, x_units)
-    arrh_y_label = r'{:s} ({:s})'.format(invt, y_units)
+    x_units = r'$1/\mathrm{K}$'
+    y_units = r'$\mathrm{cm}^3$ $\mathrm{mol}^{-1}$ $\mathrm{s}^{-1}$'
+    arrh_x_label = r'{:s} ({:s})'.format(invt, x_units)
+    arrh_y_label = r'{:s}[$k$ ({:s})]'.format(log10, y_units)
 
     dgm = None
     if not any(map(is_empty_table_value, cfts)):

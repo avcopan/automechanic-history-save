@@ -15,7 +15,7 @@ from .geom import migration_indices
 from .graph import indices as graph_indices
 from .graph import atom_neighborhood_indices
 from .form import subtract as subtract_formulas
-from .func import nasa_enthalpy
+from .func import nasa_enthalpy_function
 from .func import arrhenius_log_rate
 from .plot import empty_diagram
 from .plot import add_line as add_line_to_diagram
@@ -64,19 +64,22 @@ def translate_chemkin_thermo_data(thd_str):
     spc, cfts_lo, cfts_hi, t_cross, t_lo, t_hi = thd
 
     assert t_lo < t_cross < t_hi
-    cfts = cfts_lo if t_298 <= t_cross else cfts_hi
-    h_298 = nasa_enthalpy(t_298, cfts)
+    t_spec = (t_cross, t_lo, t_hi)
+
+    enth_function_ = nasa_enthalpy_function(cfts_lo, cfts_hi, t_spec)
+    h_298 = enth_function_(t_298)
     ret = (spc, h_298)
     return ret
 
 
-def add_arrhenius_plot_to_diagram(dgm, cfts, temp_lo, temp_hi):
+def add_arrhenius_plot_to_diagram(dgm, cfts, temp_lo, temp_hi, dotted=False):
     """ add an Arrhenius plot to a diagram
     """
     temps = numpy.linspace(temp_lo, temp_hi)
     rates = arrhenius_log_rate(temps, cfts)
     scaled_inv_temps = 1000. / temps
-    add_line_to_diagram(dgm, x_vals=scaled_inv_temps, y_vals=rates)
+    add_line_to_diagram(
+        dgm, x_vals=scaled_inv_temps, y_vals=rates, dotted=dotted)
     return dgm
 
 
@@ -96,10 +99,11 @@ def arrhenius_diagram(cfts, ref_cfts, tmp_lo, tmp_hi, lbls):
         add_arrhenius_plot_to_diagram(dgm, cfts, tmp_lo, tmp_hi)
         if ref_cfts is not None and not any(
                 map(is_empty_table_value, ref_cfts)):
-            add_arrhenius_plot_to_diagram(dgm, ref_cfts, tmp_lo, tmp_hi)
+            add_arrhenius_plot_to_diagram(
+                dgm, ref_cfts, tmp_lo, tmp_hi, dotted=True)
 
         lbl_str = '\n\n'.join(map(str, lbls))
-        add_text_to_diagram(dgm, lbl_str)
+        add_text_to_diagram(dgm, lbl_str, top=False)
         add_axis_labels(dgm, x_label=arrh_x_label, y_label=arrh_y_label)
 
     return dgm

@@ -242,6 +242,12 @@ def _arginfo_set(ainf, key, val):
     return _freeze_arginfo((args, kwargs))
 
 
+def _arginfo_update(ainf, upd_dct):
+    args, kwargs = _unfreeze_arginfo(ainf)
+    kwargs.update(upd_dct)
+    return _freeze_arginfo((args, kwargs))
+
+
 def _arginfo_adjust(ainf, default=None, extra_help=''):
     ainf = _arginfo_add_help(ainf, extra_help)
     ainf = _arginfo_set(ainf, 'default', default)
@@ -350,6 +356,7 @@ def reactions_new_main(argv):
         subcmd_dct={
             'find_arrhenius': reactions_find_arrhenius,
             'plot_arrhenius': reactions_plot_arrhenius,
+            'plot_gibbs': reactions_plot_gibbs,
             'to_chemkin': reactions_to_chemkin
         }
     )
@@ -831,6 +838,161 @@ def reactions_find_arrhenius(argv):
         )
 
 
+def reactions_plot_arrhenius(argv):
+    """ make Arrhenius plots
+    """
+    prog = 'automech reactions plot_arrhenius'
+    rxn_csv_ref_ainf = (
+        ('-r', '--reaction_csv_ref'),
+        (('type', str),
+         ('default', None),
+         ('help',
+          "[i] Secondary reactions CSV with reference values to plot against; "
+          "columns: 'reaction_id', 'arrh_a', 'arrh_b', 'arrh_e'"))
+    )
+    ext_ainf = (
+        ('-e', '--extension'),
+        (('type', str),
+         ('default', 'png'),
+         ('help', "Determines image format: png, pdf, ps, eps, svg"))
+    )
+    tmp_rng_ainf = (
+        ('-x', '--temperature_range'),
+        (('type', float),
+         ('nargs', 2),
+         ('default', [500, 2000]),
+         ('help', "Temperature range over which to plot."))
+    )
+    col_key_opt_ainf = (
+        ('-k', '--column_key'),
+        (('type', str),
+         ('nargs', '+'),
+         ('default', ['reaction_id']),
+         ('help', "CSV column key(s) for plot labeling"))
+    )
+    ainf_lst = (
+        _arginfo_add_help(RXN_CSV_REQ_INP_AINF,
+                          help_str="columns: 'reaction_id', 'arrh_<a,b,e>'"),
+        rxn_csv_ref_ainf,
+        _arginfo_add_help(RXN_CSV_OPT_OUT_AINF,
+                          help_str="columns: 'reaction_id', 'arrh_<a,b,e>'"),
+        PLOT_DIR_AINF,
+        ext_ainf,
+        tmp_rng_ainf,
+        col_key_opt_ainf,
+        PREFIX_AINF,
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'plot.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
+
+    (
+        rxn_csv_val,
+        rxn_csv_ref_val,
+        rxn_csv_out_val,
+        plot_dir_val,
+        ext_val,
+        tmp_rng_val,
+        col_keys_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
+
+    rxn_csv_val = os.path.abspath(rxn_csv_val)
+    rxn_csv_ref_val = (os.path.abspath(rxn_csv_ref_val) if rxn_csv_ref_val
+                       else None)
+
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
+        automechanic.io.reactions_plot_arrhenius(
+            rxn_csv=rxn_csv_val,
+            rxn_csv_ref=rxn_csv_ref_val,
+            rxn_csv_out=rxn_csv_out_val,
+            plot_dir=plot_dir_val,
+            extension=ext_val,
+            tmp_rng=tmp_rng_val,
+            lbl_col_keys=col_keys_val,
+            id2path=from_qtc.obtools.get_smiles_filename,
+            logger=routine.logger
+        )
+
+
+def reactions_plot_gibbs(argv):
+    """ make plots of the Gibbs free energy
+    """
+    prog = 'automech reactions plot_gibbs'
+    ext_ainf = (
+        ('-e', '--extension'),
+        (('type', str),
+         ('default', 'png'),
+         ('help', "Determines image format: png, pdf, ps, eps, svg"))
+    )
+    tmp_rng_ainf = (
+        ('-x', '--temperature_range'),
+        (('type', float),
+         ('nargs', 2),
+         ('default', [500, 2000]),
+         ('help', "Temperature range over which to plot."))
+    )
+    col_key_opt_ainf = (
+        ('-k', '--column_key'),
+        (('type', str),
+         ('nargs', '+'),
+         ('default', ['reaction_id']),
+         ('help', "CSV column key(s) for plot labeling"))
+    )
+    ainf_lst = (
+        _arginfo_add_help(RXN_CSV_REQ_INP_AINF,
+                          help_str="columns: 'reaction_id', 'arrh_<a,b,e>'"),
+        _arginfo_add_help(SPC_CSV_REQ_INP_AINF,
+                          help_str="columns: 'species_id', 'nasa_lo_<1-5>', "
+                                   "'nasa_hi_<1-5>', 'nasa_t_<com,lo,hi>'"),
+        _arginfo_add_help(RXN_CSV_OPT_OUT_AINF,
+                          help_str="columns: 'reaction_id', 'arrh_<a,b,e>'"),
+        PLOT_DIR_AINF,
+        ext_ainf,
+        tmp_rng_ainf,
+        col_key_opt_ainf,
+        PREFIX_AINF,
+        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'plot.log'),
+        LOG_LEVEL_AINF,
+        PRINT_OUT_AINF
+    )
+
+    (
+        rxn_csv_val,
+        spc_csv_val,
+        rxn_csv_out_val,
+        plot_dir_val,
+        ext_val,
+        tmp_rng_val,
+        col_keys_val,
+        prefix_val,
+        log_file_name_val,
+        log_level_val,
+        print_out_val,
+    ) = _argument_values(argv, prog, ainf_lst)
+
+    rxn_csv_val = os.path.abspath(rxn_csv_val)
+    spc_csv_val = os.path.abspath(spc_csv_val) if spc_csv_val else None
+
+    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
+                          print_out_val) as routine:
+        automechanic.io.reactions_plot_gibbs(
+            rxn_csv=rxn_csv_val,
+            spc_csv=spc_csv_val,
+            rxn_csv_out=rxn_csv_out_val,
+            plot_dir=plot_dir_val,
+            extension=ext_val,
+            tmp_rng=tmp_rng_val,
+            lbl_col_keys=col_keys_val,
+            id2path=from_qtc.obtools.get_smiles_filename,
+            logger=routine.logger
+        )
+
+
 def csv_reindex(argv):
     """ (over)write the 'index' column in a csv file
     """
@@ -972,89 +1134,6 @@ def csv_intersect(argv):
             table_csvs=tab_csvs_val,
             col_key=col_key_val,
             table_csv_out=tab_csv_out_val,
-            logger=routine.logger
-        )
-
-
-def reactions_plot_arrhenius(argv):
-    """ make Arrhenius plots
-    """
-    prog = 'automech reactions plot_arrhenius'
-    rxn_csv_ref_ainf = (
-        ('-r', '--reaction_csv_ref'),
-        (('type', str),
-         ('default', None),
-         ('help',
-          "[i] Secondary reactions CSV with reference values to plot against; "
-          "columns: 'reaction_id', 'arrh_a', 'arrh_b', 'arrh_e'"))
-    )
-    ext_ainf = (
-        ('-e', '--extension'),
-        (('type', str),
-         ('default', 'png'),
-         ('help', "Determines image format: png, pdf, ps, eps, svg"))
-    )
-    tmp_rng_ainf = (
-        ('-x', '--temperature_range'),
-        (('type', float),
-         ('nargs', 2),
-         ('default', [500, 2000]),
-         ('help', "Temperature range over which to plot."))
-    )
-    col_key_opt_ainf = (
-        ('-k', '--column_key'),
-        (('type', str),
-         ('nargs', '+'),
-         ('default', ['reaction_id']),
-         ('help', "CSV column key(s) for plot labeling"))
-    )
-    ainf_lst = (
-        _arginfo_add_help(RXN_CSV_REQ_INP_AINF,
-                          help_str="columns: 'reaction_id', 'arrh_a', "
-                                   "'arrh_b', 'arrh_e'"),
-        rxn_csv_ref_ainf,
-        _arginfo_add_help(RXN_CSV_OPT_OUT_AINF,
-                          help_str="columns: 'reaction_id', 'arrh_a', "
-                                   "'arrh_b', 'arrh_e', 'plot_path'"),
-        PLOT_DIR_AINF,
-        ext_ainf,
-        tmp_rng_ainf,
-        col_key_opt_ainf,
-        PREFIX_AINF,
-        _arginfo_set(LOG_FILE_NAME_AINF, 'default', 'plot.log'),
-        LOG_LEVEL_AINF,
-        PRINT_OUT_AINF
-    )
-
-    (
-        rxn_csv_val,
-        rxn_csv_ref_val,
-        rxn_csv_out_val,
-        plot_dir_val,
-        ext_val,
-        tmp_rng_val,
-        col_keys_val,
-        prefix_val,
-        log_file_name_val,
-        log_level_val,
-        print_out_val,
-    ) = _argument_values(argv, prog, ainf_lst)
-
-    rxn_csv_val = os.path.abspath(rxn_csv_val)
-    rxn_csv_ref_val = (os.path.abspath(rxn_csv_ref_val) if rxn_csv_ref_val
-                       else None)
-
-    with _AutomechRoutine(prefix_val, log_file_name_val, log_level_val,
-                          print_out_val) as routine:
-        automechanic.io.reactions_plot_arrhenius(
-            rxn_csv=rxn_csv_val,
-            rxn_csv_ref=rxn_csv_ref_val,
-            rxn_csv_out=rxn_csv_out_val,
-            plot_dir=plot_dir_val,
-            extension=ext_val,
-            tmp_rng=tmp_rng_val,
-            lbl_col_keys=col_keys_val,
-            id2path=from_qtc.obtools.get_smiles_filename,
             logger=routine.logger
         )
 

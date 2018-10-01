@@ -3,11 +3,12 @@
 from matplotlib import pyplot
 
 
-def add_line(diag, x_vals, y_vals):
+def add_line(diag, x_vals, y_vals, dotted=False):
     """ add line plot to diagram
     """
     _, axs = diag
-    axs.plot(x_vals, y_vals)
+    lnsty = '--' if dotted else '-'
+    axs.plot(x_vals, y_vals, linestyle=lnsty)
 
 
 def add_axis_labels(diag, x_label, y_label):

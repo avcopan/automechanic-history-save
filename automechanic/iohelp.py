@@ -22,7 +22,6 @@ from .plot import add_line as add_line_to_diagram
 from .plot import add_text as add_text_to_diagram
 from .plot import add_axis_labels
 from .table import is_empty_value as is_empty_table_value
-from .timeout import timeout
 
 
 def translate_chemkin_reaction(rxn_str, sid_dct):
@@ -127,7 +126,6 @@ def migration_candidate(rid):
     return bool(_mig_sorted_candidate(rid))
 
 
-@timeout(300)
 def abstraction(rid, mgeo_dct, _thv_dct=None):
     """ species IDs with abstraction indices (or None)
     """
@@ -147,7 +145,6 @@ def abstraction(rid, mgeo_dct, _thv_dct=None):
     return abst
 
 
-@timeout(300)
 def addition(rid, mgeo_dct, _thv_dct=None):
     """ species IDs with addition indices (or None)
     """
@@ -165,7 +162,6 @@ def addition(rid, mgeo_dct, _thv_dct=None):
     return addn
 
 
-@timeout(300)
 def migration(rid, mgeo_dct, _thv_dct=None):
     """ species IDs with migration indices (or None)
     """

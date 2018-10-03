@@ -5,7 +5,6 @@ import time
 import json
 import subprocess
 from functools import partial
-from itertools import starmap
 import pandas
 from .strid import canonical as canonical_species_identifier
 from .strid import canonical_reaction_identifier
@@ -41,7 +40,6 @@ from .table import sort as sort_table
 from .table import merge as merge_tables
 from .table import intersect as intersect_tables
 from .table import move_column_to_front as move_table_column_to_front
-from .func import nasa_gibbs_polynomial
 
 ADD_XYZ_EXTENSION = '{:s}.xyz'.format
 SID_COL_KEY = 'species_id'
@@ -417,44 +415,6 @@ def reactions_plot_arrhenius(rxn_csv, rxn_csv_ref, rxn_csv_out, plot_dir,
 
     logger.info("Writing updated reaction table to {:s}".format(rxn_csv_out))
     write_table_to_csv(rxn_df, rxn_csv_out)
-
-
-def reactions_plot_gibbs(rxn_csv, spc_csv, rxn_csv_out, plot_dir, extension,
-                         tmp_rng, lbl_col_keys, id2path, logger):
-    """ make Gibbs free energy plots
-    """
-    logger.info("Reading in {:s}".format(rxn_csv))
-    rxn_df = pandas.read_csv(rxn_csv)
-    assert table_has_column_keys(rxn_df, ARRH_COL_KEYS)
-    assert table_has_column_keys(rxn_df, lbl_col_keys)
-    rxn_df = update_table_column_keys(rxn_df, ('plot_path',))
-
-    if spc_csv:
-        logger.info("Reading in {:s}".format(spc_csv))
-        spc_df = pandas.read_csv(spc_csv)
-        assert table_has_column_keys(spc_df, ('species_id',))
-        assert table_has_column_keys(spc_df, NASA_LO_COL_KEYS)
-        assert table_has_column_keys(spc_df, NASA_HI_COL_KEYS)
-        assert table_has_column_keys(spc_df, NASA_T_COL_KEYS)
-        nasa_lo_cols = table_columns(spc_df, NASA_LO_COL_KEYS)
-        nasa_hi_cols = table_columns(spc_df, NASA_HI_COL_KEYS)
-        nasa_t_cols = table_columns(spc_df, NASA_T_COL_KEYS)
-        sids = table_column(spc_df, 'species_id')
-        nasa_info_lst = tuple(zip(
-            zip(*nasa_lo_cols), zip(*nasa_hi_cols), zip(*nasa_t_cols)))
-        thermfs = starmap(nasa_gibbs_polynomial, nasa_info_lst)
-        thermf_dct = dict(zip(sids, thermfs))
-
-        for sid, thermf in thermf_dct.items():
-            print (sid, thermf(298.))
-
-    logger.info(rxn_csv)
-    logger.info(rxn_csv_out)
-    logger.info(plot_dir)
-    logger.info(extension)
-    logger.info(tmp_rng)
-    logger.info(lbl_col_keys)
-    logger.info(id2path)
 
 
 def read_thermo_data(spc_csv):

@@ -4,7 +4,7 @@ from distutils.core import setup
 
 
 setup(name="automechanic",
-      version="0.1.0",
+      version="0.2a1",
       packages=["automechanic", "automechanic.ipybel", "automechanic.ipyx2z",
-                "from_qtc"],
-      scripts=["automech"])
+                "automechanic.cli", "from_qtc"],
+      scripts=["automech", "automech2"])

@@ -213,10 +213,3 @@ def move_column_to_front(table_df, col_key):
     col_keys = [col_key] + list(key for key in table_df.columns
                                 if key != col_key)
     return table_df[col_keys]
-
-
-if __name__ == '__main__':
-    TAB = empty(('a', 'b'))
-    TAB = append_rows(TAB, [{'a': 1, 'b': 2}])
-    TAB = append_rows(TAB, [{'a': 3, 'b': 4}])
-    print TAB

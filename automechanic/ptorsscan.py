@@ -1,11 +1,11 @@
 """ parsers for TorsScan files
 """
 import re
-from .parse import one_or_more
-from .parse import capture
-from .parse import INTEGER
-from .parse import FLOAT
-from .parse import SPACE
+from .parse_help import one_or_more
+from .parse_help import capture
+from .parse_help import INTEGER
+from .parse_help import FLOAT
+from .parse_help import SPACE
 
 
 def arrhenius(plog_str):

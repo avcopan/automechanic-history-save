@@ -527,24 +527,3 @@ def _nx_graph_isomorphism(nxgrph1, nxgrph2):
         iso = inverse(iso_inv)
 
     return iso
-
-
-if __name__ == '__main__':
-    MGRPH = (('C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'),
-             frozenset([(frozenset([0, 3]), 1), (frozenset([1, 5]), 1),
-                        (frozenset([1, 2]), 1), (frozenset([0, 4]), 1),
-                        (frozenset([8, 2]), 1), (frozenset([2, 6]), 1),
-                        (frozenset([0, 1]), 2), (frozenset([2, 7]), 1)]))
-    PMT_MGRPH = (('H', 'H', 'C', 'H', 'C', 'C', 'H', 'H', 'H'),
-                 frozenset([(frozenset([5, 6]), 1), (frozenset([4, 7]), 1),
-                            (frozenset([8, 4]), 1), (frozenset([0, 5]), 1),
-                            (frozenset([1, 5]), 1), (frozenset([2, 5]), 1),
-                            (frozenset([2, 3]), 1), (frozenset([2, 4]), 2)]))
-    HATM_MGRPH = (('H',), frozenset([]))
-    HMOL_MGRPH = (('H', 'H'), frozenset([(frozenset([0, 1]), 1)]))
-    MGRPH1 = union(union(HATM_MGRPH, HMOL_MGRPH), MGRPH)
-    MGRPH2 = union(union(PMT_MGRPH, HATM_MGRPH), HMOL_MGRPH)
-    ISO = _isomorphism(MGRPH1, MGRPH2)
-    print permute_atoms(MGRPH1, ISO) == MGRPH2
-    ISO = isomorphism(MGRPH1, MGRPH2)
-    print permute_atoms(MGRPH1, ISO) == MGRPH2

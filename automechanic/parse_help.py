@@ -146,7 +146,6 @@ NEWLINE = r'\n'
 NON_NEWLINE = r'[^\n]'
 
 SPACE = r'[ \t]'
-SPACE_OR_NEWLINE = r'.'
 
 UPPERCASE_LETTER = r'[A-Z]'
 LETTER = r'[a-zA-Z]'

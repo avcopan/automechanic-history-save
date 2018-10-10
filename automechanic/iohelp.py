@@ -42,9 +42,9 @@ def translate_chemkin_reaction(rxn_str, sid_dct):
 def thermo_value_dictionary(thd_strs, sid_dct):
     """ a dictionary of thermo values
     """
-    thv_dct = dict((sid_dct[spc], val) for spc, val in
-                   map(translate_chemkin_thermo_data, thd_strs)
-                   if spc in sid_dct)
+    spcs, thvs = zip(*map(translate_chemkin_thermo_data, thd_strs))
+    thv_dct = {sid_dct[spc]: thv for spc, thv in zip(spcs, thvs)
+               if spc in sid_dct.keys()}
     return thv_dct
 
 
@@ -197,12 +197,12 @@ def abstraction_xyz_strings(sids, idxs, mgeo_dct):
     return dxyz_dct
 
 
-def abstraction_input_string(sids, tmp_str, tmp_kevyal_dct):
+def abstraction_input_string(sids, tmp_str, tmp_keyval_dct):
     """ TorsScan input for abstraction reaction
     """
     q1h_sid, q2_sid, q1_sid, q2h_sid = sids
     sub_dct = {'q1h': q1h_sid, 'q2': q2_sid, 'q1': q1_sid, 'q2h': q2h_sid}
-    sub_dct.update(tmp_kevyal_dct)
+    sub_dct.update(tmp_keyval_dct)
     inp_str = tmp_str.format(**sub_dct)
     return inp_str
 

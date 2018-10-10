@@ -5,10 +5,10 @@ from .ipybel.smiles import number_of_atoms as number_of_atoms_from_smiles
 from .ipybel.smiles import formula as formula_from_smiles
 from .ipybel.smiles import geometry as geometry_from_smiles
 from .ipybel.smiles import xyz_string as xyz_string_from_smiles
-from .parse import DIGIT
-from .parse import one_or_more
-from .parse import named_capture
-from .parse import group_dictionary
+from .parse_help import DIGIT
+from .parse_help import one_or_more
+from .parse_help import named_capture
+from .parse_help import group_dictionary
 
 
 def canonical(sid):
@@ -24,7 +24,7 @@ def canonical(sid):
 def smiles(sid):
     """ SMILES string from a species ID
     """
-    smi = sid.split('_')[0]
+    smi = str.split(sid, '_')[0]
     return smi
 
 
@@ -87,9 +87,9 @@ def reaction_identifier(rct_sids, prd_sids):
 def canonical_reaction_identifier(rid):
     """ canonical SMILES for a reaction identifier
     """
-    rct_cid, prd_cid = rid.split('>>')
-    rct_sids = sorted(map(canonical, rct_cid.split('.')))
-    prd_sids = sorted(map(canonical, prd_cid.split('.')))
+    rct_cid, prd_cid = str.split(rid, '>>')
+    rct_sids = sorted(map(canonical, str.split(rct_cid, '.')))
+    prd_sids = sorted(map(canonical, str.split(prd_cid, '.')))
     rxn_sids = sorted([rct_sids, prd_sids], key=lambda x: (-len(x), x))
     return reaction_identifier(*rxn_sids)
 
@@ -97,9 +97,9 @@ def canonical_reaction_identifier(rid):
 def split_reaction_identifier(rid):
     """ SMIRKS-style reaction ID from reactant and product species IDs
     """
-    rct_str, prd_str = rid.split('>>')
-    rct_sids = tuple(rct_str.split('.'))
-    prd_sids = tuple(prd_str.split('.'))
+    rct_str, prd_str = str.split(rid, '>>')
+    rct_sids = tuple(str.split(rct_str, '.'))
+    prd_sids = tuple(str.split(prd_str, '.'))
     return (rct_sids, prd_sids)
 
 

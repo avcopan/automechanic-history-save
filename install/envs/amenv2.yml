@@ -1,14 +1,16 @@
-name: amenv
+name: amenv2
 channels:
     - openbabel
 dependencies:
     - python=2.7
+    - cython
     - openbabel
+    - numpy
+    - pandas
+    - matplotlib
+    - dask
     - pip:
-        - numpy
-        - pandas
         - networkx
-        - matplotlib
         - pytest
         - pytest-cov
         - future

@@ -165,6 +165,7 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
 
     rxn_cols = ('reaction_id', 'chemkin_index', 'reaction')
     rxn_df = table_from_rows(rxn_rows, rxn_cols)
+    rxn_df = sort_table(rxn_df, 'chemkin_index')
 
     mis_cols = ('chemkin_index', 'reaction')
     mis_df = table_from_rows(mis_rows, mis_cols)
@@ -578,7 +579,8 @@ def reactions_to_chemkin(cls, rxn_csv, spc_csv, mech_txt_out, logger):
     rct_sids_lst = tuple(zip(*table_columns(rxn_df, rct_sid_col_keys)))
     prd_sids_lst = tuple(zip(*table_columns(rxn_df, prd_sid_col_keys)))
 
-    rxns = tuple(starmap(_chemkin_reaction_name, zip(rct_sids_lst, prd_sids_lst)))
+    rxns = tuple(starmap(_chemkin_reaction_name,
+                         zip(rct_sids_lst, prd_sids_lst)))
 
     assert all(col_key in rxn_col_keys for col_key in ARRH_COL_KEYS)
     arrh_cfts_lst = zip(*table_columns(rxn_df, ARRH_COL_KEYS))
@@ -795,6 +797,7 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
 
         logger.info("Writing {:s} reactions to {:s}"
                     .format(cls, os.path.abspath(rxn_csv_out)))
+        rxn_df_out = reindex_table(rxn_df_out)
         write_table_to_csv(rxn_df_out, rxn_csv_out)
 
         logger.info("Writing left-over candidates to {:s}"

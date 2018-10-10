@@ -7,6 +7,7 @@ import time
 import json
 import subprocess
 from itertools import chain
+from itertools import starmap
 from functools import partial
 import pandas
 from .strid import canonical as canonical_species_identifier
@@ -58,6 +59,16 @@ NASA_LO_COL_KEYS = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
 NASA_HI_COL_KEYS = ('nasa_hi_1', 'nasa_hi_2', 'nasa_hi_3', 'nasa_hi_4',
                     'nasa_hi_5', 'nasa_hi_6', 'nasa_hi_7')
 NASA_T_COL_KEYS = ('nasa_t_com', 'nasa_t_lo', 'nasa_t_hi')
+REACTANT_SID_COL_KEYS = (
+    ('addition', ('x', 'y')),
+    ('abstraction', ('q1h', 'q2')),
+    ('migration', ('r',))
+)
+PRODUCT_SID_COL_KEYS = (
+    ('addition', ('xy')),
+    ('abstraction', ('q1', 'q2h')),
+    ('migration', ('p',))
+)
 REACTION_SID_COL_KEYS = (
     ('addition', ('x', 'y', 'xy')),
     ('abstraction', ('q1h', 'q2', 'q1', 'q2h')),
@@ -539,15 +550,35 @@ def chemkin_id_reactions(rxn_csv, spc_csv, rxn_csv_out, spc_csv_out, logger):
     write_table_to_csv(rxn_df, rxn_csv_out)
 
 
-def reactions_to_chemkin(rxn_csv, mech_txt_out, logger):
+def reactions_to_chemkin(cls, rxn_csv, spc_csv, mech_txt_out, logger):
     """ generate CHEMKIN files from CSVs
     """
+    rct_sid_col_keys = dict(REACTANT_SID_COL_KEYS)[cls]
+    prd_sid_col_keys = dict(PRODUCT_SID_COL_KEYS)[cls]
+
+    logger.info("Reading in {:s}".format(spc_csv))
+    spc_df = pandas.read_csv(spc_csv)
+    spc_col_keys = table_column_keys(spc_df)
+    assert 'species' in spc_col_keys and 'species_id' in spc_col_keys
+
+    spc_dct = dict(zip(*table_columns(spc_df, ('species_id', 'species'))))
+
+    def _chemkin_reaction_name(rct_sids, prd_sids):
+        rct_str = '+'.join(map(spc_dct.__getitem__, rct_sids))
+        prd_str = '+'.join(map(spc_dct.__getitem__, prd_sids))
+        rxn = '='.join([rct_str, prd_str])
+        return rxn
+
     logger.info("Reading in {:s}".format(rxn_csv))
     rxn_df = pandas.read_csv(rxn_csv)
     rxn_col_keys = table_column_keys(rxn_df)
 
-    assert 'reaction' in rxn_col_keys
-    rxns = table_column(rxn_df, 'reaction')
+    assert all(col_key in rxn_col_keys for col_key in rct_sid_col_keys)
+    assert all(col_key in rxn_col_keys for col_key in prd_sid_col_keys)
+    rct_sids_lst = tuple(zip(*table_columns(rxn_df, rct_sid_col_keys)))
+    prd_sids_lst = tuple(zip(*table_columns(rxn_df, prd_sid_col_keys)))
+
+    rxns = tuple(starmap(_chemkin_reaction_name, zip(rct_sids_lst, prd_sids_lst)))
 
     assert all(col_key in rxn_col_keys for col_key in ARRH_COL_KEYS)
     arrh_cfts_lst = zip(*table_columns(rxn_df, ARRH_COL_KEYS))

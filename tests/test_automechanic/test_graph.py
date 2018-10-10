@@ -59,6 +59,48 @@ def test__bond_orders():
     assert graph.bond_orders(mgrph2) == {}
 
 
+def test__subgraph():
+    """ test graph.subgraph()
+    """
+    mgrph = (('H', 'H', 'C', 'H', 'C', 'C', 'H', 'H', 'H'),
+             frozenset([(frozenset([5, 6]), 1), (frozenset([4, 7]), 1),
+                        (frozenset([8, 4]), 1), (frozenset([0, 5]), 1),
+                        (frozenset([1, 5]), 1), (frozenset([2, 5]), 1),
+                        (frozenset([2, 3]), 1), (frozenset([2, 4]), 2)]))
+    ref_mgrph = (('C', 'C', 'C'),
+                 frozenset([(frozenset([0, 2]), 1), (frozenset([0, 1]), 2)]))
+    assert graph.subgraph(mgrph, (2, 4, 5)) == ref_mgrph
+    assert graph.subgraph(mgrph, (0,)) == (('H',), frozenset([]))
+    assert graph.subgraph(mgrph, ()) == ((), frozenset([]))
+
+
+def test__heavy_atom_subgraph():
+    """ test graph.heavy_atom_subgraph()
+    """
+    mgrph = (('H', 'H', 'C', 'H', 'C', 'C', 'H', 'H', 'H'),
+             frozenset([(frozenset([5, 6]), 1), (frozenset([4, 7]), 1),
+                        (frozenset([8, 4]), 1), (frozenset([0, 5]), 1),
+                        (frozenset([1, 5]), 1), (frozenset([2, 5]), 1),
+                        (frozenset([2, 3]), 1), (frozenset([2, 4]), 2)]))
+    ref_mgrph = (('C', 'C', 'C'),
+                 frozenset([(frozenset([0, 2]), 1), (frozenset([0, 1]), 2)]))
+    assert graph.heavy_atom_subgraph(mgrph) == ref_mgrph
+
+
+def test__skeleton_graph():
+    """ test graph.skeleton_graph()
+    """
+    mgrph = (('H', 'H', 'C', 'H', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'),
+             frozenset([(frozenset([10, 11]), 1), (frozenset([5, 6]), 1),
+                        (frozenset([4, 7]), 1), (frozenset([8, 4]), 1),
+                        (frozenset([0, 5]), 1), (frozenset([1, 5]), 1),
+                        (frozenset([2, 5]), 1), (frozenset([2, 3]), 1),
+                        (frozenset([2, 4]), 2)]))
+    ref_mgrph = ((('C', 1), ('C', 2), ('C', 3), ('H', 0), ('H', 1)),
+                 frozenset([(frozenset([0, 2]), 1), (frozenset([0, 1]), 2)]))
+    assert graph.skeleton_graph(mgrph) == ref_mgrph
+
+
 def test__radical_sites():
     """ test graph.radical_sites()
     """
@@ -75,6 +117,29 @@ def test__radical_sites():
     assert graph.radical_sites(mgrph1) == ()
     assert graph.radical_sites(mgrph2) == (0,)
     assert graph.radical_sites(mgrph3) == (0, 4)
+
+
+def test__heavy_atom_indices():
+    """ test graph.heavy_atom_indices
+    """
+    mgrph = (('H', 'H', 'C', 'H', 'C', 'C', 'H', 'H', 'H'),
+             frozenset([(frozenset([5, 6]), 1), (frozenset([4, 7]), 1),
+                        (frozenset([8, 4]), 1), (frozenset([0, 5]), 1),
+                        (frozenset([1, 5]), 1), (frozenset([2, 5]), 1),
+                        (frozenset([2, 3]), 1), (frozenset([2, 4]), 2)]))
+    assert graph.heavy_atom_indices(mgrph) == (2, 4, 5)
+
+
+def test__backbone_indices():
+    """ test graph.backbone_indices
+    """
+    mgrph = (('H', 'H', 'C', 'H', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'),
+             frozenset([(frozenset([10, 11]), 1), (frozenset([5, 6]), 1),
+                        (frozenset([4, 7]), 1), (frozenset([8, 4]), 1),
+                        (frozenset([0, 5]), 1), (frozenset([1, 5]), 1),
+                        (frozenset([2, 5]), 1), (frozenset([2, 3]), 1),
+                        (frozenset([2, 4]), 2)]))
+    assert graph.backbone_indices(mgrph) == (2, 4, 5, 9, 11)
 
 
 def test__atom_bonds():
@@ -125,6 +190,44 @@ def test__atom_neighborhood_indices():
     mgrph2 = ('H', frozenset())
     assert graph.atom_neighborhood_indices(mgrph1, 0) == frozenset([1, 2, 3])
     assert graph.atom_neighborhood_indices(mgrph2, 0) == frozenset()
+
+
+def test__atom_neighborhood():
+    """ test graph.atom_neighborhood()
+    """
+    mgrph1 = (('C', 'C', 'H', 'H', 'H', 'H'),
+              frozenset([(frozenset([0, 3]), 1), (frozenset([1, 4]), 1),
+                         (frozenset([0, 2]), 1), (frozenset([1, 5]), 1),
+                         (frozenset([0, 1]), 2)]))
+    assert graph.atom_neighborhood(mgrph1, 0) == ('C', 'H', 'H')
+
+
+def test__atom_hydrogen_indices():
+    """ test graph.atom_hydrogen_indices()
+    """
+    mgrph = (('C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'),
+             frozenset([(frozenset([0, 3]), 1), (frozenset([1, 5]), 1),
+                        (frozenset([1, 2]), 1), (frozenset([0, 4]), 1),
+                        (frozenset([8, 2]), 1), (frozenset([2, 6]), 1),
+                        (frozenset([0, 1]), 2), (frozenset([2, 7]), 1)]))
+    assert graph.atom_hydrogen_indices(mgrph, 0) == (3, 4)
+    assert graph.atom_hydrogen_indices(mgrph, 1) == (5,)
+    assert graph.atom_hydrogen_indices(mgrph, 2) == (8, 6, 7)
+    assert graph.atom_hydrogen_indices(mgrph, 3) == ()
+
+
+def test__atom_hydrogen_count():
+    """ test graph.atom_hydrogen_count()
+    """
+    mgrph = (('C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'),
+             frozenset([(frozenset([0, 3]), 1), (frozenset([1, 5]), 1),
+                        (frozenset([1, 2]), 1), (frozenset([0, 4]), 1),
+                        (frozenset([8, 2]), 1), (frozenset([2, 6]), 1),
+                        (frozenset([0, 1]), 2), (frozenset([2, 7]), 1)]))
+    assert graph.atom_hydrogen_count(mgrph, 0) == 2
+    assert graph.atom_hydrogen_count(mgrph, 1) == 1
+    assert graph.atom_hydrogen_count(mgrph, 2) == 3
+    assert graph.atom_hydrogen_count(mgrph, 3) == 0
 
 
 def test__atom_bond_count():
@@ -198,6 +301,24 @@ def test__permute_atoms():
              frozenset([(frozenset([2, 5]), 2), (frozenset([2, 3]), 1),
                         (frozenset([0, 2]), 1), (frozenset([1, 5]), 1),
                         (frozenset([4, 5]), 1)])))
+
+
+def test__skeleton_sort():
+    """ test graph.skeleton_sort
+    """
+    mgrph = (('H', 'H', 'C', 'H', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'),
+             frozenset([(frozenset([10, 11]), 1), (frozenset([5, 6]), 1),
+                        (frozenset([4, 7]), 1), (frozenset([8, 4]), 1),
+                        (frozenset([0, 5]), 1), (frozenset([1, 5]), 1),
+                        (frozenset([2, 5]), 1), (frozenset([2, 3]), 1),
+                        (frozenset([2, 4]), 2)]))
+    ref_mgrph = (('C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H'),
+                 frozenset([(frozenset([8, 2]), 1), (frozenset([11, 4]), 1),
+                            (frozenset([1, 6]), 1), (frozenset([1, 7]), 1),
+                            (frozenset([0, 2]), 1), (frozenset([0, 5]), 1),
+                            (frozenset([0, 1]), 2), (frozenset([2, 10]), 1),
+                            (frozenset([9, 2]), 1)]))
+    assert graph.skeleton_sort(mgrph) == ref_mgrph
 
 
 def test__isomorphic():
@@ -278,7 +399,6 @@ def test__multibond_forming_resonances():
             == {mgrph1, mgrph2, mgrph3, mgrph4, mgrph5})
 
 
-
 def test__forward_abstraction_indices():
     """ test graph.forward_abstraction_indices()
     """
@@ -348,4 +468,9 @@ def test__migration_indices():
 
 
 if __name__ == '__main__':
-    test__multibond_forming_resonances()
+    test__heavy_atom_indices()
+    test__atom_hydrogen_indices()
+    test__atom_hydrogen_count()
+    test__heavy_atom_subgraph()
+    test__backbone_indices()
+    test__skeleton_sort()

@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+""" the main automechanic executable
+"""
+import sys
+import automechanic.cli
+
+automechanic.cli.main(sys.argv)

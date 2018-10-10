@@ -1,11 +1,13 @@
 """ drivers and functions for I/O
 """
+from __future__ import unicode_literals
+from builtins import open, str
 import os
 import time
 import json
 import subprocess
+from itertools import chain
 from functools import partial
-from itertools import starmap
 import pandas
 from .strid import canonical as canonical_species_identifier
 from .strid import canonical_reaction_identifier
@@ -26,6 +28,7 @@ from .table import is_empty_value as is_empty_table_value
 from .table import has_column_keys as table_has_column_keys
 from .table import column as table_column
 from .table import columns as table_columns
+from .table import lookup_dictionary as table_lookup_dictionary
 from .table import lookup_row as table_lookup_row
 from .table import lookup_update as table_lookup_update
 from .table import columns_like as table_with_columns_like
@@ -41,11 +44,14 @@ from .table import sort as sort_table
 from .table import merge as merge_tables
 from .table import intersect as intersect_tables
 from .table import move_column_to_front as move_table_column_to_front
-from .func import nasa_gibbs_polynomial
+
+from .parse.rere.find import split
+from .parse.rere.find import strip_spaces
 
 ADD_XYZ_EXTENSION = '{:s}.xyz'.format
 SID_COL_KEY = 'species_id'
 GEOM_PATH_COL_KEY = 'geom_path'
+RXN_IDX_COL_KEY = 'index'
 ARRH_COL_KEYS = ('arrh_a', 'arrh_b', 'arrh_e')
 NASA_LO_COL_KEYS = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
                     'nasa_lo_5', 'nasa_lo_6', 'nasa_lo_7')
@@ -117,7 +123,8 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
                              "file or turn thermo off.")
         thd_strs = chemkin_therm_data_strings(therm_str)
         thv_dct = thermo_value_dictionary(thd_strs, sid_dct)
-        spc_df['therm_val'] = map(thv_dct.__getitem__, spc_df['species_id'])
+        spc_df['therm_val'] = tuple(
+            map(thv_dct.__getitem__, spc_df['species_id']))
 
     logger.info("Finding reactions")
     rxn_strs = chemkin_reactions(mech_str)
@@ -157,7 +164,7 @@ def init(mech_txt, spc_csv, rxn_csv_out, spc_csv_out, geom_dir, id2path,
     logger.info("Writing reactions to {:s}".format(rxn_csv_out))
     write_table_to_csv(rxn_df, rxn_csv_out, float_fmt='%.4f')
 
-    logger.info("Writing missed reactions to {:s}".format(rxn_csv_out))
+    logger.info("Writing missed reactions to missed.csv")
     write_table_to_csv(mis_df, 'missed.csv')
 
 
@@ -419,44 +426,6 @@ def reactions_plot_arrhenius(rxn_csv, rxn_csv_ref, rxn_csv_out, plot_dir,
     write_table_to_csv(rxn_df, rxn_csv_out)
 
 
-def reactions_plot_gibbs(rxn_csv, spc_csv, rxn_csv_out, plot_dir, extension,
-                         tmp_rng, lbl_col_keys, id2path, logger):
-    """ make Gibbs free energy plots
-    """
-    logger.info("Reading in {:s}".format(rxn_csv))
-    rxn_df = pandas.read_csv(rxn_csv)
-    assert table_has_column_keys(rxn_df, ARRH_COL_KEYS)
-    assert table_has_column_keys(rxn_df, lbl_col_keys)
-    rxn_df = update_table_column_keys(rxn_df, ('plot_path',))
-
-    if spc_csv:
-        logger.info("Reading in {:s}".format(spc_csv))
-        spc_df = pandas.read_csv(spc_csv)
-        assert table_has_column_keys(spc_df, ('species_id',))
-        assert table_has_column_keys(spc_df, NASA_LO_COL_KEYS)
-        assert table_has_column_keys(spc_df, NASA_HI_COL_KEYS)
-        assert table_has_column_keys(spc_df, NASA_T_COL_KEYS)
-        nasa_lo_cols = table_columns(spc_df, NASA_LO_COL_KEYS)
-        nasa_hi_cols = table_columns(spc_df, NASA_HI_COL_KEYS)
-        nasa_t_cols = table_columns(spc_df, NASA_T_COL_KEYS)
-        sids = table_column(spc_df, 'species_id')
-        nasa_info_lst = tuple(zip(
-            zip(*nasa_lo_cols), zip(*nasa_hi_cols), zip(*nasa_t_cols)))
-        thermfs = starmap(nasa_gibbs_polynomial, nasa_info_lst)
-        thermf_dct = dict(zip(sids, thermfs))
-
-        for sid, thermf in thermf_dct.items():
-            print (sid, thermf(298.))
-
-    logger.info(rxn_csv)
-    logger.info(rxn_csv_out)
-    logger.info(plot_dir)
-    logger.info(extension)
-    logger.info(tmp_rng)
-    logger.info(lbl_col_keys)
-    logger.info(id2path)
-
-
 def read_thermo_data(spc_csv):
     """ a dictionary of thermo values (H298), indexed by species ID
     """
@@ -609,6 +578,21 @@ def reactions_init(cls, rxn_csv, spc_csv, rxn_csv_out, cdt_csv_out, logger):
     return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
 
 
+def reactions_run(cls, rxn_csv, spc_csv, rxn_rng_strs, tpl_txt, nodes, run_dir,
+                  id2path, job_argv, logger):
+    """ reactions runner
+    """
+    _run = reactions_runner(
+        cls=cls,
+        reaction_xyz_strings=dict(REACTION_XYZ_STRING_MAKERS)[cls],
+        reaction_input_string=dict(REACTION_INPUT_STRING_MAKERS)[cls],
+        sid_cols=dict(REACTION_SID_COL_KEYS)[cls],
+        idx_cols=dict(REACTION_IDX_COL_KEYS)[cls]
+    )
+    _run(spc_csv, rxn_csv, tpl_txt, rxn_rng_strs, nodes, run_dir, id2path,
+         job_argv, logger)
+
+
 def reactions_run_batch(cls, rxn_csv, spc_csv, batch_csv, tmp_txt,
                         tmp_keyval_str, run_dir, id2path, job_argv, logger):
     """ run additions
@@ -619,90 +603,6 @@ def reactions_run_batch(cls, rxn_csv, spc_csv, batch_csv, tmp_txt,
         reaction_input_string=dict(REACTION_INPUT_STRING_MAKERS)[cls],
         sid_cols=dict(REACTION_SID_COL_KEYS)[cls],
         idx_cols=dict(REACTION_IDX_COL_KEYS)[cls]
-    )
-    return _run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str, run_dir,
-                id2path, job_argv, logger)
-
-
-def abstractions_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
-    """ initialize abstraction reactions
-    """
-    _init = reactions_initializer(
-        cls='abstraction',
-        is_candidate=abstraction_candidate,
-        reaction=abstraction,
-        sid_cols=('q1h', 'q2', 'q1', 'q2h'),
-        idx_cols=('q1h_idx', 'q2_idx', 'q1_idx', 'q2h_idx')
-    )
-    return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
-
-
-def additions_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
-    """ initialize addition reactions
-    """
-    _init = reactions_initializer(
-        cls='addition',
-        is_candidate=addition_candidate,
-        reaction=addition,
-        sid_cols=('x', 'y', 'xy'),
-        idx_cols=('x_idx', 'y_idx', 'xy_idx_x', 'xy_idx_y')
-    )
-    return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
-
-
-def migrations_init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger):
-    """ initialize migration reactions
-    """
-    _init = reactions_initializer(
-        cls='migration',
-        is_candidate=migration_candidate,
-        reaction=migration,
-        sid_cols=('r', 'p'),
-        idx_cols=('r_idx_h', 'r_idx_a', 'p_idx_h', 'p_idx_a')
-    )
-    return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
-
-
-def abstractions_run_batch(spc_csv, batch_csv, rxn_csv, tmp_txt,
-                           tmp_keyval_str, run_dir, id2path, job_argv, logger):
-    """ run abstractions
-    """
-    _run = reactions_batch_runner(
-        cls='abstraction',
-        reaction_xyz_strings=abstraction_xyz_strings,
-        reaction_input_string=abstraction_input_string,
-        sid_cols=('q1h', 'q2', 'q1', 'q2h'),
-        idx_cols=('q1h_idx', 'q2_idx', 'q1_idx', 'q2h_idx')
-    )
-    return _run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str, run_dir,
-                id2path, job_argv, logger)
-
-
-def additions_run_batch(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,
-                        run_dir, id2path, job_argv, logger):
-    """ run additions
-    """
-    _run = reactions_batch_runner(
-        cls='addition',
-        reaction_xyz_strings=addition_xyz_strings,
-        reaction_input_string=addition_input_string,
-        sid_cols=('x', 'y', 'xy'),
-        idx_cols=('x_idx', 'y_idx', 'xy_idx_x', 'xy_idx_y')
-    )
-    return _run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str, run_dir,
-                id2path, job_argv, logger)
-
-
-def migrations_run_batch(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str,
-                         run_dir, id2path, job_argv, logger):
-    """ run migrations
-    """
-    _run = reactions_batch_runner(
-        cls='migration',
-        reaction_xyz_strings=migration_xyz_strings,
-        reaction_input_string=migration_input_string,
-        sid_cols=('r', 'p'),
-        idx_cols=('r_idx_h', 'r_idx_a', 'p_idx_h', 'p_idx_a')
     )
     return _run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str, run_dir,
                 id2path, job_argv, logger)
@@ -723,7 +623,7 @@ def divide(key, dir1, dir2, rxn_csv, rxn_csv_out, logger):
 
     logger.info("Reading in {:s}".format(rxn_csv))
     rxn_df = pandas.read_csv(rxn_csv)
-    rxn_df[key] = map(meets_condition_, rxn_df['reaction_id'])
+    rxn_df[key] = tuple(map(meets_condition_, rxn_df['reaction_id']))
     rxn_df1 = rxn_df[rxn_df[key]].drop(columns=key)
     rxn_df2 = rxn_df[~rxn_df[key]].drop(columns=key)
 
@@ -876,6 +776,111 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
     return _init
 
 
+def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
+                     sid_cols, idx_cols):
+    """ run reactions
+    """
+    assert cls in ('abstraction', 'addition', 'migration')
+
+    def _run(spc_csv, rxn_csv, tpl_txt, rxn_rng_strs, nodes, run_dir, id2path,
+             job_argv, logger):
+        logger.info("Reading in {:s}".format(rxn_csv))
+        rxn_df = pandas.read_csv(rxn_csv)
+
+        col_keys = table_column_keys(rxn_df)
+        assert 'reaction_id' in col_keys and RXN_IDX_COL_KEY in col_keys
+
+        logger.info("Reading in species geometries from {:s}".format(spc_csv))
+        mgeo_dct = read_geometries(spc_csv)
+
+        logger.info("Reading template file from {:s}".format(tpl_txt))
+        tpl_str = read_file(tpl_txt)
+
+        node_str = ', '.join(nodes)
+        logger.info("Nodes: {:s}".format(node_str))
+        tpl_keyval_dct = {'nodes': node_str}
+
+        if rxn_rng_strs:
+            rxn_idxs = _interpret_range_strings(rxn_rng_strs)
+            logger.info("Interpreted reaction index range argument: {:s}"
+                        .format(repr(rxn_idxs)))
+        else:
+            logger.info("No reaction range argument. Running all reactions.")
+            rxn_idxs = table_column(rxn_df, RXN_IDX_COL_KEY)
+
+        if not os.path.exists(run_dir):
+            logger.info("Creating run directory {:s}".format(run_dir))
+            os.mkdir(run_dir)
+
+        logger.info("Writing job files")
+        rxn_lkp = table_lookup_dictionary(rxn_df, RXN_IDX_COL_KEY)
+        for idx in rxn_idxs:
+            row = rxn_lkp[idx]
+            rid = row['reaction_id']
+            logger.info("reaction {:d}: {:s}".format(idx, rid))
+
+            sids = tuple(map(row.__getitem__, sid_cols))
+            idxs = tuple(map(row.__getitem__, idx_cols))
+            logger.info('  indices: {:s}'.format(str(idxs)))
+
+            dxyz_dct = reaction_xyz_strings(sids, idxs, mgeo_dct)
+            if dxyz_dct:
+                dxyz_sids = dxyz_dct.keys()
+                dxyzs = dxyz_dct.values()
+
+                dname = id2path(rid)
+                dpath = os.path.join(run_dir, dname)
+                logger.info("  Creating job directory {:s}".format(dpath))
+                if not os.path.exists(dpath):
+                    os.mkdir(dpath)
+
+                fnames = tuple(map('{:s}.xyz'.format, map(id2path, dxyz_sids)))
+                fpaths = tuple(os.path.join(dpath, fname) for fname in fnames)
+                for fpath, dxyz in zip(fpaths, dxyzs):
+                    logger.info("  Writing {:s}".format(fpath))
+                    write_file(fpath, dxyz)
+
+                inp_str = reaction_input_string(sids, tpl_str, tpl_keyval_dct)
+                inp_fpath = os.path.join(dpath, 'input.dat')
+
+                logger.info("  Writing {:s}".format(inp_fpath))
+                write_file(inp_fpath, inp_str)
+                rxn_df.loc[idx, 'created'] = True
+                rxn_df.loc[idx, 'path'] = dpath
+            else:
+                logger.info("  Failed to create .xyz files")
+                rxn_df.loc[idx, 'created'] = False
+
+        logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
+        write_table_to_csv(rxn_df, rxn_csv)
+
+        owd = os.getcwd()
+        logger.info("Running job command in successfully created directories")
+        rxn_lkp = table_lookup_dictionary(rxn_df, RXN_IDX_COL_KEY)
+        for idx in rxn_idxs:
+            row = rxn_lkp[idx]
+            if row['created']:
+                rid = row['reaction_id']
+                logger.info("reaction {:d}: {:s}".format(idx, rid))
+
+                path = row['path']
+                logger.info('  entering {:s}'.format(path))
+                os.chdir(path)
+
+                cmd_str = ' '.join(job_argv)
+                logger.info("  running command '{:s}' in {:s}"
+                            .format(cmd_str, path))
+                try:
+                    subprocess.check_call(job_argv)
+                except Exception as err:
+                    logger.info("   command '{:s}' failed with error '{:s}'"
+                                .format(cmd_str, err))
+
+                os.chdir(owd)
+
+    return _run
+
+
 def reactions_batch_runner(cls, reaction_xyz_strings, reaction_input_string,
                            sid_cols, idx_cols):
     """ run reactions
@@ -976,14 +981,17 @@ def write_file(fpath, contents, mode='w'):
     """ write contents to a file
     """
     fle = open(fpath, mode)
-    fle.write(contents)
+    fle.write(str(contents))
     fle.close()
 
 
-def read_file(fpath):
+def read_file(file_txt):
     """ read file contents as a string
     """
-    return open(fpath).read()
+    with open(file_txt, encoding='utf8', errors='ignore') as file_obj:
+        file_str = file_obj.read()
+
+    return file_str
 
 
 def read_json(fpath):
@@ -1011,5 +1019,22 @@ def timestamp_if_exists(fpath):
 # helpers
 def _interpret_template_key_values(tmp_keyval_str):
     tmp_keyval_dct = dict(
-        (s.strip() for s in kv.split(':')) for kv in tmp_keyval_str.split('|'))
+        (strip_spaces(s) for s in split(':', kv))
+        for kv in split('|', tmp_keyval_str))
     return tmp_keyval_dct
+
+
+def _interpret_range_strings(rng_strs):
+
+    def _interpret_range_string(rng_str):
+        split_rng = split('-', rng_str)
+        if len(split_rng) == 1:
+            rng = [int(split_rng[-1])]
+        elif len(split_rng) == 2:
+            start, stop = map(int, split_rng)
+            rng = list(range(start, stop+1))
+        else:
+            raise ValueError("Failed to interet index ranges")
+        return rng
+
+    return tuple(chain(*map(_interpret_range_string, rng_strs)))

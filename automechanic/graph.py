@@ -1,16 +1,13 @@
 """ graph functions
 """
-from functools import partial
 from itertools import chain
 from itertools import product
 from itertools import permutations
 from itertools import combinations
-from more_itertools import unique_everseen
-import numpy
+import networkx
 from .atom import valence
-from .perm import compose
 from .perm import inverse
-from .timeout import timeout
+from .perm import compose
 
 
 def atoms(mgrph):
@@ -31,6 +28,32 @@ def formula(mgrph):
     """
     atms = atoms(mgrph)
     return dict(_formula(atms))
+
+
+def heavy_atom_indices(mgrph):
+    """ heavy atom indices
+    """
+    idxs = tuple(idx for idx in indices(mgrph)
+                 if atom_symbol(mgrph, idx) != 'H')
+    return idxs
+
+
+def hydrogen_atom_indices(mgrph):
+    """ heavy atom indices
+    """
+    idxs = tuple(idx for idx in indices(mgrph)
+                 if atom_symbol(mgrph, idx) == 'H')
+    return idxs
+
+
+def backbone_indices(mgrph):
+    """ heavy atoms and hydrogen atoms not connected to heavy atoms
+    """
+    hv_idxs = heavy_atom_indices(mgrph)
+    hy_idxs = tuple(idx for idx in hydrogen_atom_indices(mgrph) if
+                    all(idx > nidx and atom_symbol(mgrph, nidx) == 'H'
+                        for nidx in atom_neighborhood_indices(mgrph, idx)))
+    return hv_idxs + hy_idxs
 
 
 def number_of_heavy_atoms(mgrph):
@@ -62,6 +85,35 @@ def bond_orders(mgrph):
     bkeys, btyps = _bond_keys_and_types(bnds)
     bdct = dict(zip(bkeys, btyps))
     return bdct
+
+
+def subgraph(mgrph, idxs):
+    """ subgraph of some atoms in this molecular graph
+    """
+    atms = tuple(atom_symbol(mgrph, idx) for idx in idxs)
+    bnds = bonds(mgrph)
+    sub_bnds = frozenset([(bkey, btyp) for bkey, btyp in bnds
+                          if all(bidx in idxs for bidx in bkey)])
+    idx_dct = dict((idx, new_idx) for new_idx, idx in enumerate(idxs))
+    bnds = _change_indices(sub_bnds, idx_dct)
+    return atms, bnds
+
+
+def heavy_atom_subgraph(mgrph):
+    """ the subgraph of the heavy atoms in this molecular graph
+    """
+    idxs = heavy_atom_indices(mgrph)
+    return subgraph(mgrph, idxs)
+
+
+def skeleton_graph(mgrph):
+    """ a graph of the heavy atoms and their hydrogen counts
+    """
+    idxs = backbone_indices(mgrph)
+    atms, bnds = subgraph(mgrph, idxs)
+    hcts = (atom_hydrogen_count(mgrph, idx) for idx in idxs)
+    vtcs = tuple(zip(atms, hcts))
+    return (vtcs, bnds)
 
 
 def multibond_keys(mgrph):
@@ -115,19 +167,9 @@ def potential_bond_keys(mgrph):
 def radical_sites(mgrph):
     """ radical sites of a molecular graph
     """
-    natms = len(atoms(mgrph))
-    idxs = tuple(idx for idx in range(natms)
+    idxs = tuple(idx for idx in indices(mgrph)
                  if atom_free_electrons(mgrph, idx) > 0)
     return idxs
-
-
-def neighborhood_formulas(mgrph, order=1):
-    """ map atoms to a list of neighborhood formulas
-    """
-    natms = len(atoms(mgrph))
-    atm_nbhd_fml_ = partial(atom_neighborhood_formula, mgrph, order=order)
-    nbhd_fmls = tuple(map(atm_nbhd_fml_, range(natms)))
-    return nbhd_fmls
 
 
 def atom_bonds(mgrph, idx):
@@ -180,21 +222,26 @@ def atom_neighborhood_indices(mgrph, idx):
     return frozenset(atm_scnds)
 
 
-def atom_neighborhood_formula(mgrph, idx, order=1):
+def atom_neighborhood(mgrph, idx):
     """ atoms adjacent to this one in a molecule graph
     """
-    assert order == int(order) and order >= 1
-    order = int(order)
-    atms = atoms(mgrph)
-    nbhd_idxs = atom_neighborhood_indices(mgrph, idx)
-    if order == 1:
-        nbhd_atms = tuple(map(atms.__getitem__, nbhd_idxs))
-        nbhd_fml = _formula(nbhd_atms)
-    elif order > 1:
-        nbhd_fml_ = partial(atom_neighborhood_formula, mgrph, order=order-1)
-        nbhd_items = tuple(map(nbhd_fml_, nbhd_idxs))
-        nbhd_fml = _formula(nbhd_items)
-    return nbhd_fml
+    atms = tuple(atom_symbol(mgrph, nidx)
+                 for nidx in atom_neighborhood_indices(mgrph, idx))
+    return atms
+
+
+def atom_hydrogen_indices(mgrph, idx):
+    """ indices of the hydrogens attached to this atom
+    """
+    idxs = tuple(h_idx for h_idx in atom_neighborhood_indices(mgrph, idx)
+                 if atom_symbol(mgrph, h_idx) == 'H')
+    return idxs
+
+
+def atom_hydrogen_count(mgrph, idx):
+    """ the number of hydrogens attached to this atom
+    """
+    return len(atom_hydrogen_indices(mgrph, idx))
 
 
 def atom_bond_count(mgrph, idx):
@@ -205,6 +252,13 @@ def atom_bond_count(mgrph, idx):
     return sum(atm_btyps)
 
 
+def atom_symbol(mgrph, idx):
+    """ the atomic symbol of an atom by index
+    """
+    atms = atoms(mgrph)
+    return atms[idx]
+
+
 def atom_free_electrons(mgrph, idx):
     """ number of unbound valence electrons for an atom in a molecular graph
     """
@@ -212,6 +266,40 @@ def atom_free_electrons(mgrph, idx):
     vlnc = valence(atms[idx])
     bcnt = atom_bond_count(mgrph, idx)
     return vlnc - bcnt
+
+
+def bond_order(mgrph, idx1, idx2):
+    """ the order of a bond
+    """
+    bdct = bond_orders(mgrph)
+    return bdct[frozenset([idx1, idx2])]
+
+
+def permute_atoms(mgrph, pmt):
+    """ permute the atoms in a molecular graph
+    """
+    atms, bnds = mgrph
+    ret_atms = tuple(atms[i] for i in pmt)
+    inv_pmt = inverse(pmt)
+    idx_dct = dict(enumerate(inv_pmt))
+    ret_bnds = _change_indices(bnds, idx_dct)
+    return ret_atms, ret_bnds
+
+
+def skeleton_argsort(mgrph):
+    """ backbone indices, followed by hydrogen indices for each in turn
+    """
+    bb_idxs = backbone_indices(mgrph)
+    idxs = tuple(chain(
+        bb_idxs, *(atom_hydrogen_indices(mgrph, idx) for idx in bb_idxs)))
+    return idxs
+
+
+def skeleton_sort(mgrph):
+    """ backbone atoms, followed by hydrogens for each in turn
+    """
+    pmt = skeleton_argsort(mgrph)
+    return permute_atoms(mgrph, pmt)
 
 
 def union(mgrph1, mgrph2):
@@ -258,30 +346,24 @@ def isomorphic(mgrph1, mgrph2):
     return bool(isomorphism(mgrph1, mgrph2))
 
 
-def isomorphism(mgrph, target_mgrph):
+def isomorphism(mgrph1, mgrph2):
     """ isomorphism between graphs, if there is one
     """
-    return _isomorphism3(mgrph, target_mgrph)
-
-
-def sort_by_atoms(mgrph):
-    """ sort the atoms in a molecular graph by atomic symbol
-    """
-    atms, _ = mgrph
-    pmt = tuple(numpy.argsort(atms))
-    ret_mgrph = permute_atoms(mgrph, pmt)
-    return ret_mgrph
-
-
-def permute_atoms(mgrph, pmt):
-    """ permute the atoms in a molecular graph
-    """
-    atms, bnds = mgrph
-    ret_atms = tuple(atms[i] for i in pmt)
-    inv_pmt = inverse(pmt)
-    idx_dct = dict(enumerate(inv_pmt))
-    ret_bnds = _change_indices(bnds, idx_dct)
-    return ret_atms, ret_bnds
+    iso = None
+    if formula(mgrph1) == formula(mgrph2):
+        srt1 = skeleton_argsort(mgrph1)
+        srt2 = skeleton_argsort(mgrph2)
+        srt_mgrph1 = permute_atoms(mgrph1, srt1)
+        srt_mgrph2 = permute_atoms(mgrph2, srt2)
+        sk_grph1 = skeleton_graph(srt_mgrph1)
+        sk_grph2 = skeleton_graph(srt_mgrph2)
+        sk_iso = _isomorphism(sk_grph1, sk_grph2)
+        if sk_iso:
+            srt_iso = tuple(chain(
+                sk_iso,
+                *(atom_hydrogen_indices(srt_mgrph1, idx) for idx in sk_iso)))
+            iso = compose(inverse(srt2), srt_iso, srt1)
+    return iso
 
 
 def forward_abstraction_indices(qh_mgrph, q_mgrph):
@@ -375,52 +457,9 @@ def migration_indices(r_mgrph, p_mgrph):
     return idxs
 
 
-# helper functions
-@timeout(20)
-def _isomorphism3(mgrph, target_mgrph, max_order=15):
-    """ are these graphs isomorphic? (slightly faster)
-    """
-    iso = None
-    if formula(mgrph) == formula(target_mgrph):
-        nhvys = number_of_heavy_atoms(mgrph)
-        order = min(nhvys + 1, max_order)
-        r_nbhd_fmls = neighborhood_formulas(mgrph, order=order)
-        t_nbhd_fmls = neighborhood_formulas(target_mgrph, order=order)
-        if sorted(r_nbhd_fmls) == sorted(t_nbhd_fmls):
-            r_srt = _argsort(r_nbhd_fmls)
-            t_srt = _argsort(t_nbhd_fmls)
-            r_mgrph = permute_atoms(mgrph, r_srt)
-            t_mgrph = permute_atoms(target_mgrph, t_srt)
-
-            nbhd_fmls = tuple(r_nbhd_fmls[i] for i in r_srt)
-            idxs_by_nbhd = [[i for i, f in enumerate(nbhd_fmls) if f == fml]
-                            for fml in unique_everseen(nbhd_fmls)]
-
-            for pmt in _flat_product_permutations(*idxs_by_nbhd):
-                p_mgrph = permute_atoms(r_mgrph, pmt)
-                if p_mgrph == t_mgrph:
-                    srt_iso = pmt
-                    iso = compose(inverse(t_srt), srt_iso, r_srt)
-                    break
-    return iso
-
-
 def _other_vertex(bkey, idx):
     ret_idx, = bkey - frozenset([idx])
     return ret_idx
-
-
-def _shift_bond_keys(bnds, shift):
-    if not bnds:
-        ret_bnds = frozenset()
-    else:
-        bkeys, btyps = _bond_keys_and_types(bnds)
-        frsts, scnds = _unzip_bond_keys(bkeys)
-        ret_frsts = numpy.add(frsts, shift)
-        ret_scnds = numpy.add(scnds, shift)
-        ret_bkeys = map(frozenset, zip(ret_frsts, ret_scnds))
-        ret_bnds = frozenset(zip(ret_bkeys, btyps))
-    return ret_bnds
 
 
 def _bond_keys_and_types(bnds):
@@ -431,36 +470,6 @@ def _bond_keys_and_types(bnds):
 def _unzip_bond_keys(bkeys):
     frsts, scnds = zip(*bkeys) if bkeys else ((), ())
     return frsts, scnds
-
-
-def _argsort(seq):
-    return tuple(sorted(range(len(seq)), key=seq.__getitem__))
-
-
-def _flat_product_permutations(*seqs):
-    perm_creators = tuple(map(_permutation_creator, seqs))
-    for prod in _product(*perm_creators):
-        pmt = sum(prod, ())
-        yield pmt
-
-
-def _product(*iterables, **kwargs):
-    if not iterables:
-        yield ()
-    else:
-        iterables = iterables * kwargs.get('repeat', 1)
-        iterable = iterables[0]
-        for item in iterable() if callable(iterable) else iter(iterable):
-            for items in _product(*iterables[1:]):
-                yield (item, ) + items
-
-
-def _permutation_creator(seq):
-
-    def _create():
-        return permutations(seq)
-
-    return _create
 
 
 def _change_indices(bnds, idx_dct):
@@ -479,3 +488,42 @@ def _change_indices(bnds, idx_dct):
 def _formula(iterable):
     items = tuple(iterable)
     return tuple((item, items.count(item)) for item in sorted(set(items)))
+
+
+def _isomorphism(mgrph1, mgrph2):
+    """ full graph isomorphism
+    """
+    vdct1 = dict(enumerate(atoms(mgrph1)))
+    vdct2 = dict(enumerate(atoms(mgrph2)))
+    edct1 = bond_orders(mgrph1)
+    edct2 = bond_orders(mgrph2)
+
+    nxgrph1 = _nx_graph(vdct1, edct1)
+    nxgrph2 = _nx_graph(vdct2, edct2)
+    return _nx_graph_isomorphism(nxgrph1, nxgrph2)
+
+
+def _nx_graph(vdct, edct):
+    nxgrph = networkx.Graph()
+    for vkey, vtyp in vdct.items():
+        nxgrph.add_node(vkey, typ=vtyp)
+    for ekey, etyp in edct.items():
+        nxgrph.add_edge(*ekey, typ=etyp)
+    return nxgrph
+
+
+def _nx_graph_isomorphism(nxgrph1, nxgrph2):
+
+    def _same_type(dct1, dct2):
+        return dct1['typ'] == dct2['typ']
+
+    matcher = networkx.algorithms.isomorphism.GraphMatcher(
+        nxgrph1, nxgrph2, node_match=_same_type, edge_match=_same_type)
+
+    iso = None
+    if matcher.is_isomorphic():
+        iso_dct = matcher.mapping
+        iso_inv = tuple(map(iso_dct.__getitem__, range(len(iso_dct))))
+        iso = inverse(iso_inv)
+
+    return iso

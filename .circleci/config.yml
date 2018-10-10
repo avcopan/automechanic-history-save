@@ -3,37 +3,32 @@ jobs:
     build-ubuntu:
         docker:
             - image: circleci/buildpack-deps:18.04
-        environment:
-            CONDA=$HOME/miniconda
         steps:
             - checkout
             - run: 
-                name: Create conda environment
+                name: Create conda environments
                 command: |
-                    echo 'export CONDA=$HOME/miniconda2' >> $BASH_ENV
+                    echo 'export CONDA=$HOME/miniconda' >> $BASH_ENV
                     echo 'export PATH=$CONDA/bin:$PATH' >> $BASH_ENV
                     source $BASH_ENV
-                    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
-                    bash Miniconda2-latest-Linux-x86_64.sh -b -p $CONDA
-                    conda config --set always_yes yes
-                    conda update conda
-                    conda env create -f environment.yml
+                    cd install
+                    ./conda.sh
+                    ./amenv3.sh
+                    ./amenv2.sh
             - run:
-                name: Install
+                name: Run tests with python3
                 command: |
-                    source activate amenv
-                    # install pyx2z
-                    git clone --recurse-submodules https://github.com/PACChem/x2z
-                    cd x2z
-                    cmake . -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
-                    make install
-                    cd ..
-                    # install automechanic
+                    source activate amenv3
                     pip install .
+                    cd tests/
+                    pytest -v --cov=automechanic .
+                    flake8 --exit-zero automechanic
+                    pylint --rcfile=../.pylintrc automechanic
             - run:
-                name: Run tests
+                name: Run tests with python2
                 command: |
-                    source activate amenv
+                    source activate amenv2
+                    pip install .
                     cd tests/
                     pytest -v --cov=automechanic .
                     flake8 --exit-zero automechanic

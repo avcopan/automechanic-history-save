@@ -1,6 +1,7 @@
 """ Test scripts
 """
 import os
+import sys
 import subprocess
 import tempfile
 
@@ -14,7 +15,7 @@ def test__automech__syngas_from_rmg():
     """
     tmp_path = tempfile.mkdtemp()
 
-    print tmp_path
+    sys.stdout.write("{:s}\n".format(tmp_path))
 
     mech_json = os.path.join(SYNGAS_PATH, 'mechanism.json')
     spc_json = os.path.join(SYNGAS_PATH, 'species.json')
@@ -38,28 +39,31 @@ def test__automech__syngas_from_rmg():
                            os.path.join(tmp_path, 'species.csv'),
                            '-P', os.path.join(tmp_path, 'migrations'),
                            '-p'])
-    subprocess.check_call(['automech', 'additions', 'run_batch',
+    subprocess.check_call(['automech', 'csv', 'reindex',
+                           '-P', os.path.join(tmp_path, 'additions'),
+                           os.path.join(tmp_path, 'additions',
+                                        'reactions.csv')])
+    subprocess.check_call(['automech', 'additions', 'run',
+                           os.path.join(tmp_path, 'additions',
+                                        'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'addition.txt'),
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'additions',
-                                              'reactions.csv'),
-                           '-b', os.path.join(tmp_path, 'additions',
-                                              'reactions.csv'),
                            '-P', os.path.join(tmp_path, 'additions'),
                            '-p',
-                           '-y', 'nodes:d',
                            'cmd', 'ls'])
-    subprocess.check_call(['automech', 'migrations', 'run_batch',
+    subprocess.check_call(['automech', 'csv', 'reindex',
+                           '-P', os.path.join(tmp_path, 'migrations'),
+                           os.path.join(tmp_path, 'migrations',
+                                        'reactions.csv')])
+    subprocess.check_call(['automech', 'migrations', 'run',
+                           '-P', os.path.join(tmp_path, 'migrations'),
+                           os.path.join(tmp_path, 'migrations',
+                                        'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'migration.txt'),
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'migrations',
-                                              'reactions.csv'),
-                           '-b', os.path.join(tmp_path, 'migrations',
-                                              'reactions.csv'),
                            '-P', os.path.join(tmp_path, 'migrations'),
-                           '-y', 'nodes:d',
                            '-p',
                            'cmd', 'ls'])
 
@@ -77,32 +81,34 @@ def test__automech__syngas_from_rmg():
                            '-P', os.path.join(tmp_path, 'abstractions',
                                               'rad-rad'),
                            '-p'])
-    subprocess.check_call(['automech', 'abstractions', 'run_batch',
-                           '-t', os.path.join(TEMPLATE_PATH,
-                                              'abstraction.txt'),
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'abstractions',
-                                              'rad-mol', 'reactions.csv'),
-                           '-b', os.path.join(tmp_path, 'abstractions',
-                                              'rad-mol', 'reactions.csv'),
+    subprocess.check_call(['automech', 'csv', 'reindex',
                            '-P', os.path.join(tmp_path, 'abstractions',
                                               'rad-mol'),
-                           '-y', 'nodes:d',
-                           '-p',
-                           'cmd', 'ls'])
-    subprocess.check_call(['automech', 'abstractions', 'run_batch',
+                           os.path.join(tmp_path, 'abstractions', 'rad-mol',
+                                        'reactions.csv')])
+    subprocess.check_call(['automech', 'abstractions', 'run',
+                           os.path.join(tmp_path, 'abstractions', 'rad-mol',
+                                        'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'abstraction.txt'),
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'abstractions',
-                                              'rad-rad', 'high-spin',
-                                              'reactions.csv'),
-                           '-b', os.path.join(tmp_path, 'abstractions',
-                                              'rad-rad', 'high-spin',
-                                              'reactions.csv'),
+                           '-P', os.path.join(tmp_path, 'abstractions',
+                                              'rad-mol'),
+                           '-p',
+                           'cmd', 'ls'])
+    subprocess.check_call(['automech', 'csv', 'reindex',
                            '-P', os.path.join(tmp_path, 'abstractions',
                                               'rad-rad', 'high-spin'),
-                           '-y', 'nodes:d',
+                           os.path.join(tmp_path, 'abstractions', 'rad-rad',
+                                        'high-spin', 'reactions.csv')])
+    subprocess.check_call(['automech', 'abstractions', 'run',
+                           os.path.join(tmp_path, 'abstractions', 'rad-rad',
+                                        'high-spin', 'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
+                           '-t', os.path.join(TEMPLATE_PATH,
+                                              'abstraction.txt'),
+                           '-P', os.path.join(tmp_path, 'abstractions',
+                                              'rad-rad', 'high-spin'),
                            '-p',
                            'cmd', 'ls'])
 
@@ -112,7 +118,7 @@ def test__automech__syngas_from_chemkin():
     """
     tmp_path = tempfile.mkdtemp()
 
-    print tmp_path
+    sys.stdout.write("{:s}\n".format(tmp_path))
 
     subprocess.check_call(['automech', 'init',
                            os.path.join(SYNGAS_PATH, 'mechanism.txt'),
@@ -133,28 +139,30 @@ def test__automech__syngas_from_chemkin():
                            os.path.join(tmp_path, 'species.csv'),
                            '-P', os.path.join(tmp_path, 'migrations'),
                            '-p'])
-    subprocess.check_call(['automech', 'additions', 'run_batch',
+    subprocess.check_call(['automech', 'csv', 'reindex',
+                           '-P', os.path.join(tmp_path, 'additions'),
+                           os.path.join(tmp_path, 'additions',
+                                        'reactions.csv')])
+    subprocess.check_call(['automech', 'additions', 'run',
+                           os.path.join(tmp_path, 'additions',
+                                        'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'addition.txt'),
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'additions',
-                                              'reactions.csv'),
-                           '-b', os.path.join(tmp_path, 'additions',
-                                              'reactions.csv'),
                            '-P', os.path.join(tmp_path, 'additions'),
                            '-p',
-                           '-y', 'nodes:d',
                            'cmd', 'ls'])
-    subprocess.check_call(['automech', 'migrations', 'run_batch',
+    subprocess.check_call(['automech', 'csv', 'reindex',
+                           '-P', os.path.join(tmp_path, 'migrations'),
+                           os.path.join(tmp_path, 'migrations',
+                                        'reactions.csv')])
+    subprocess.check_call(['automech', 'migrations', 'run',
+                           os.path.join(tmp_path, 'migrations',
+                                        'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'migration.txt'),
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'migrations',
-                                              'reactions.csv'),
-                           '-b', os.path.join(tmp_path, 'migrations',
-                                              'reactions.csv'),
                            '-P', os.path.join(tmp_path, 'migrations'),
-                           '-y', 'nodes:d',
                            '-p',
                            'cmd', 'ls'])
 
@@ -172,32 +180,34 @@ def test__automech__syngas_from_chemkin():
                            '-P', os.path.join(tmp_path, 'abstractions',
                                               'rad-rad'),
                            '-p'])
-    subprocess.check_call(['automech', 'abstractions', 'run_batch',
-                           '-t', os.path.join(TEMPLATE_PATH,
-                                              'abstraction.txt'),
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'abstractions',
-                                              'rad-mol', 'reactions.csv'),
-                           '-b', os.path.join(tmp_path, 'abstractions',
-                                              'rad-mol', 'reactions.csv'),
+    subprocess.check_call(['automech', 'csv', 'reindex',
                            '-P', os.path.join(tmp_path, 'abstractions',
                                               'rad-mol'),
-                           '-y', 'nodes:d',
-                           '-p',
-                           'cmd', 'ls'])
-    subprocess.check_call(['automech', 'abstractions', 'run_batch',
+                           os.path.join(tmp_path, 'abstractions', 'rad-mol',
+                                        'reactions.csv')])
+    subprocess.check_call(['automech', 'abstractions', 'run',
+                           os.path.join(tmp_path, 'abstractions', 'rad-mol',
+                                        'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
                            '-t', os.path.join(TEMPLATE_PATH,
                                               'abstraction.txt'),
-                           '-s', os.path.join(tmp_path, 'species.csv'),
-                           '-r', os.path.join(tmp_path, 'abstractions',
-                                              'rad-rad', 'high-spin',
-                                              'reactions.csv'),
-                           '-b', os.path.join(tmp_path, 'abstractions',
-                                              'rad-rad', 'high-spin',
-                                              'reactions.csv'),
+                           '-P', os.path.join(tmp_path, 'abstractions',
+                                              'rad-mol'),
+                           '-p',
+                           'cmd', 'ls'])
+    subprocess.check_call(['automech', 'csv', 'reindex',
                            '-P', os.path.join(tmp_path, 'abstractions',
                                               'rad-rad', 'high-spin'),
-                           '-y', 'nodes:d',
+                           os.path.join(tmp_path, 'abstractions', 'rad-rad',
+                                        'high-spin', 'reactions.csv')])
+    subprocess.check_call(['automech', 'abstractions', 'run',
+                           os.path.join(tmp_path, 'abstractions', 'rad-rad',
+                                        'high-spin', 'reactions.csv'),
+                           os.path.join(tmp_path, 'species.csv'),
+                           '-t', os.path.join(TEMPLATE_PATH,
+                                              'abstraction.txt'),
+                           '-P', os.path.join(tmp_path, 'abstractions',
+                                              'rad-rad', 'high-spin'),
                            '-p',
                            'cmd', 'ls'])
 
@@ -207,7 +217,7 @@ def test__automech_csv_to_from_chemkin():
     """
     tmp_path = tempfile.mkdtemp()
 
-    print(tmp_path)
+    sys.stdout.write("{:s}\n".format(tmp_path))
 
     subprocess.check_call(['automech', 'chemkin', 'to_csv',
                            os.path.join(SYNGAS_PATH, 'mechanism.txt'),
@@ -218,6 +228,6 @@ def test__automech_csv_to_from_chemkin():
 
 
 if __name__ == '__main__':
-    # test__automech__syngas_from_rmg()
-    # test__automech__syngas_from_chemkin()
     test__automech_csv_to_from_chemkin()
+    test__automech__syngas_from_rmg()
+    test__automech__syngas_from_chemkin()

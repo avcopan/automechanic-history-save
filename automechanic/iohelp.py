@@ -22,7 +22,6 @@ from .plot import add_line as add_line_to_diagram
 from .plot import add_text as add_text_to_diagram
 from .plot import add_axis_labels
 from .table import is_empty_value as is_empty_table_value
-from .timeout import timeout
 
 
 def translate_chemkin_reaction(rxn_str, sid_dct):
@@ -43,9 +42,9 @@ def translate_chemkin_reaction(rxn_str, sid_dct):
 def thermo_value_dictionary(thd_strs, sid_dct):
     """ a dictionary of thermo values
     """
-    thv_dct = dict((sid_dct[spc], val) for spc, val in
-                   map(translate_chemkin_thermo_data, thd_strs)
-                   if spc in sid_dct)
+    spcs, thvs = zip(*map(translate_chemkin_thermo_data, thd_strs))
+    thv_dct = {sid_dct[spc]: thv for spc, thv in zip(spcs, thvs)
+               if spc in sid_dct.keys()}
     return thv_dct
 
 
@@ -127,7 +126,6 @@ def migration_candidate(rid):
     return bool(_mig_sorted_candidate(rid))
 
 
-@timeout(300)
 def abstraction(rid, mgeo_dct, _thv_dct=None):
     """ species IDs with abstraction indices (or None)
     """
@@ -147,7 +145,6 @@ def abstraction(rid, mgeo_dct, _thv_dct=None):
     return abst
 
 
-@timeout(300)
 def addition(rid, mgeo_dct, _thv_dct=None):
     """ species IDs with addition indices (or None)
     """
@@ -165,7 +162,6 @@ def addition(rid, mgeo_dct, _thv_dct=None):
     return addn
 
 
-@timeout(300)
 def migration(rid, mgeo_dct, _thv_dct=None):
     """ species IDs with migration indices (or None)
     """
@@ -201,12 +197,12 @@ def abstraction_xyz_strings(sids, idxs, mgeo_dct):
     return dxyz_dct
 
 
-def abstraction_input_string(sids, tmp_str, tmp_kevyal_dct):
+def abstraction_input_string(sids, tmp_str, tmp_keyval_dct):
     """ TorsScan input for abstraction reaction
     """
     q1h_sid, q2_sid, q1_sid, q2h_sid = sids
     sub_dct = {'q1h': q1h_sid, 'q2': q2_sid, 'q1': q1_sid, 'q2h': q2h_sid}
-    sub_dct.update(tmp_kevyal_dct)
+    sub_dct.update(tmp_keyval_dct)
     inp_str = tmp_str.format(**sub_dct)
     return inp_str
 

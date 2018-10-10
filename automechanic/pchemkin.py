@@ -5,23 +5,27 @@ from re import escape
 from itertools import chain
 from more_itertools import windowed
 import numpy
-from .parse import maybe
-from .parse import capture
-from .parse import zero_or_more
-from .parse import one_or_more
-from .parse import one_of_these
-from .parse import named_capture
-from .parse import group_lists
-from .parse import group_dictionary
-from .parse import ANY_CHAR
-from .parse import SPACE
-from .parse import PLUS
-from .parse import FLOAT
-from .parse import UNSIGNED_INTEGER
-from .parse import INTEGER
-from .parse import STRING_START
-from .parse import STRING_END
+from .parse_help import maybe
+from .parse_help import capture
+from .parse_help import zero_or_more
+from .parse_help import one_or_more
+from .parse_help import one_of_these
+from .parse_help import named_capture
+from .parse_help import group_lists
+from .parse_help import group_dictionary
+from .parse_help import ANY_CHAR
+from .parse_help import SPACE
+from .parse_help import PLUS
+from .parse_help import FLOAT
+from .parse_help import UNSIGNED_INTEGER
+from .parse_help import INTEGER
+from .parse_help import STRING_START
+from .parse_help import STRING_END
 
+from .parse.rere.find import ends_with
+from .parse.rere.find import split_words
+from .parse.rere.find import split_lines
+from .parse.rere.find import strip_spaces
 
 SPACES = one_or_more(SPACE, greedy=False)
 
@@ -80,7 +84,7 @@ def block(mech_str, name):
     gdct = group_dictionary(block_pattern, clean_mech_str)
     if gdct:
         ret_str = gdct['contents']
-        ret_str = '\n'.join(ret_str.splitlines())
+        ret_str = '\n'.join(split_lines(ret_str))
     return ret_str
 
 
@@ -146,7 +150,7 @@ def species(mech_str):
     :rtype: list
     """
     spec_block_str = species_block(mech_str)
-    specs = tuple(spec_block_str.split())
+    specs = tuple(split_words(spec_block_str))
     return specs
 
 
@@ -163,7 +167,7 @@ def reactions(mech_str):
     reag_pattern = _en_reagents_pattern(specs)
     reac_pattern = _reaction_pattern(reag_pattern)
     reac_block_str = reactions_block(mech_str)
-    reacs = tuple(map(str.strip, re.findall(reac_pattern, reac_block_str)))
+    reacs = tuple(map(strip_spaces, re.findall(reac_pattern, reac_block_str)))
     return reacs
 
 
@@ -172,7 +176,7 @@ def kinetics_unit_keys(mech_str):
     """
     reac_block_str = reactions_block(mech_str)
 
-    unit_line = reac_block_str.splitlines()[0]
+    unit_line = split_lines(reac_block_str)[0]
 
     ea_unit_pattern = one_of_these(EA_UNIT_KEYS)
     a_unit_pattern = one_of_these(A_UNIT_KEYS)
@@ -265,10 +269,10 @@ def therm_data_strings(mech_str):
 
 
 def _therm_data_strings_from_thermo_block(ther_block_str):
-    ther_lines = tuple(map(str.strip, ther_block_str.splitlines()))
+    ther_lines = tuple(map(strip_spaces, split_lines(ther_block_str)))
     tdats = []
     for tdat_lines in windowed(ther_lines, 4):
-        match = all(str.endswith(tdat_line, str(i)) for tdat_line, i
+        match = all(ends_with(str(i), tdat_line) for tdat_line, i
                     in zip(tdat_lines, range(1, 5)))
         if match:
             tdat = '\n'.join(tdat_lines)
@@ -292,10 +296,10 @@ def split_reaction(reac):
     reactant_str = re.sub(em_pattern, '', reactant_str)
     product_str = re.sub(em_pattern, '', product_str)
     en_reactants = tuple(map(_expand_en_reagents,
-                             map(str.strip,
+                             map(strip_spaces,
                                  re.split(PADDED_PLUS, reactant_str))))
     en_products = tuple(map(_expand_en_reagents,
-                            map(str.strip,
+                            map(strip_spaces,
                                 re.split(PADDED_PLUS, product_str))))
     reactants = tuple(chain(*en_reactants))
     products = tuple(chain(*en_products))
@@ -313,11 +317,11 @@ def split_therm_data(poly):
     """
     poly_data = None
 
-    lines = poly.strip().splitlines()
+    lines = split_lines(strip_spaces(poly))
     head_line = lines[0]
     coef_lines = '\n'.join(lines[1:])
 
-    spec = head_line.split()[0]
+    spec = split_words(head_line)[0]
 
     temps_pattern = SPACES.join([named_capture(FLOAT, 'temp_lo'),
                                  named_capture(FLOAT, 'temp_hi'),
@@ -351,7 +355,8 @@ def _reaction_pattern_without_em(reag_pattern):
 
 
 def _reaction_pattern_with_em(reag_pattern):
-    reagents = (reag_pattern + zero_or_more(PADDED_PLUS + reag_pattern) + PLUS_EM)
+    reagents = (reag_pattern + zero_or_more(PADDED_PLUS + reag_pattern)
+                + PLUS_EM)
     reac_pattern = reagents + PADDED_ARROW + reagents
     return reac_pattern
 

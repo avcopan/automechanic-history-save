@@ -1,15 +1,15 @@
 """ .xyz-based functions
 """
 import re
-from .parse import SPACE
-from .parse import UNSIGNED_INTEGER
-from .parse import STRING_START
-from .parse import LINE_END
-from .parse import LETTER
-from .parse import FLOAT
-from .parse import maybe
-from .parse import one_or_more
-from .parse import named_capture
+from .parse_help import SPACE
+from .parse_help import UNSIGNED_INTEGER
+from .parse_help import STRING_START
+from .parse_help import LINE_END
+from .parse_help import LETTER
+from .parse_help import FLOAT
+from .parse_help import maybe
+from .parse_help import one_or_more
+from .parse_help import named_capture
 
 SPACES = one_or_more(SPACE)
 

@@ -2,35 +2,36 @@
 
 ## Installation
 
-If you haven't already, first install some form of `conda`.
-The following instructions will work for Miniconda on Linux.
-```
-export CONDA=$HOME/miniconda2
-export PATH=$CONDA/bin:$PATH
-unset PYTHONPATH
-wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
-bash Miniconda2-latest-Linux-x86_64.sh -b -p $CONDA
-conda update conda
-```
-
-Now you can install `automechanic` as follows.
-Make sure you have relatively recent C/C++ compilers before proceeding.
+Clone the code:
 ```
 git clone https://github.com/PACChem/automechanic
-git clone --recursive https://github.com/PACChem/x2z  # for git>2.13 use --recurse-submodules
-conda env create -f automechanic/environment.yml
-source activate amenv
-(amenv) cd x2z
-(amenv) cmake . -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-(amenv) make install
-(amenv) cd ..
-(amenv) pip install automechanic/
+```
+
+Install conda (if you haven't already):
+```
+export CONDA=$HOME/miniconda
+export PATH=$CONDA/bin:$PATH
+bash automechanic/install/conda.sh
+```
+
+Create the conda environment for `automechanic`:
+```
+bash automechanic/install/amenv3.sh
+```
+For python2, use the script for the `amenv2` environment.
+
+Install automechanic in the environment:
+```
+source activate amenv3  # or amenv2
+(amenv3) pip install automechanic/
 ```
 
 To test your installation, run the tests as follows.
 ```
-(amenv) pytest automechanic/tests -v
+(amenv3) pytest automechanic/tests -v
 ```
+
+To exit the environment, use `source deactivate`.
 
 
 ## Instructions for plotting:

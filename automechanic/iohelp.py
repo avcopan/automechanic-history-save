@@ -398,6 +398,7 @@ def _migration_xyz_string(mgeo, h_idx, a_idx):
                 for an1_idx in atom_neighborhood_indices(mgrph, a_idx)
                 for an2_idx in atom_neighborhood_indices(mgrph, an1_idx)
                 if an2_idx != a_idx
+                if an1_idx not in atom_neighborhood_indices(mgrph, h_idx)
                 and an2_idx not in atom_neighborhood_indices(mgrph, h_idx))
     idxs = next(_2chainz, None)
     if idxs:

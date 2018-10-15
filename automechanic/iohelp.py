@@ -397,10 +397,21 @@ def _migration_xyz_string(mgeo, h_idx, a_idx):
     _2chainz = ((an1_idx, an2_idx)
                 for an1_idx in atom_neighborhood_indices(mgrph, a_idx)
                 for an2_idx in atom_neighborhood_indices(mgrph, an1_idx)
-                if an2_idx != a_idx
-                if an1_idx not in atom_neighborhood_indices(mgrph, h_idx)
+                if an1_idx not in (h_idx,)
+                and an2_idx not in (a_idx, h_idx)
                 and an2_idx not in atom_neighborhood_indices(mgrph, h_idx))
     idxs = next(_2chainz, None)
+
+    # allow for broken chains, if not enough connected atoms
+    if not idxs:
+        _broken_chains = (
+            (a1_idx, a2_idx)
+            for a1_idx in atom_neighborhood_indices(mgrph, a_idx)
+            for a2_idx in graph_indices(mgrph)
+            if a2_idx not in (a_idx, a1_idx)
+            and a2_idx not in atom_neighborhood_indices(mgrph, h_idx))
+        idxs = next(_broken_chains, None)
+
     if idxs:
         an1_idx, an2_idx = idxs
         dxyz = xyz_string(mgeo, {h_idx: 1, a_idx: 2, an1_idx: 3, an2_idx: 4})

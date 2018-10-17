@@ -6,7 +6,6 @@ from pandas import Series
 from pandas import Int64Index
 from pandas import RangeIndex
 from pandas import concat as _concat
-from pandas import merge as _merge
 
 # types
 STR_DTYPE = numpy.dtype('O')
@@ -69,18 +68,6 @@ def sql_select_one(tbl, col_key):
     return tbl[col_key]
 
 
-# def sql_select(tbl, *col_keys):
-#     """ select columns from a table
-#     """
-#     return tbl[list(col_keys)]
-
-
-def sql_where(tbl, cnd):
-    """ select rows from a table with a boolean conditional vector
-    """
-    return tbl[cnd]
-
-
 def sql_where_eq(tbl, col_key, val):
     """ select rows from a table with column entries of a given value
     """
@@ -95,14 +82,6 @@ def sql_where_in(tbl, col_key, vals):
     return tbl[tbl[col_key].isin(vals)]
 
 
-def sql_left_join_on_index(tbl1, tbl2):
-    """ left-join two tables by index
-    """
-    if not set(column_keys(tbl1)).isdisjoint(column_keys(tbl2)):
-        raise ValueError("Join duplicates columns")
-    return _merge(tbl1, tbl2, left_index=True, right_index=True, how='left')
-
-
 def _row_indices(nrows, idxs=None):
     row_idxs = Int64Index(idxs) if idxs is not None else RangeIndex(stop=nrows)
     assert len(row_idxs) == nrows
@@ -115,8 +94,3 @@ def _column_series(col, key, typ, row_idxs):
 
 def _concatenate_column_series(col_sers):
     return _concat(col_sers, axis=1)
-
-
-def _enumerate_rows(tbl):
-    for idx, row in tbl.iterrows():
-        yield idx, tuple(row)

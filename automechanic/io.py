@@ -850,18 +850,18 @@ def reactions_setup_run(cls, rxn_csv, spc_csv, rxn_rng_strs, run_dir, id2path,
         logger.info("reaction {:d}: {:s}".format(idx, rid))
         logger.info('  indices: {:s}'.format(str(idxs)))
 
+        dname = id2path(rid)
+        dpath = os.path.join(run_dir, dname)
+        logger.info("  Creating job directory {:s}".format(dpath))
+        if not os.path.exists(dpath):
+            os.mkdir(dpath)
+
         ret = (EMPTY, RXN_NOT_CREATED_VAL)
 
         dxyz_dct = reaction_xyz_strings(sids, idxs, mgeo_dct)
         if dxyz_dct:
             dxyz_sids = dxyz_dct.keys()
             dxyzs = dxyz_dct.values()
-
-            dname = id2path(rid)
-            dpath = os.path.join(run_dir, dname)
-            logger.info("  Creating job directory {:s}".format(dpath))
-            if not os.path.exists(dpath):
-                os.mkdir(dpath)
 
             fnames = tuple(map('{:s}.xyz'.format, map(id2path, dxyz_sids)))
             fpaths = tuple(os.path.join(dpath, fname) for fname in fnames)
@@ -917,6 +917,9 @@ def reactions_run(cls, rxn_csv, rxn_rng_strs, tpl_txt, nodes, job_argv,
     """ reactions parallel runner
     """
     assert cls in ('abstraction', 'addition', 'migration')
+
+    if not hasattr(job_argv, '__iter__'):
+        raise ValueError("Missing run command.")
 
     sid_cols = dict(REACTION_SID_COL_KEYS)[cls]
 

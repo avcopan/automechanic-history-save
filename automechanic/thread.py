@@ -59,6 +59,7 @@ class _Worker(Thread):
         self.ret_queue = ret_queue
         self.term_signal = Event()
         super(_Worker, self).__init__()
+        self.daemon = True
 
     def run(self):
         """ runs when start() is called until join() sets the term_signal

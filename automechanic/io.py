@@ -46,20 +46,29 @@ from .table import merge as merge_tables
 from .table import intersect as intersect_tables
 from .table import move_column_to_front as move_table_column_to_front
 # from new table interface
-from .table2 import table_rows
-from .table2 import sql_select
+from .table2 import EMPTY
+from .table2 import row_indices
+from .table2 import update_column_by_index
+from .table2 import sql_where_eq
+from .table2 import sql_where_in
+from .table2 import sql_select_one
 # from new parsing module
 from .parse.rere.find import split
 from .parse.rere.find import strip_spaces
+# threading
+from .thread import tag_team_starmap
 
 ADD_XYZ_EXTENSION = '{:s}.xyz'.format
 SID_COL_KEY = 'species_id'
 GEOM_PATH_COL_KEY = 'geom_path'
-RXN_PATH_COL_KEY = 'path'
 RXN_IDX_COL_KEY = 'index'
+RID_COL_KEY = 'reaction_id'
+RXN_PATH_COL_KEY = 'path'
 RXN_STAT_COL_KEY = 'status'
 RXN_CREATED_VAL = 'created'
 RXN_NOT_CREATED_VAL = 'not created'
+RXN_RAN_VAL = 'ran'
+RXN_FAILED_VAL = 'failed'
 ARRH_COL_KEYS = ('arrh_a', 'arrh_b', 'arrh_e')
 NASA_LO_COL_KEYS = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
                     'nasa_lo_5', 'nasa_lo_6', 'nasa_lo_7')
@@ -618,8 +627,8 @@ def reactions_init(cls, rxn_csv, spc_csv, rxn_csv_out, cdt_csv_out, logger):
     return _init(spc_csv, rxn_csv, rxn_csv_out, cdt_csv_out, logger)
 
 
-def reactions_run(cls, rxn_csv, spc_csv, rxn_rng_strs, tpl_txt, nodes, run_dir,
-                  id2path, job_argv, logger):
+def reactions_run_old(cls, rxn_csv, spc_csv, rxn_rng_strs, tpl_txt, nodes,
+                      run_dir, id2path, job_argv, logger):
     """ reactions runner
     """
     _run = reactions_runner(
@@ -631,21 +640,6 @@ def reactions_run(cls, rxn_csv, spc_csv, rxn_rng_strs, tpl_txt, nodes, run_dir,
     )
     _run(spc_csv, rxn_csv, tpl_txt, rxn_rng_strs, nodes, run_dir, id2path,
          job_argv, logger)
-
-
-def reactions_run_batch(cls, rxn_csv, spc_csv, batch_csv, tmp_txt,
-                        tmp_keyval_str, run_dir, id2path, job_argv, logger):
-    """ run additions
-    """
-    _run = reactions_batch_runner(
-        cls=cls,
-        reaction_xyz_strings=dict(REACTION_XYZ_STRING_MAKERS)[cls],
-        reaction_input_string=dict(REACTION_INPUT_STRING_MAKERS)[cls],
-        sid_cols=dict(REACTION_SID_COL_KEYS)[cls],
-        idx_cols=dict(REACTION_IDX_COL_KEYS)[cls]
-    )
-    return _run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str, run_dir,
-                id2path, job_argv, logger)
 
 
 def divide(key, dir1, dir2, rxn_csv, rxn_csv_out, logger):
@@ -817,27 +811,21 @@ def reactions_initializer(cls, is_candidate, reaction, sid_cols, idx_cols):
     return _init
 
 
-def reactions_submit(cls, rxn_csv, spc_csv, rxn_rng_strs, tpl_txt, nodes,
-                     run_dir, id2path, job_argv, logger):
-    """ reactions parallel runner
+def reactions_setup_run(cls, rxn_csv, spc_csv, rxn_rng_strs, run_dir, id2path,
+                        cmd_argv, logger):
+    """ write xyz files for the runner
     """
     assert cls in ('abstraction', 'addition', 'migration')
 
     reaction_xyz_strings = dict(REACTION_XYZ_STRING_MAKERS)[cls]
-    reaction_input_string = dict(REACTION_INPUT_STRING_MAKERS)[cls]
     sid_cols = dict(REACTION_SID_COL_KEYS)[cls]
     idx_cols = dict(REACTION_IDX_COL_KEYS)[cls]
-
-    logger.info(nodes)
-    logger.info(job_argv)
-    logger.info(reaction_input_string)
 
     logger.info("Reading in {:s}".format(rxn_csv))
     rxn_df = pandas.read_csv(rxn_csv)
 
     col_keys = table_column_keys(rxn_df)
-    assert 'reaction_id' in col_keys and RXN_IDX_COL_KEY in col_keys
-    rxn_df = update_table_column_keys(rxn_df, ('path', RXN_STAT_COL_KEY))
+    assert RID_COL_KEY in col_keys and RXN_IDX_COL_KEY in col_keys
 
     logger.info("Reading in species geometries from {:s}".format(spc_csv))
     mgeo_dct = read_geometries(spc_csv)
@@ -858,17 +846,11 @@ def reactions_submit(cls, rxn_csv, spc_csv, rxn_rng_strs, tpl_txt, nodes,
         logger.info("Creating run directory {:s}".format(run_dir))
         os.mkdir(run_dir)
 
-    logger.info("Writing job .xyz files")
-    rxn_lkp = table_lookup_dictionary(rxn_df, RXN_IDX_COL_KEY)
-
-    for idx in rxn_idxs:
-        row = rxn_lkp[idx]
-        rid = row['reaction_id']
+    def _create_job_dir(idx, rid, sids, idxs):
         logger.info("reaction {:d}: {:s}".format(idx, rid))
-
-        sids = tuple(map(row.__getitem__, sid_cols))
-        idxs = tuple(map(row.__getitem__, idx_cols))
         logger.info('  indices: {:s}'.format(str(idxs)))
+
+        ret = (EMPTY, RXN_NOT_CREATED_VAL)
 
         dxyz_dct = reaction_xyz_strings(sids, idxs, mgeo_dct)
         if dxyz_dct:
@@ -887,48 +869,120 @@ def reactions_submit(cls, rxn_csv, spc_csv, rxn_rng_strs, tpl_txt, nodes,
                 logger.info("  Writing {:s}".format(fpath))
                 write_file(fpath, dxyz)
 
-            rxn_df = table_lookup_update(rxn_df,
-                                         (RXN_IDX_COL_KEY, idx),
-                                         ('path', dpath))
-
-            rxn_df = table_lookup_update(rxn_df,
-                                         (RXN_IDX_COL_KEY, idx),
-                                         (RXN_STAT_COL_KEY, RXN_CREATED_VAL))
+            ret = (dpath, RXN_CREATED_VAL)
         else:
-            logger.info("  Failed to create xyz files")
+            logger.info("  Failed to write .xyz files.")
 
-            rxn_df = table_lookup_update(rxn_df,
-                                         (RXN_IDX_COL_KEY, idx),
-                                         (RXN_STAT_COL_KEY,
-                                          RXN_NOT_CREATED_VAL))
+        if cmd_argv:
+            cmd_str = ' '.join(cmd_argv)
+            logger.info("  running command `{:s}` in {:s}"
+                        .format(cmd_str, dpath))
+            try:
+                subprocess.check_call(cmd_argv, cwd=dpath)
+            except Exception as err:
+                logger.info("  {:s}".format(err))
+
+            logger.info('')
+
+        return ret
+
+    logger.info("Writing job .xyz files")
+
+    sub_rxn_df = sql_where_in(rxn_df, RXN_IDX_COL_KEY, rxn_idxs)
+
+    sub_idxs = tuple(sql_select_one(sub_rxn_df, RXN_IDX_COL_KEY))
+    sub_rids = tuple(sql_select_one(sub_rxn_df, RID_COL_KEY))
+    sub_sids_lst = tuple(zip(*(
+        sql_select_one(sub_rxn_df, sid_col) for sid_col in sid_cols)))
+    sub_idxs_lst = tuple(zip(*(
+        sql_select_one(sub_rxn_df, idx_col) for idx_col in idx_cols)))
+
+    paths, stats = zip(*starmap(
+        _create_job_dir, zip(sub_idxs, sub_rids, sub_sids_lst, sub_idxs_lst)))
+
+    rxn_df = update_table_column_keys(rxn_df,
+                                      (RXN_PATH_COL_KEY, RXN_STAT_COL_KEY))
+
+    rxn_df = update_column_by_index(rxn_df, row_indices(sub_rxn_df),
+                                    RXN_PATH_COL_KEY, paths)
+    rxn_df = update_column_by_index(rxn_df, row_indices(sub_rxn_df),
+                                    RXN_STAT_COL_KEY, stats)
 
     logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
     write_table_to_csv(rxn_df, rxn_csv)
 
+
+def reactions_run(cls, rxn_csv, rxn_rng_strs, tpl_txt, nodes, job_argv,
+                  logger):
+    """ reactions parallel runner
+    """
+    assert cls in ('abstraction', 'addition', 'migration')
+
+    sid_cols = dict(REACTION_SID_COL_KEYS)[cls]
+
+    logger.info("Reading in {:s}".format(rxn_csv))
+    rxn_df = pandas.read_csv(rxn_csv)
+
+    col_keys = table_column_keys(rxn_df)
+    assert (RID_COL_KEY in col_keys and RXN_IDX_COL_KEY in col_keys and
+            RXN_PATH_COL_KEY in col_keys and RXN_STAT_COL_KEY in col_keys)
+
+    if rxn_rng_strs:
+        rxn_idxs = _interpret_range_strings(rxn_rng_strs)
+        logger.info("Interpreted reaction index range argument: {:s}"
+                    .format(repr(rxn_idxs)))
+    else:
+        logger.info("No reaction range argument. Running all reactions.")
+        rxn_idxs = table_column(rxn_df, RXN_IDX_COL_KEY)
+
     logger.info("Reading template file from {:s}".format(tpl_txt))
-    # tpl_str = read_file(tpl_txt)
+    tpl_str = read_file(tpl_txt)
 
-    # owd = os.getcwd()
-    logger.info("Running job command in successfully created directories")
+    def _submit_job(idx, rid, path, sids, worker_id):
+        node = worker_id
+        logger.info("reaction {:d}: {:s} assigned to node {:s} worker"
+                    .format(idx, rid, node))
 
-    logger.info(table_rows(sql_select(rxn_df, RXN_PATH_COL_KEY)))
+        inp_str = tpl_str.format(nodes=node, **dict(zip(sid_cols, sids)))
+        inp_fpath = os.path.join(path, 'input.dat')
 
-    # def _submit(path, tpl_str, worker_id):
-    #     node = worker_id
+        logger.info("  node {:s} worker writing {:s}".format(node, inp_fpath))
+        write_file(inp_fpath, inp_str)
 
-    #     logger.info('  entering {:s}'.format(path))
-    #     os.chdir(path)
+        cmd_str = ' '.join(job_argv)
+        logger.info("  node {:s} worker running {:s} in {:s}"
+                    .format(node, cmd_str, path))
 
-    #     inp_str = reaction_input_string(sids, tpl_str, {'nodes': node})
-    #     inp_fpath = os.path.join('input.dat')
+        ret = RXN_RAN_VAL
+        try:
+            subprocess.check_call(job_argv, cwd=path)
+        except Exception as err:
+            logger.info("  failed on node {:s} with error '{:s}'"
+                        .format(node, err))
+            ret = RXN_FAILED_VAL
 
-    #     logger.info("  Writing {:s}".format(inp_fpath))
-    #     write_file(inp_fpath, inp_str)
-    #     logger.info(inp_fpath)
+        return ret
 
-    #     logger.info("Submitting on node {:s}".format(node))
-    #     time.sleep(5)
-    #     logger.info("Ran on node {:s}".format(node))
+    run_rxn_df = sql_where_eq(
+        sql_where_in(rxn_df, RXN_IDX_COL_KEY, rxn_idxs),
+        RXN_STAT_COL_KEY,
+        RXN_CREATED_VAL)
+
+    run_idxs = tuple(sql_select_one(run_rxn_df, RXN_IDX_COL_KEY))
+    run_rids = tuple(sql_select_one(run_rxn_df, RID_COL_KEY))
+    run_paths = tuple(sql_select_one(run_rxn_df, RXN_PATH_COL_KEY))
+    run_sids_lst = tuple(zip(*(
+        sql_select_one(run_rxn_df, sid_col) for sid_col in sid_cols)))
+
+    logger.info("Stepping through run directories to submit jobs")
+    stats = tag_team_starmap(_submit_job,
+                             zip(run_idxs, run_rids, run_paths, run_sids_lst),
+                             worker_ids=nodes)
+    rxn_df = update_column_by_index(rxn_df, row_indices(run_rxn_df),
+                                    RXN_STAT_COL_KEY, stats)
+
+    logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
+    write_table_to_csv(rxn_df, rxn_csv)
 
 
 def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
@@ -1017,101 +1071,6 @@ def reactions_runner(cls, reaction_xyz_strings, reaction_input_string,
             if row['created']:
                 rid = row['reaction_id']
                 logger.info("reaction {:d}: {:s}".format(idx, rid))
-
-                path = row['path']
-                logger.info('  entering {:s}'.format(path))
-                os.chdir(path)
-
-                cmd_str = ' '.join(job_argv)
-                logger.info("  running command '{:s}' in {:s}"
-                            .format(cmd_str, path))
-                try:
-                    subprocess.check_call(job_argv)
-                except Exception as err:
-                    logger.info("   command '{:s}' failed with error '{:s}'"
-                                .format(cmd_str, err))
-
-                os.chdir(owd)
-
-    return _run
-
-
-def reactions_batch_runner(cls, reaction_xyz_strings, reaction_input_string,
-                           sid_cols, idx_cols):
-    """ run reactions
-    """
-    assert cls in ('abstraction', 'addition', 'migration')
-
-    def _run(spc_csv, batch_csv, rxn_csv, tmp_txt, tmp_keyval_str, run_dir,
-             id2path, job_argv, logger):
-        logger.info("Reading in {:s}".format(rxn_csv))
-        rxn_df = pandas.read_csv(rxn_csv)
-
-        logger.info("Reading in {:s}".format(batch_csv))
-        batch_df = pandas.read_csv(batch_csv)
-
-        logger.info("Reading in species geometries from {:s}".format(spc_csv))
-        mgeo_dct = read_geometries(spc_csv)
-
-        logger.info("Reading template file from {:s}".format(tmp_txt))
-        tmp_str = read_file(tmp_txt)
-
-        tmp_keyval_dct = _interpret_template_key_values(tmp_keyval_str)
-        logger.info("Substitution key values: {:s}"
-                    .format(str(tmp_keyval_dct)))
-
-        if not os.path.exists(run_dir):
-            logger.info("Creating run directory {:s}".format(run_dir))
-            os.mkdir(run_dir)
-
-        logger.info("Writing files for reactions in {:s}".format(batch_csv))
-        batch_rids = tuple(batch_df['reaction_id'])
-        select = list(map(batch_rids.__contains__, rxn_df['reaction_id']))
-        for idx, row in rxn_df[select].iterrows():
-            rid = row['reaction_id']
-            logger.info('reaction {:d}: {:s}'.format(idx, rid))
-
-            sids = tuple(row[list(sid_cols)])
-            idxs = tuple(row[list(idx_cols)])
-            logger.info('  indices: {:s}'.format(str(idxs)))
-
-            dxyz_dct = reaction_xyz_strings(sids, idxs, mgeo_dct)
-            if dxyz_dct:
-                dxyz_sids = dxyz_dct.keys()
-                dxyzs = dxyz_dct.values()
-
-                dname = id2path(rid)
-                dpath = os.path.join(run_dir, dname)
-                logger.info("Creating job directory {:s}".format(dpath))
-                if not os.path.exists(dpath):
-                    os.mkdir(dpath)
-
-                fnames = tuple(map('{:s}.xyz'.format, map(id2path, dxyz_sids)))
-                fpaths = tuple(os.path.join(dpath, fname) for fname in fnames)
-                for fpath, dxyz in zip(fpaths, dxyzs):
-                    logger.info("  Writing {:s}".format(fpath))
-                    write_file(fpath, dxyz)
-
-                inp_str = reaction_input_string(sids, tmp_str, tmp_keyval_dct)
-                inp_fpath = os.path.join(dpath, 'input.dat')
-
-                logger.info("  Writing {:s}".format(inp_fpath))
-                write_file(inp_fpath, inp_str)
-                rxn_df.loc[idx, 'created'] = True
-                rxn_df.loc[idx, 'path'] = dpath
-            else:
-                logger.info("  Failed to create .xyz files")
-                rxn_df.loc[idx, 'created'] = False
-
-        logger.info("Writing updated reaction table to {:s}".format(rxn_csv))
-        write_table_to_csv(rxn_df, rxn_csv)
-
-        owd = os.getcwd()
-        logger.info("Running job command in successfully created directories")
-        for idx, row in rxn_df[select].iterrows():
-            if row['created']:
-                rid = row['reaction_id']
-                logger.info('reaction {:d}: {:s}'.format(idx, rid))
 
                 path = row['path']
                 logger.info('  entering {:s}'.format(path))

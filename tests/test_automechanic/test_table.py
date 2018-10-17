@@ -1,6 +1,8 @@
 """ test the automechanic.table module
 """
+import pytest
 import numpy
+from pandas.testing import assert_frame_equal
 from automechanic import table2 as table
 
 
@@ -8,9 +10,9 @@ def test__column_types():
     """ test table.column_types()
     """
     keys = ('a', 'b', 'c')
-    typs = tuple((numpy.int32, numpy.float64, numpy.dtype('O')))
+    typs = (table.INT_DTYPE, table.FLOAT_DTYPE, table.STR_DTYPE)
     rows = ((1, 1., 'x'), (2, 2., 'y'), (3, 3., 'z'))
-    tbl = table.from_rows(rows, keys, typs)
+    tbl = table.from_data(rows, keys, typs)
     assert table.column_types(tbl) == typs
 
 
@@ -18,26 +20,40 @@ def test__column_keys():
     """ test table.column_keys()
     """
     keys = ('a', 'b', 'c')
-    typs = tuple((numpy.int32, numpy.float64, numpy.dtype('O')))
+    typs = (table.INT_DTYPE, table.FLOAT_DTYPE, table.STR_DTYPE)
     rows = ((1, 1., 'x'), (2, 2., 'y'), (3, 3., 'z'))
-    tbl = table.from_rows(rows, keys, typs)
+    tbl = table.from_data(rows, keys, typs)
     assert table.column_keys(tbl) == keys
 
 
-def test__sql_select():
-    """ test table.sql_select()
+def test__row_indices():
+    """ test table.column_keys()
     """
     keys = ('a', 'b', 'c')
-    typs = tuple((numpy.int32, numpy.float64, numpy.dtype('O')))
-    rows = numpy.array(((1, 1., 'x'), (2, 2., 'y'), (3, 3., 'z')),
-                       dtype=numpy.dtype('O'))
-    tbl = table.from_rows(rows, keys, typs)
-    col_a, col_c = table.table_columns(table.sql_select(tbl, 'a', 'c'))
-    assert numpy.array_equiv(col_a, (1, 2, 3))
-    assert numpy.array_equiv(col_c, ('x', 'y', 'z'))
+    typs = (table.INT_DTYPE, table.FLOAT_DTYPE, table.STR_DTYPE)
+    rows = ((1, 1., 'x'), (2, 2., 'y'), (3, 3., 'z'))
+    tbl1 = table.from_data(rows, keys, typs)
+    assert table.row_indices(tbl1) == (0, 1, 2)
+
+    row_idxs = (5, 8, 17)
+    tbl2 = table.from_data(rows, keys, typs, row_idxs)
+    assert table.row_indices(tbl2) == row_idxs
+
+
+def test__sql_where_in():
+    """ test table.sql_where_in
+    """
+    keys = ('a', 'b', 'c')
+    typs = (table.INT_DTYPE, table.FLOAT_DTYPE, table.STR_DTYPE)
+    rows = ((1, 1., 'x'), (2, 2., 'y'), (3, 3., 'z'))
+    row_idxs = (5, 6, 17)
+    tbl = table.from_data(rows, keys, typs, row_idxs)
+    print(tbl)
+    print(table.sql_where_in(tbl, 'a', (1, 3)))
 
 
 if __name__ == '__main__':
     test__column_types()
     test__column_keys()
-    test__sql_select()
+    test__row_indices()
+    test__sql_where_in()

@@ -1,24 +1,35 @@
 """ interface to pandas DataFrames modeled on SQL syntax
 """
+# import operator
 import numpy
 from pandas import Series
+from pandas import Int64Index
+from pandas import RangeIndex
 from pandas import concat as _concat
+from pandas import merge as _merge
+
+# types
+STR_DTYPE = numpy.dtype('O')
+INT_DTYPE = numpy.dtype('int64')
+FLOAT_DTYPE = numpy.dtype('float64')
+BOOL_DTYPE = numpy.dtype('bool')
+
+# values
+EMPTY = numpy.nan
 
 
-def from_rows(rows, keys, typs):
+def from_data(data, col_keys, col_typs, row_idxs=None):
     """ create a table from a series of rows
     """
-    cols = numpy.transpose(numpy.array(rows))
-    return from_columns(cols, keys, typs)
-
-
-def from_columns(cols, keys, typs):
-    """ create a table from a series columns
-    """
-    assert len(cols) == len(keys) == len(typs)
-    col_series = [Series(data=col, name=key, dtype=typ)
-                  for col, key, typ in zip(cols, keys, typs)]
-    return _concatenate_column_series(col_series)
+    assert numpy.ndim(data) == 2
+    data = numpy.array(data)
+    nrows, ncols = numpy.shape(data)
+    assert len(col_keys) == len(col_typs) == ncols
+    row_idxs = _row_indices(nrows, idxs=row_idxs)
+    data_by_columns = numpy.transpose(data)
+    cols = [_column_series(col_data, key, typ, row_idxs)
+            for col_data, key, typ in zip(data_by_columns, col_keys, col_typs)]
+    return _concatenate_column_series(cols)
 
 
 def column_types(tbl):
@@ -27,29 +38,85 @@ def column_types(tbl):
     return tuple(tbl.dtypes)
 
 
+def data_array(tbl):
+    """ table data array
+    """
+    return tbl.data
+
+
 def column_keys(tbl):
     """ table columns keys
     """
     return tuple(tbl.columns)
 
 
-def table_rows(tbl):
-    """ rows of a table
+def row_indices(tbl):
+    """ table row_indices
     """
-    return tbl.values
+    return tuple(tbl.index)
 
 
-def table_columns(tbl):
-    """ columns of a table
+def update_column_by_index(tbl, row_idxs, col_key, vals):
+    """ update table column by row index
     """
-    return numpy.transpose(table_rows(tbl))
+    tbl.loc[list(row_idxs), col_key] = vals
+    return tbl
 
 
-def sql_select(tbl, *keys):
-    """ select columns from a table
+def sql_select_one(tbl, col_key):
+    """ select one column from a table
     """
-    return tbl[list(keys)]
+    return tbl[col_key]
 
 
-def _concatenate_column_series(srys):
-    return _concat(srys, axis=1)
+# def sql_select(tbl, *col_keys):
+#     """ select columns from a table
+#     """
+#     return tbl[list(col_keys)]
+
+
+def sql_where(tbl, cnd):
+    """ select rows from a table with a boolean conditional vector
+    """
+    return tbl[cnd]
+
+
+def sql_where_eq(tbl, col_key, val):
+    """ select rows from a table with column entries of a given value
+    """
+    assert col_key in column_keys(tbl)
+    return tbl[tbl[col_key] == val]
+
+
+def sql_where_in(tbl, col_key, vals):
+    """ select rows from a table with column entries between two values
+    """
+    assert col_key in column_keys(tbl)
+    return tbl[tbl[col_key].isin(vals)]
+
+
+def sql_left_join_on_index(tbl1, tbl2):
+    """ left-join two tables by index
+    """
+    if not set(column_keys(tbl1)).isdisjoint(column_keys(tbl2)):
+        raise ValueError("Join duplicates columns")
+    return _merge(tbl1, tbl2, left_index=True, right_index=True, how='left')
+
+
+def _row_indices(nrows, idxs=None):
+    row_idxs = Int64Index(idxs) if idxs is not None else RangeIndex(stop=nrows)
+    assert len(row_idxs) == nrows
+    return row_idxs
+
+
+def _column_series(col, key, typ, row_idxs):
+    return Series(data=col, name=key, dtype=typ, index=row_idxs)
+
+
+def _concatenate_column_series(col_sers):
+    return _concat(col_sers, axis=1)
+
+
+def _enumerate_rows(tbl):
+    for idx, row in tbl.iterrows():
+        yield idx, tuple(row)

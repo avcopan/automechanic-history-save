@@ -197,16 +197,6 @@ def abstraction_xyz_strings(sids, idxs, mgeo_dct):
     return dxyz_dct
 
 
-def abstraction_input_string(sids, tmp_str, tmp_keyval_dct):
-    """ TorsScan input for abstraction reaction
-    """
-    q1h_sid, q2_sid, q1_sid, q2h_sid = sids
-    sub_dct = {'q1h': q1h_sid, 'q2': q2_sid, 'q1': q1_sid, 'q2h': q2h_sid}
-    sub_dct.update(tmp_keyval_dct)
-    inp_str = tmp_str.format(**sub_dct)
-    return inp_str
-
-
 def addition_xyz_strings(sids, idxs, mgeo_dct):
     """ TorsScan xyz strings for an addition reaction
     """
@@ -222,16 +212,6 @@ def addition_xyz_strings(sids, idxs, mgeo_dct):
         dxyz_dct = {xy_sid: xy_dxyz, x_sid: x_dxyz, y_sid: y_dxyz}
 
     return dxyz_dct
-
-
-def addition_input_string(sids, tmp_str, tmp_kevyal_dct):
-    """ TorsScan input for addition reaction
-    """
-    x_sid, y_sid, xy_sid = sids
-    sub_dct = {'x': x_sid, 'y': y_sid, 'xy': xy_sid}
-    sub_dct.update(tmp_kevyal_dct)
-    inp_str = tmp_str.format(**sub_dct)
-    return inp_str
 
 
 def migration_xyz_strings(sids, idxs, mgeo_dct):
@@ -250,6 +230,26 @@ def migration_xyz_strings(sids, idxs, mgeo_dct):
         dxyz_dct = {p_sid: p_dxyz, r_sid: r_dxyz}
 
     return dxyz_dct
+
+
+def abstraction_input_string(sids, tmp_str, tmp_keyval_dct):
+    """ TorsScan input for abstraction reaction
+    """
+    q1h_sid, q2_sid, q1_sid, q2h_sid = sids
+    sub_dct = {'q1h': q1h_sid, 'q2': q2_sid, 'q1': q1_sid, 'q2h': q2h_sid}
+    sub_dct.update(tmp_keyval_dct)
+    inp_str = tmp_str.format(**sub_dct)
+    return inp_str
+
+
+def addition_input_string(sids, tmp_str, tmp_kevyal_dct):
+    """ TorsScan input for addition reaction
+    """
+    x_sid, y_sid, xy_sid = sids
+    sub_dct = {'x': x_sid, 'y': y_sid, 'xy': xy_sid}
+    sub_dct.update(tmp_kevyal_dct)
+    inp_str = tmp_str.format(**sub_dct)
+    return inp_str
 
 
 def migration_input_string(sids, tmp_str, tmp_kevyal_dct):

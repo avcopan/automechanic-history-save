@@ -1,6 +1,7 @@
 """ CHEMKIN parsing
 """
 from itertools import chain
+from numpy import multiply as _scale
 from .rere.pattern import maybe
 from .rere.pattern import escape
 from .rere.pattern import capturing
@@ -62,13 +63,28 @@ def species_names(mech_str):
 def reaction_data(mech_str):
     """ find all reaction data
     """
-    # NEED TO CONVERT UNITS
+    a_key, e_key = reaction_unit_names(mech_str)
     rxn_dstr_lst = reaction_data_strings(mech_str)
-    rxn_dat_lst = tuple(zip(
-        map(reaction_data_reactant_names, rxn_dstr_lst),
-        map(reaction_data_product_names, rxn_dstr_lst),
-        map(reaction_data_high_p_coeffs, rxn_dstr_lst)))
+
+    rcts_lst = list(map(reaction_data_reactant_names, rxn_dstr_lst))
+    prds_lst = list(map(reaction_data_product_names, rxn_dstr_lst))
+    arrh_lst = list(map(reaction_data_high_p_coeffs, rxn_dstr_lst))
+    arrh_lst = _convert_units(arrh_lst, a_key=a_key, e_key=e_key)
+    rxn_dat_lst = tuple(zip(rcts_lst, prds_lst, arrh_lst))
     return rxn_dat_lst
+
+
+def _convert_units(arrh_lst, a_key, e_key):
+    a_unit_dct = dict(A_UNITS)
+    e_unit_dct = dict(E_UNITS)
+    a_lst, b_lst, e_lst = zip(*arrh_lst)
+    if a_key is not None:
+        assert a_key in a_unit_dct
+        a_lst = _scale(a_lst, a_unit_dct[a_key])
+    if e_key is not None:
+        assert e_key in e_unit_dct
+        e_lst = _scale(e_lst, e_unit_dct[e_key])
+    return list(zip(a_lst, b_lst, e_lst))
 
 
 def reaction_data_strings(mech_str):

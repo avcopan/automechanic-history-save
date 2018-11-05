@@ -1,33 +1,20 @@
 version: 2
 jobs:
-    build-ubuntu:
+    build-debian:
         docker:
-            - image: circleci/buildpack-deps:18.04
+            - image: continuumio/miniconda3
         steps:
-            - checkout
+            - checkout  # checkout the code
             - run: 
-                name: Create conda environments
+                name: Create conda environment
                 command: |
-                    echo 'export CONDA=$HOME/miniconda' >> $BASH_ENV
-                    echo 'export PATH=$CONDA/bin:$PATH' >> $BASH_ENV
-                    source $BASH_ENV
-                    cd install
-                    ./conda.sh
-                    ./amenv3.sh
-                    ./amenv2.sh
+                    apt-get update --yes
+                    apt-get install --yes libgl1-mesa-glx  # needed for matplotlib
+                    conda env create -f environment.yml
             - run:
-                name: Run tests with python3
+                name: Run tests
                 command: |
-                    source activate amenv3
-                    pip install .
-                    cd tests/
-                    pytest -v --cov=automechanic .
-                    flake8 --exit-zero automechanic
-                    pylint --rcfile=../.pylintrc automechanic
-            - run:
-                name: Run tests with python2
-                command: |
-                    source activate amenv2
+                    source activate amenv
                     pip install .
                     cd tests/
                     pytest -v --cov=automechanic .
@@ -37,4 +24,4 @@ workflows:
     version: 2
     build-all:
         jobs:
-            - build-ubuntu
+            - build-debian

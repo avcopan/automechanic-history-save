@@ -1,6 +1,6 @@
 """ test the automechanic.geom module
 """
-from automechanic import geom
+from automechanic_old import geom
 
 
 def test__resonance_graphs():

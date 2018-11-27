@@ -6,7 +6,7 @@ channels:
     - openbabel
 
 dependencies:
-    - python=2
+    - python=3
     - numpy
     - pandas
     - matplotlib

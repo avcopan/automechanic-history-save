@@ -3,7 +3,7 @@
 import pytest
 import numpy
 from pandas.testing import assert_frame_equal
-from automechanic import table2 as table
+from automechanic_old import table2 as table
 
 
 def test__column_types():

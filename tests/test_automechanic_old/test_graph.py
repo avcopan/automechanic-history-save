@@ -2,7 +2,7 @@
 """
 from itertools import permutations
 import numpy.random
-from automechanic import graph
+from automechanic_old import graph
 
 
 def test__atoms():

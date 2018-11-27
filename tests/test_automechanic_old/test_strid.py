@@ -1,6 +1,6 @@
 """ test automechanic.strid
 """
-from automechanic import strid
+from automechanic_old import strid
 
 
 def test__smiles():

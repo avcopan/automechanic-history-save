@@ -1,7 +1,7 @@
 """ test the automechanic.pchemkin module
 """
 import os
-from automechanic import pchemkin
+from automechanic_old import pchemkin
 
 PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_PATH = os.path.join(PATH, 'data')

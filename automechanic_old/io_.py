@@ -388,7 +388,8 @@ def reactions_find_arrhenius(rxn_csv, rxn_csv_out, logger):
 
     arrh_col_keys = ('arrh_a', 'arrh_b', 'arrh_e')
     rxn_df = update_table_column_keys(rxn_df, col_keys=arrh_col_keys)
-    arrh_as, arrh_bs, arrh_es = zip(*map(_get, iterate_table_row_dicts(rxn_df)))
+    arrh_as, arrh_bs, arrh_es = zip(
+        *map(_get, iterate_table_row_dicts(rxn_df)))
     rxn_df['arrh_a'] = arrh_as
     rxn_df['arrh_b'] = arrh_bs
     rxn_df['arrh_e'] = arrh_es

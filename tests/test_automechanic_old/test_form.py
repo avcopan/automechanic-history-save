@@ -1,6 +1,6 @@
 """ test the automechanic.form module
 """
-from automechanic import form
+from automechanic_old import form
 
 
 def test__subtract():

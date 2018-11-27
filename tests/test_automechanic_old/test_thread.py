@@ -1,7 +1,7 @@
-""" test the automechanic.thread module
+""" test the automechanic_old.thread module
 """
 import time
-from automechanic import thread
+from automechanic_old import thread
 
 
 def test__tag_team_starmap():

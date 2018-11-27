@@ -1,7 +1,7 @@
 """ test the automechanic.dxyz module
 """
 import pytest
-from automechanic import dotxyz
+from automechanic_old import dotxyz
 
 
 def test__number_of_atoms():

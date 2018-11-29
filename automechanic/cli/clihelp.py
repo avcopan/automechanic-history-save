@@ -12,6 +12,7 @@ from .arg import specifier_value_mapping
 from .arg import interpret_specifier
 from .arg import specifier_from_kernel
 from .arg import set_specifier_keyword_value
+from ..iohelp import timestamp_if_exists
 
 LOG_NAME = specifier_from_kernel(al.LOG_NAME, opt_char='L', out=True)
 LOG_LEVEL = specifier_from_kernel(al.LOG_LEVEL, opt_char='V')
@@ -51,7 +52,7 @@ def command_line(argt):
     """ the full command line
     """
     argv, _ = argt
-    cmd_str = ' '.join(argv[1:])
+    cmd_str = ' '.join(argv)
     return cmd_str
 
 
@@ -69,17 +70,17 @@ def current_position_argument(argt):
     return argv[pos]
 
 
-def last_subcommand(argt):
-    """ get the last subcommand in the argument tracker
+def subcommands(argt):
+    """ get the subcommands (command line without the arguments)
     """
     argv, pos = argt
-    return argv[pos-1]
+    return argv[1:pos]
 
 
 def log_file_name(argt):
     """ get a file name, based on the last subcommand of the argument tracker
     """
-    base = last_subcommand(argt)
+    base = '_'.join(subcommands(argt))
     fname = '{:s}.{:s}'.format(base, 'log')
     return fname
 
@@ -153,10 +154,12 @@ def call_task(argt, task, specs):
     vals, extra_vals = all_vals[:-nextra], all_vals[-nextra:]
 
     log_name, log_level, print_out = extra_vals
+
+    timestamp_if_exists(log_name)
     logger = _logger(log_name, log_level, print_out)
 
     cmd_str = command_line(argt)
-    logger.info("# command line: {:s}".format(cmd_str))
+    logger.info("# {:s}".format(cmd_str))
 
     task(*vals, logger=logger)
 

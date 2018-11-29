@@ -1,7 +1,7 @@
 # cmd: conda build . --python 2 -c pacchem -c conda-forge -c openbabel
 package:
     name: automechanic
-    version: "0.1.0"
+    version: "0.1.1"
 
 source:
     path: .
@@ -22,4 +22,3 @@ requirements:
         - openbabel::openbabel
         - conda-forge::xorg-libxrender
         - pacchem::x2z
-        - pacchem::inchipy

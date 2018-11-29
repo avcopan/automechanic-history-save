@@ -2,38 +2,38 @@
 """
 from itertools import chain
 from numpy import multiply as _scale
-from .rere.pattern import maybe
-from .rere.pattern import escape
-from .rere.pattern import capturing
-from .rere.pattern import one_or_more
-from .rere.pattern import zero_or_more
-from .rere.pattern import one_of_these
-from .rere.pattern import not_followed_by
-from .rere.pattern_lib import STRING_START
-from .rere.pattern_lib import LINE_START
-from .rere.pattern_lib import LINE_END
-from .rere.pattern_lib import ANY_CHAR
-from .rere.pattern_lib import NONWHITESPACE
-from .rere.pattern_lib import NONNEWLINE
-from .rere.pattern_lib import NONNEWLINE_WHITESPACE
-from .rere.pattern_lib import NEWLINE
-from .rere.pattern_lib import DIGIT
-from .rere.pattern_lib import UNSIGNED_FLOAT
-from .rere.pattern_lib import PLUS
-from .rere.pattern_lib import INTEGER
-from .rere.pattern_lib import FLOAT
-from .rere.pattern_lib import EXPONENTIAL_INTEGER
-from .rere.pattern_lib import EXPONENTIAL_FLOAT
-from .rere.find import has_match as find_if_has_match
-from .rere.find import split as find_split
-from .rere.find import remove as find_remove
-from .rere.find import captures as find_captures
-from .rere.find import split_words as find_split_words
-from .rere.find import split_lines as find_split_lines
-from .rere.find import strip_spaces as find_strip_spaces
-from .rere.find import single_capture as find_single_capture
-from .rere.find import multiple_capture as find_multiple_capture
-from .rere.find import sections_with_headline as find_sections_with_headline
+from ..rere.pattern import maybe
+from ..rere.pattern import escape
+from ..rere.pattern import capturing
+from ..rere.pattern import one_or_more
+from ..rere.pattern import zero_or_more
+from ..rere.pattern import one_of_these
+from ..rere.pattern import not_followed_by
+from ..rere.pattern_lib import STRING_START
+from ..rere.pattern_lib import LINE_START
+from ..rere.pattern_lib import LINE_END
+from ..rere.pattern_lib import ANY_CHAR
+from ..rere.pattern_lib import NONWHITESPACE
+from ..rere.pattern_lib import NONNEWLINE
+from ..rere.pattern_lib import NONNEWLINE_WHITESPACE
+from ..rere.pattern_lib import NEWLINE
+from ..rere.pattern_lib import DIGIT
+from ..rere.pattern_lib import UNSIGNED_FLOAT
+from ..rere.pattern_lib import PLUS
+from ..rere.pattern_lib import INTEGER
+from ..rere.pattern_lib import FLOAT
+from ..rere.pattern_lib import EXPONENTIAL_INTEGER
+from ..rere.pattern_lib import EXPONENTIAL_FLOAT
+from ..rere.find import has_match as find_if_has_match
+from ..rere.find import split as find_split
+from ..rere.find import remove as find_remove
+from ..rere.find import captures as find_captures
+from ..rere.find import split_words as find_split_words
+from ..rere.find import split_lines as find_split_lines
+from ..rere.find import strip_spaces as find_strip_spaces
+from ..rere.find import single_capture as find_single_capture
+from ..rere.find import multiple_capture as find_multiple_capture
+from ..rere.find import sections_with_headline as find_sections_with_headline
 
 SPACES = one_or_more(NONNEWLINE_WHITESPACE)
 CHEMKIN_ARROW = maybe(escape('<')) + escape('=') + maybe(escape('>'))

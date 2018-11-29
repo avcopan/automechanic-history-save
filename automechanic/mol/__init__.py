@@ -1,5 +1,7 @@
 """ molecular descriptor libraries
 """
-from . import smiles
+from . import ge
+from . import ic
+from . import sm
 
-__all__ = ['smiles']
+__all__ = ['ge', 'ic', 'sm']

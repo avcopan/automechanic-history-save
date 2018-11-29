@@ -2,7 +2,8 @@
 """
 from . import tablib as tl
 from .. import tab
-from .util import read_txt
+from ..iohelp import read_txt
+from ..iohelp import write_csv
 from ..parse.chemkin import species_names
 from ..parse.chemkin import thermo_data
 from ..parse.chemkin import reaction_data
@@ -18,13 +19,13 @@ def to_csv(mech_txt_lst, rxn_csv_out, spc_csv_out, logger):
     spc_tbl = _species_table(mech_str)
 
     logger.info("Writing species data to {:s}".format(spc_csv_out))
-    tab.write_csv(spc_tbl, spc_csv_out, float_format='%.8f')
+    write_csv(spc_tbl, spc_csv_out, float_format='%.8f')
 
     logger.info("Finding reactions data")
     rxn_tbl = _reactions_table(mech_str)
 
     logger.info("Writing reaction data to {:s}".format(spc_csv_out))
-    tab.write_csv(rxn_tbl, rxn_csv_out, float_format='%.8f')
+    write_csv(rxn_tbl, rxn_csv_out, float_format='%.8f')
 
 
 def _species_table(mech_str):

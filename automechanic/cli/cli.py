@@ -73,21 +73,21 @@ def species(argt):
     call_subcommand(
         argt,
         subcmds=(
-            ('fill_guess_geoms', species_fill_guess_geoms),
+            ('expand_stereo', species_expand_stereo),
         )
     )
 
 
-def species_fill_guess_geoms(argt):
+def species_expand_stereo(argt):
     """ fill in species guess geometries
     """
     call_task(
         argt,
-        task.species.fill_guess_geoms,
+        task.species.expand_stereo,
         specs=(
             specifier(
                 al.GEOM_SPEC_KEY, inp=True,
-                allowed_values=task.species.GEOM_SPEC_KEYS,
+                allowed_values=task.species.EXPAND_STEREO__SPC_ID_KEYS,
             ),
             specifier(
                 al.SPECIES_CSV, inp=True,
@@ -95,10 +95,6 @@ def species_fill_guess_geoms(argt):
             specifier(
                 al.SPECIES_CSV, out=True, opt_char=SPC_CSV_CHAR.upper(),
                 extra_kwargs=(('default', SPC_CSV_DEF),),
-            ),
-            specifier(
-                al.DB_PREFIX, out=True, opt_char=DB_PREFIX_CHAR.upper(),
-                extra_kwargs=(('default', DB_PREFIX_DEF),),
             ),
         )
     )

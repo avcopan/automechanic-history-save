@@ -9,10 +9,10 @@ SPC_NAME_TYP = tab.dt_(str)
 SPC_MULT_KEY = 'mult_'
 SPC_MULT_TYP = tab.dt_(int)
 
-GEOM_SPEC_SMI_KEY = 'smi_'  # smiles
-GEOM_SPEC_ICH_KEY = 'ich_'  # inchi
-GEOM_SPEC_XYZ_KEY = 'xyz_'  # xyz file path
-GEOM_SPEC_TYP = tab.dt_(str)
+SPC_ID_SMI_KEY = 'smi_'  # smiles
+SPC_ID_ICH_KEY = 'ich_'  # inchi
+SPC_ID_XYZ_KEY = 'xyz_'  # xyz file path
+SPC_ID_TYP = tab.dt_(str)
 
 NASA_C_TYP = tab.dt_(float)
 NASA_C_LO_KEYS = ('nasa_lo_1_', 'nasa_lo_2_', 'nasa_lo_3_', 'nasa_lo_4_',

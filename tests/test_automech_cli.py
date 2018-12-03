@@ -47,10 +47,10 @@ def test__species__help():
     subprocess.check_call([AUTOMECH_CMD, 'species', '-h'])
 
 
-def test__species__fill_guess_geoms():
-    """ test `automech species fill_guess_geoms`
+def test__species__expand_stereo():
+    """ test `automech species expand_stereo`
     """
-    subprocess.check_call([AUTOMECH_CMD, 'species', 'fill_guess_geoms', '-h'])
+    subprocess.check_call([AUTOMECH_CMD, 'species', 'expand_stereo', '-h'])
 
     calling_dir = os.getcwd()
     routine_dir = tempfile.mkdtemp()
@@ -61,7 +61,7 @@ def test__species__fill_guess_geoms():
     sys.stdout.write("{:s}\n".format(routine_dir))
 
     os.chdir(routine_dir)
-    subprocess.check_call([AUTOMECH_CMD, 'species', 'fill_guess_geoms',
+    subprocess.check_call([AUTOMECH_CMD, 'species', 'expand_stereo',
                            geom_type_key, spc_csv, '-p'])
     os.chdir(calling_dir)
 
@@ -71,4 +71,4 @@ if __name__ == '__main__':
     # test__chemkin__help()
     # test__chemkin__to_csv()
     # test__species__help()
-    test__species__fill_guess_geoms()
+    test__species__expand_stereo()

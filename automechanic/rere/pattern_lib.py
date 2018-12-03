@@ -19,6 +19,9 @@ NONWHITESPACE = r'\S'
 WHITESPACE = r'\s'
 NONNEWLINE_WHITESPACE = r'[ \t]'
 
+UPPERCASE_LETTER = '[A-Z]'
+LOWERCASE_LETTER = '[a-z]'
+
 DIGIT = r'[0-9]'
 
 PLUS = escape('+')

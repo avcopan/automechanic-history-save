@@ -28,7 +28,7 @@ def branch_segments(ich, mult):
 
 
 def _base_segment():
-    dir_name = par.SPC_FS_DIR_NAME
+    dir_name = par.SPC.FILESYSTEM_DIR_NAME
     info = None
     return (dir_name, info)
 
@@ -61,6 +61,6 @@ def _stereochemistry_segment(ich):
 
 def _inchi_hash_information(ich):
     smi = mol.inchi.smiles(ich)
-    inf_dct = {par.SPC_ID_ICH_KEY: ich,
-               par.SPC_ID_SMI_KEY: smi}
+    inf_dct = {par.SPC.ID_ICH_KEY: ich,
+               par.SPC.ID_SMI_KEY: smi}
     return inf_dct

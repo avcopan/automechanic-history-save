@@ -90,7 +90,7 @@ def species__to_inchi(argt):
         specs=(
             specifier(
                 al.SPECIES_ID,
-                allowed_values=task.species.TO_INCHI__SPC_ID_VALS,
+                allowed_values=task.species.VALS.TOxINCHI.SPC_ID_KEY,
             ),
             specifier(
                 al.SPECIES_CSV, inp=True,
@@ -119,9 +119,9 @@ def species__filesystem(argt):
             ),
             specifier(
                 al.STEREO_HANDLING, opt_char=STEREO_HANDLING_CHAR,
-                allowed_values=task.species.FILESYSTEM__STEREO_HANDLING_VALS,
+                allowed_values=task.species.VALS.FILESYSTEM.STEREO_HANDLING,
                 extra_kwargs=(
-                    ('default', task.species.STEREO_HANDLING_DEF),),
+                    ('default', task.species.DEFS.FILESYSTEM.STEREO_HANDLING),)
             ),
             specifier(
                 al.FILESYSTEM_PREFIX, out=True,

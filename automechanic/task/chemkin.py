@@ -34,16 +34,17 @@ def _species_table(mech_str):
     spcs = species_names(mech_str)
     thm_dat_lst = thermo_data(mech_str)
     assert len(thm_dat_lst) == len(spcs)
-    typs = (par.SPC_NAME_TYP, par.NASA_C_TYP, par.NASA_C_TYP, par.NASA_T_TYP)
-    keys = (par.SPC_NAME_KEY, par.NASA_C_LO_KEYS, par.NASA_C_HI_KEYS,
-            par.NASA_T_KEYS)
+    keys = (par.SPC.TAB.NAME_KEY, par.SPC.TAB.NASA_C_LO_KEYS,
+            par.SPC.TAB.NASA_C_HI_KEYS, par.SPC.TAB.NASA_T_KEYS)
+    typs = (par.SPC.TAB.NAME_TYP, par.SPC.TAB.NASA_C_TYP,
+            par.SPC.TAB.NASA_C_TYP, par.SPC.TAB.NASA_T_TYP)
     spc_tbl = tab.from_records(vals=thm_dat_lst, keys=keys, typs=typs)
     return spc_tbl
 
 
 def _reactions_table(mech_str):
     rxn_dat_lst = reaction_data(mech_str)
-    typs = (par.RXN_NAME_TYP, par.ARRH_TYP)
-    keys = (par.RXN_NAME_KEY, par.ARRH_KEYS)
+    keys = (par.RXN.TAB.NAME_KEY, par.RXN.TAB.ARRH_KEYS)
+    typs = (par.RXN.TAB.NAME_TYP, par.RXN.TAB.ARRH_TYP)
     rxn_tbl = tab.from_records(vals=rxn_dat_lst, keys=keys, typs=typs)
     return rxn_tbl

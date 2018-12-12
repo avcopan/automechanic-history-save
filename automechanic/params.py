@@ -2,41 +2,71 @@
 """
 from . import tab
 
-SPC_FS_DIR_NAME = 'SPC'
+_NAME_KEY = 'name'
+_NAME_TYP = tab.dt_(str)
+_ID_ICH_KEY = 'inchi'
+_ID_SMI_KEY = 'smiles'
+_ID_TYP = tab.dt_(str)
+_MULT_KEY = 'mult'
+_MULT_TYP = tab.dt_(int)
+_FILESYSTEM_PATH_KEY = 'path'
+_FILESYSTEM_PATH_TYP = tab.dt_(str)
 
-# species table schema
-SPC_NAME_KEY = 'name'
-SPC_NAME_TYP = tab.dt_(str)
 
-SPC_MULT_KEY = 'mult'
-SPC_MULT_TYP = tab.dt_(int)
+class SPC():
+    """ species parameters
+    """
+    ID_ICH_KEY = _ID_ICH_KEY
+    ID_SMI_KEY = _ID_SMI_KEY
+    MULT_KEY = _MULT_KEY
 
-SPC_ID_SMI_KEY = 'smiles'  # smiles
-SPC_ID_ICH_KEY = 'inchi'  # inchi
-SPC_ID_XYZ_KEY = 'xyz'  # xyz file path
-SPC_ID_TYP = tab.dt_(str)
+    FILESYSTEM_DIR_NAME = 'SPC'
 
-SPC_FS_PATH_KEY = 'fs_path'
-SPC_FS_PATH_TYP = tab.dt_(str)
+    PICK_STEREO = 'pick'
+    EXPAND_STEREO = 'expand'
 
-NASA_C_TYP = tab.dt_(float)
-NASA_C_LO_KEYS = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
-                  'nasa_lo_5', 'nasa_lo_6', 'nasa_lo_7')
-NASA_C_HI_KEYS = ('nasa_hi_1', 'nasa_hi_2', 'nasa_hi_3', 'nasa_hi_4',
-                  'nasa_hi_5', 'nasa_hi_6', 'nasa_hi_7')
-NASA_T_TYP = tab.dt_(float)
-NASA_T_KEYS = ('t_lo', 't_hi', 't_c')
+    class TAB():
+        """ species table parameters
+        """
+        NAME_KEY = _NAME_KEY
+        NAME_TYP = _NAME_TYP
 
-# species keys and options
-PICK_STEREO = 'pick'
-EXPAND_STEREO = 'expand'
+        ID_TYP = _ID_TYP
 
-# reaction table schema
-RXN_NAME_KEY = 'name'
-RXN_NAME_TYP = tab.dt_(str)
+        MULT_TYP = _MULT_TYP
 
-RXN_FS_PATH_KEY = 'fs_path'
-RXN_FS_PATH_TYP = tab.dt_(str)
+        FILESYSTEM_PATH_KEY = _FILESYSTEM_PATH_KEY
+        FILESYSTEM_PATH_TYP = _FILESYSTEM_PATH_TYP
 
-ARRH_TYP = tab.dt_(float)
-ARRH_KEYS = ('arrh_a', 'arrh_b', 'arrh_e')
+        NASA_C_TYP = tab.dt_(float)
+        NASA_C_LO_KEYS = ('nasa_lo_1', 'nasa_lo_2', 'nasa_lo_3', 'nasa_lo_4',
+                          'nasa_lo_5', 'nasa_lo_6', 'nasa_lo_7')
+        NASA_C_HI_KEYS = ('nasa_hi_1', 'nasa_hi_2', 'nasa_hi_3', 'nasa_hi_4',
+                          'nasa_hi_5', 'nasa_hi_6', 'nasa_hi_7')
+        NASA_T_TYP = tab.dt_(float)
+        NASA_T_KEYS = ('t_lo', 't_hi', 't_c')
+
+
+class RXN():
+    """ reaction parameters
+    """
+    MULT_KEY = _MULT_KEY
+    ID_ICH_KEY = _ID_ICH_KEY
+
+    FILESYSTEM_DIR_NAME = 'RXN'
+
+    class TAB():
+        """ species table parameters
+        """
+        NAME_KEY = _NAME_KEY
+        NAME_TYP = _NAME_TYP
+
+        ID_TYP = _ID_TYP
+
+        MULT_TYP = _MULT_TYP
+
+        FILESYSTEM_PATH_KEY = _FILESYSTEM_PATH_KEY
+        FILESYSTEM_PATH_TYP = _FILESYSTEM_PATH_TYP
+
+        ARRH_TYP = tab.dt_(float)
+        ARRH_KEYS = ('arrh_a', 'arrh_b', 'arrh_e')

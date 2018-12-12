@@ -4,8 +4,15 @@ from distutils.core import setup
 
 
 setup(name="automechanic",
-      version="0.2a1",
-      packages=["automechanic", "automechanic.ipybel", "automechanic.ipyx2z",
-                "automechanic.cli", "automechanic.routines",
-                "automechanic.parse", "automechanic.parse.rere", "from_qtc"],
-      scripts=["automech", "automech2"])
+      version="0.1.1",
+      packages=["automechanic",
+                "automechanic.cli", "automechanic.task", "automechanic.mol",
+                "automechanic.mol.graph", "automechanic.parse",
+                "automechanic.rere", "automechanic.fs", "automechanic.fslib",
+                # deprecated:
+                "automechanic_old", "automechanic_old.ipybel",
+                "automechanic_old.parse", "automechanic_old.parse.rere",
+                "automechanic_old.ipyx2z", "from_qtc"],
+      scripts=["automech",
+               # deprecated:
+               "automech_old"])

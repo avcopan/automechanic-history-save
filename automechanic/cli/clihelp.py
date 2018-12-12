@@ -6,21 +6,17 @@ import logging
 from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
 from itertools import chain
-from .argspec import specifier_key
-from .argspec import specifier_value_mapping
-from .argspec import interpret_specifier
-from .argspec import specifier_from_kernel
-from .argspec import set_specifier_keyword_value
-from .argspec_kernels import SUBCMD as SUBCMD_K
-from .argspec_kernels import PREFIX as PREFIX_K
-from .argspec_kernels import LOG_NAME as LOG_NAME_K
-from .argspec_kernels import LOG_LEVEL as LOG_LEVEL_K
-from .argspec_kernels import PRINT_OUT as PRINT_OUT_K
+from . import arglib as al
+from .arg import specifier_key
+from .arg import specifier_value_mapping
+from .arg import interpret_specifier
+from .arg import specifier_from_kernel
+from .arg import set_specifier_keyword_value
+from ..iohelp import timestamp_if_exists
 
-PREFIX = specifier_from_kernel(PREFIX_K, opt_char='P')
-LOG_NAME = specifier_from_kernel(LOG_NAME_K, opt_char='L', out=True)
-LOG_LEVEL = specifier_from_kernel(LOG_LEVEL_K, opt_char='V')
-PRINT_OUT = specifier_from_kernel(PRINT_OUT_K, opt_char='p')
+LOG_NAME = specifier_from_kernel(al.LOG_NAME, opt_char='L', out=True)
+LOG_LEVEL = specifier_from_kernel(al.LOG_LEVEL, opt_char='V')
+PRINT_OUT = specifier_from_kernel(al.PRINT_OUT, opt_char='p')
 
 
 def tracker(argv, pos):
@@ -52,6 +48,14 @@ def call_name(argt):
     return cmd_str
 
 
+def command_line(argt):
+    """ the full command line
+    """
+    argv, _ = argt
+    cmd_str = ' '.join(argv)
+    return cmd_str
+
+
 def has_arguments_left(argt):
     """ is this tracker at the end?
     """
@@ -66,17 +70,17 @@ def current_position_argument(argt):
     return argv[pos]
 
 
-def last_subcommand(argt):
-    """ get the last subcommand in the argument tracker
+def subcommands(argt):
+    """ get the subcommands (command line without the arguments)
     """
     argv, pos = argt
-    return argv[pos-1]
+    return argv[1:pos]
 
 
 def log_file_name(argt):
     """ get a file name, based on the last subcommand of the argument tracker
     """
-    base = last_subcommand(argt)
+    base = '_'.join(subcommands(argt))
     fname = '{:s}.{:s}'.format(base, 'log')
     return fname
 
@@ -109,7 +113,8 @@ def call_subcommand(argt, subcmds):
     """
     argt = increment_tracker(argt)
     subcmd_keys, _ = zip(*subcmds)
-    subcmd_key_sp = specifier_from_kernel(SUBCMD_K, allowed_values=subcmd_keys)
+    subcmd_key_sp = specifier_from_kernel(al.SUBCMD,
+                                          allowed_values=subcmd_keys)
     subcmd_key_val = parse_current_argument(argt, subcmd_key_sp)
     subcmd_fnc = dict(subcmds)[subcmd_key_val]
     subcmd_fnc(argt)
@@ -132,26 +137,31 @@ def parse_arguments(argt, specs):
     return vals
 
 
-def call_routine(argt, routine, specs):
-    """ parse remaining arguments to invoke a routine
+def call_task(argt, task, specs):
+    """ parse remaining arguments to invoke a task
     """
+    assert current_position_argument(argt) == task.__name__
+    # ^ sanity check to keep the API and the CLI consistent with each other
     argt = increment_tracker(argt)
     fname = log_file_name(argt)
     log_name_spec = set_specifier_keyword_value(LOG_NAME, 'default', fname)
-    specs = tuple(chain(specs, (PREFIX, log_name_spec, LOG_LEVEL, PRINT_OUT)))
-    vals = parse_arguments(argt, specs)
-    routine_args, context_vals = vals[:-4], vals[-4:]
 
-    prefix, log_name, log_level, print_out = context_vals
+    extra_specs = (log_name_spec, LOG_LEVEL, PRINT_OUT)
+    all_specs = tuple(chain(specs, extra_specs))
+    all_vals = parse_arguments(argt, all_specs)
 
-    calling_dir = os.getcwd()
-    routine_dir = os.path.abspath(prefix)
-    if not os.path.exists(routine_dir):
-        os.mkdir(routine_dir)
+    nextra = len(extra_specs)
+    vals, extra_vals = all_vals[:-nextra], all_vals[-nextra:]
 
-    os.chdir(routine_dir)
-    routine(*routine_args, logger=_logger(log_name, log_level, print_out))
-    os.chdir(calling_dir)
+    log_name, log_level, print_out = extra_vals
+
+    timestamp_if_exists(log_name)
+    logger = _logger(log_name, log_level, print_out)
+
+    cmd_str = command_line(argt)
+    logger.info("# {:s}".format(cmd_str))
+
+    task(*vals, logger=logger)
 
 
 def _quit_with_help_message(par):

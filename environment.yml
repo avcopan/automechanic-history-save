@@ -3,20 +3,22 @@ name: amenv
 channels:
     - conda-forge
     - pacchem
+    - rdkit
     - openbabel
 
 dependencies:
-    - python=2
+    - python=3
     - numpy
     - pandas
     - matplotlib
     - networkx
+    - pyyaml
     - pytest
     - pytest-cov
     - future
     - flake8
     - pylint
+    - rdkit::rdkit
     - openbabel::openbabel
     - conda-forge::xorg-libxrender
     - pacchem::x2z
-    - pacchem::inchipy

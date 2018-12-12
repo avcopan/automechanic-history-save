@@ -1,11 +1,8 @@
 [MASTER]
 extension-pkg-whitelist=
-    pyx2z
+    pyx2z,
+    rdkit
 disable=
-    duplicate-code,
-    too-many-lines,
     too-many-locals,
     too-many-arguments,
-    too-many-statements,
-    broad-except,
     redefined-builtin

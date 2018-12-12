@@ -1,8 +1,9 @@
 """ molecular descriptor libraries
 """
-from . import ic
-from . import sm
-from . import ge
-from . import gr
+from . import smiles
+from . import inchi
+from . import inchi_key
+from . import graph
+from . import geom
 
-__all__ = ['ge', 'ic', 'sm', 'gr']
+__all__ = ['smiles', 'inchi', 'inchi_key', 'graph', 'geom']

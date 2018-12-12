@@ -75,6 +75,19 @@ def capturing(pattern):
     return r'({:s})'.format(pattern)
 
 
+def named_capturing(pattern, name):
+    """ generate a capturing pattern
+
+    :param pattern: an `re` pattern
+    :type pattern: str
+    :param name: a name for the capture
+    :type name: str
+
+    :rtype: str
+    """
+    return r'(?P<{:s}>{:s})'.format(name, pattern)
+
+
 def one_of_these(patterns):
     """ any one of a series of patterns
 

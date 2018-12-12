@@ -34,11 +34,11 @@ PRINT_OUT = (
     )
 )
 
-DB_PREFIX = (
-    'db_prefix',
+FILESYSTEM_PREFIX = (
+    'filesystem_prefix',
     (
         ('type', str),
-        ('help', "Path to database directory"),
+        ('help', "Path to automech filesystem"),
     )
 )
 
@@ -68,10 +68,18 @@ MECHANISM_TXT = (
 )
 
 # species arg(s)
-GEOM_SPEC_KEY = (
-    'geom_spec_key',
+SPECIES_ID = (
+    'species_id',
     (
         ('type', str),
-        ('help', "Geometry specification format")
+        ('help', "Species identifier type")
+    )
+)
+
+STEREO_HANDLING = (
+    'stereo_handling',
+    (
+        ('type', str),
+        ('help', "How to handle stereoisomers")
     )
 )

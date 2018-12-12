@@ -5,5 +5,4 @@ extension-pkg-whitelist=
 disable=
     too-many-locals,
     too-many-arguments,
-    broad-except,
     redefined-builtin

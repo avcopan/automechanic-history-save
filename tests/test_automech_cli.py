@@ -1,9 +1,9 @@
 """ Test the automech CLI
 """
 import os
-import sys
 import tempfile
 import subprocess
+from automechanic import fs
 
 AUTOMECH_CMD = 'automech'
 PATH = os.path.dirname(os.path.realpath(__file__))
@@ -27,18 +27,14 @@ def test__chemkin__to_csv():
     """
     subprocess.check_call([AUTOMECH_CMD, 'chemkin', 'to_csv', '-h'])
 
-    calling_dir = os.getcwd()
-    routine_dir = tempfile.mkdtemp()
+    tmp_dir = tempfile.mkdtemp()
+    print(tmp_dir)
 
-    mech_txt = os.path.join(HEPTANE_PATH, 'mechanism.txt')
-    ther_txt = os.path.join(HEPTANE_PATH, 'thermo_data.txt')
-
-    sys.stdout.write("{:s}\n".format(routine_dir))
-
-    os.chdir(routine_dir)
-    subprocess.check_call([AUTOMECH_CMD, 'chemkin', 'to_csv',
-                           mech_txt, ther_txt, '-p'])
-    os.chdir(calling_dir)
+    with fs.enter(tmp_dir):
+        mech_txt = os.path.join(HEPTANE_PATH, 'mechanism.txt')
+        ther_txt = os.path.join(HEPTANE_PATH, 'thermo_data.txt')
+        subprocess.check_call([AUTOMECH_CMD, 'chemkin', 'to_csv',
+                               mech_txt, ther_txt, '-p'])
 
 
 def test__species__help():
@@ -47,23 +43,37 @@ def test__species__help():
     subprocess.check_call([AUTOMECH_CMD, 'species', '-h'])
 
 
-def test__species__expand_stereo():
-    """ test `automech species expand_stereo`
+def test__species__to_inchi():
+    """ test `automech species to_inchi`
     """
-    subprocess.check_call([AUTOMECH_CMD, 'species', 'expand_stereo', '-h'])
+    subprocess.check_call([AUTOMECH_CMD, 'species', 'to_inchi', '-h'])
 
-    calling_dir = os.getcwd()
-    routine_dir = tempfile.mkdtemp()
+    tmp_dir = tempfile.mkdtemp()
+    print(tmp_dir)
 
-    geom_type_key = 'smi_'
-    spc_csv = os.path.join(HEPTANE_PATH, 'smiles.csv')
+    with fs.enter(tmp_dir):
+        spc_csv = os.path.join(HEPTANE_PATH, 'smiles.csv')
+        subprocess.check_call([AUTOMECH_CMD, 'species', 'to_inchi',
+                               'smiles', spc_csv, '-S', 'inchi.csv', '-p'])
 
-    sys.stdout.write("{:s}\n".format(routine_dir))
 
-    os.chdir(routine_dir)
-    subprocess.check_call([AUTOMECH_CMD, 'species', 'expand_stereo',
-                           geom_type_key, spc_csv, '-p'])
-    os.chdir(calling_dir)
+def test__species__filesystem():
+    """ test `automech species filesystem`
+    """
+    subprocess.check_call([AUTOMECH_CMD, 'species', 'filesystem', '-h'])
+
+    tmp_dir = tempfile.mkdtemp()
+    print(tmp_dir)
+
+    with fs.enter(tmp_dir):
+        spc_csv = os.path.join(HEPTANE_PATH, 'inchi.csv')
+        subprocess.check_call([AUTOMECH_CMD, 'species', 'filesystem',
+                               spc_csv, '-F', 'automech_fs',
+                               '--stereo_handling', 'pick', '-p'])
+        subprocess.check_call([AUTOMECH_CMD, 'species', 'filesystem',
+                               spc_csv, '-F', 'automech_fs_expanded',
+                               '--stereo_handling', 'expand',
+                               '-S', 'species_expanded.csv', '-p'])
 
 
 if __name__ == '__main__':
@@ -71,4 +81,5 @@ if __name__ == '__main__':
     # test__chemkin__help()
     # test__chemkin__to_csv()
     # test__species__help()
-    test__species__expand_stereo()
+    # test__species__to_inchi()
+    test__species__filesystem()

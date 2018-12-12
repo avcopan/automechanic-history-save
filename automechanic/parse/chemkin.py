@@ -33,7 +33,7 @@ from ..rere.find import split_lines as find_split_lines
 from ..rere.find import strip_spaces as find_strip_spaces
 from ..rere.find import single_capture as find_single_capture
 from ..rere.find import multiple_capture as find_multiple_capture
-from ..rere.find import sections_with_headline as find_sections_with_headline
+from ..rere.find import headlined_sections as find_headlined_sections
 
 SPACES = one_or_more(NONNEWLINE_WHITESPACE)
 CHEMKIN_ARROW = maybe(escape('<')) + escape('=') + maybe(escape('>'))
@@ -91,7 +91,7 @@ def reaction_data_strings(mech_str):
     """
     block_str = remove_blanks(reactions_block(mech_str))
     headline_pattern = CHEMKIN_ARROW
-    rxn_dat_lst = find_sections_with_headline(headline_pattern, block_str)
+    rxn_dat_lst = find_headlined_sections(headline_pattern, block_str)
     return rxn_dat_lst
 
 
@@ -175,7 +175,7 @@ def thermo_data_strings(mech_str):
         one_of_these([DIGIT, PLUS, escape('=')]))
     end_pattern = '1' + LINE_END
     headline_pattern = start_pattern + one_or_more(ANY_CHAR) + end_pattern
-    thm_dstr_lst = find_sections_with_headline(headline_pattern, block_str)
+    thm_dstr_lst = find_headlined_sections(headline_pattern, block_str)
     assert all(len(find_split_lines(thm_dstr)) == 4
                for thm_dstr in thm_dstr_lst)
     return thm_dstr_lst

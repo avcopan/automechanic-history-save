@@ -6,12 +6,22 @@ from itertools import starmap as _starmap
 from itertools import chain as _chain
 import numpy
 from pandas import Series as _Series
+from pandas import merge as _merge
 from pandas import read_csv as _read_csv
 from pandas import DataFrame as _DataFrame
 from pandas import Int64Index as _Int64Index
 from pandas import RangeIndex as _RangeIndex
+from .rere.find import single_capture as _single_capture
+from .rere.pattern import escape as _escape
+from .rere.pattern import capturing as _capturing
+from .rere.pattern_lib import STRING_START as _STRING_START
+from .rere.pattern_lib import STRING_END as _STRING_END
+from .rere.pattern_lib import UNSIGNED_INTEGER as _UNSIGNED_INTEGER
 
 IDX_KEY = 'i_'
+IDX_TYP = numpy.dtype('int64')
+
+IDX_SAVE_KEY_FORMAT = 'i{:d}_'
 NAN = numpy.nan
 
 
@@ -19,45 +29,49 @@ NAN = numpy.nan
 def from_records(vals, keys, typs=None, idxs=None):
     """ create a table from a series of records
     """
-    try:
-        vals = numpy.array(vals)
-        return _from_records(vals, keys, typs, idxs)
-    except Exception:
-        return _from_fancy_records(vals, keys, typs, idxs)
+    if any(map(_is_fancy, keys)):
+        ret = _from_fancy_records(vals, keys, typs, idxs)
+    else:
+        ret = _from_records(vals, keys, typs, idxs)
+    return ret
 
 
 def from_starmap(tbl, func, arg_keys, keys, typs=None):
     """ starmap columns and create a table from the resulting values
     """
-    idxs_itr, fancy_vals_itr = zip(*fancy_enum(tbl, arg_keys))
+    idxs_itr, fancy_vals_itr = zip(*enum_(tbl, arg_keys))
     idxs = list(idxs_itr)
     vals = list(_starmap(func, fancy_vals_itr))
     return from_records(vals, keys, typs, idxs)
 
 
-# table I/O
-def read_csv(file_path, keys=None, typs=None):
-    """ read table from a CSV file
+def enforce_schema(tbl, keys, typs=None):
+    """ make sure the table adheres to a specific schema
     """
-    tbl = _read_csv(file_path)
-    if IDX_KEY in keys_(tbl):
-        tbl.set_index(IDX_KEY, inplace=True)
-    else:
-        tbl.index.rename(IDX_KEY, inplace=True)
-
     if keys is not None:
         assert has_keys(tbl, keys=keys)
     if typs is not None:
         assert keys is not None
         tbl = set_typs(tbl, keys=keys, typs=typs)
-
     return tbl
 
 
-def write_csv(tbl, file_path, float_format=None):
+# table I/O
+def read_csv(file_pth):
+    """ read table from a CSV file
+    """
+    tbl = _read_csv(file_pth)
+    if IDX_KEY in keys_(tbl):
+        tbl.set_index(IDX_KEY, inplace=True)
+    else:
+        tbl.index.rename(IDX_KEY, inplace=True)
+    return tbl
+
+
+def write_csv(file_pth, tbl, float_format=None):
     """ write table to a CSV file
     """
-    tbl.to_csv(file_path, float_format=float_format)
+    tbl.to_csv(file_pth, float_format=float_format)
 
 
 # table properties
@@ -112,7 +126,7 @@ def set_typs(tbl, keys, typs):
 
 
 # iterators
-def fancy_iter(tbl, keys):
+def iter_(tbl, keys):
     """ yield records from one or more columns (fancy)
     """
     itrs = map(_iter_vals, _fancy_select(tbl, keys))
@@ -120,7 +134,7 @@ def fancy_iter(tbl, keys):
         yield fancy_vals
 
 
-def fancy_enum(tbl, keys):
+def enum_(tbl, keys):
     """ yield records from one or more columns (fancy), with index
     """
     itrs = map(_iter_vals, _fancy_select(tbl, keys))
@@ -158,6 +172,59 @@ def update(tbl1, tbl2):
     return tbl
 
 
+def left_join(tbl1, tbl2, key=None):
+    """ SQL LEFT OUTER join of two tables
+
+    Keeps keys from the left table and preserves their order
+    """
+    return _join(tbl1, tbl2, key=key, right=False)
+
+
+def right_join(tbl1, tbl2, key=None):
+    """ SQL RIGHT OUTER join of two tables
+
+    Keeps keys from the right table and preserves their order
+    """
+    return _join(tbl1, tbl2, key=key, right=True)
+
+
+def _join(tbl1, tbl2, key=None, right=False):
+    key = IDX_KEY if key is None else key
+    how = 'right' if right else 'left'
+    tbl = _merge(tbl1, tbl2, how=how, left_on=key, right_on=key)
+    tbl.index.rename(IDX_KEY, inplace=True)
+    return tbl
+
+
+def save_index(tbl):
+    """ save the index as a regular column
+    """
+    tbl = _DataFrame.copy(tbl)
+    idx_save_key = next_index_save_key(tbl)
+    tbl.insert(loc=0, column=idx_save_key, value=idxs_(tbl))
+    return tbl
+
+
+def next_index_save_key(tbl):
+    """ get the value of the next saved index key
+    """
+    sids = _index_save_ids(tbl)
+    sid = max(sids, default=-1) + 1
+    idx_save_key = IDX_SAVE_KEY_FORMAT.format(sid)
+    return idx_save_key
+
+
+def _index_save_ids(tbl):
+    """ get the values of previously saved index keys
+    """
+    _pattern = (_STRING_START + 'i' + _capturing(_UNSIGNED_INTEGER) +
+                _escape('_') + _STRING_END)
+    keys = keys_(tbl)
+    caps = tuple(_single_capture(_pattern, key) for key in keys)
+    sids = tuple(int(cap) for cap in caps if cap is not None)
+    return sids
+
+
 # helpers
 def _iter_vals(tbl):
     """ iterate over values in a table or series
@@ -185,9 +252,14 @@ def _iter_idxs(tbl):
 def _from_records(vals, keys, typs=None, idxs=None):
     """ create a table from a series of records
     """
-    vals = vals if numpy.ndim(vals) != 1 else list(zip(vals))
-    assert numpy.ndim(vals) == 2
+    if numpy.size(vals):
+        assert numpy.ndim(vals) in (1, 2)
+        vals = (numpy.array(vals) if numpy.ndim(vals) == 2 else
+                numpy.reshape(vals, (-1, 1)))
+    else:
+        vals = numpy.reshape([], (0, len(keys)))
     nrows, ncols = numpy.shape(vals)
+
     idxs = (_RangeIndex(stop=nrows, name=IDX_KEY) if idxs is None
             else _Int64Index(idxs, name=IDX_KEY))
     typs = (object,) * ncols if typs is None else typs
@@ -225,7 +297,7 @@ def _from_fancy_records(fancy_vals, fancy_keys, group_typs=None, idxs=None):
     group_typs = (object,) * ngroups if group_typs is None else group_typs
     keys = _unfancy_keys(fancy_keys)
     typs = _unfancy_group_types(group_typs, fancy_keys)
-    cols = _unfancy_columns(fancy_cols, fancy_keys)
+    cols = _unfancy_columns(fancy_cols, fancy_keys) if fancy_cols else ()
     vals = numpy.transpose(cols)
     return _from_records(vals, keys, typs, idxs)
 

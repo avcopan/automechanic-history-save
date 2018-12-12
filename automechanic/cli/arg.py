@@ -1,4 +1,4 @@
-""" functions for generating parsing command-line arguments
+""" functions for generating and parsing command-line arguments
 """
 
 
@@ -81,6 +81,8 @@ def specifier_from_kernel(kernel, opt_char=None, allowed_values=(),
     req_key_fmt = "<{:s}>".format
 
     key, kwargs = kernel
+
+    key += ('_inp' if inp else '_out' if out else '')
 
     kwargs += freeze_specifier_kwargs(extra_kwargs)
 

@@ -13,9 +13,11 @@ RXN_CSV_CHAR = 'r'
 SPC_CSV_CHAR = 's'
 
 HOME_DIR = os.path.expanduser("~")
-DB_NAME = 'automech_db'
-DB_PREFIX_DEF = os.path.join(HOME_DIR, DB_NAME)
-DB_PREFIX_CHAR = 'd'
+FILESYSTEM_NAME = 'automech_fs'
+FILESYSTEM_PREFIX_DEF = os.path.join(HOME_DIR, FILESYSTEM_NAME)
+FILESYSTEM_PREFIX_CHAR = 'f'
+
+STEREO_HANDLING_CHAR = 't'
 
 
 def automech(argt):
@@ -36,12 +38,12 @@ def chemkin(argt):
     call_subcommand(
         argt,
         subcmds=(
-            ('to_csv', chemkin_to_csv),
+            ('to_csv', chemkin__to_csv),
         )
     )
 
 
-def chemkin_to_csv(argt):
+def chemkin__to_csv(argt):
     """ parse CHEMKIN mechanism
     """
     call_task(
@@ -73,21 +75,22 @@ def species(argt):
     call_subcommand(
         argt,
         subcmds=(
-            ('expand_stereo', species_expand_stereo),
+            ('to_inchi', species__to_inchi),
+            ('filesystem', species__filesystem),
         )
     )
 
 
-def species_expand_stereo(argt):
-    """ fill in species guess geometries
+def species__to_inchi(argt):
+    """ expand species into their possible stereoisomers
     """
     call_task(
         argt,
-        task.species.expand_stereo,
+        task.species.to_inchi,
         specs=(
             specifier(
-                al.GEOM_SPEC_KEY, inp=True,
-                allowed_values=task.species.EXPAND_STEREO__SPC_ID_KEYS,
+                al.SPECIES_ID,
+                allowed_values=task.species.TO_INCHI__SPC_ID_VALS,
             ),
             specifier(
                 al.SPECIES_CSV, inp=True,
@@ -95,6 +98,35 @@ def species_expand_stereo(argt):
             specifier(
                 al.SPECIES_CSV, out=True, opt_char=SPC_CSV_CHAR.upper(),
                 extra_kwargs=(('default', SPC_CSV_DEF),),
+            ),
+        )
+    )
+
+
+def species__filesystem(argt):
+    """ fill in species guess geometries
+    """
+    call_task(
+        argt,
+        task.species.filesystem,
+        specs=(
+            specifier(
+                al.SPECIES_CSV, inp=True,
+            ),
+            specifier(
+                al.SPECIES_CSV, out=True, opt_char=SPC_CSV_CHAR.upper(),
+                extra_kwargs=(('default', SPC_CSV_DEF),),
+            ),
+            specifier(
+                al.STEREO_HANDLING, opt_char=STEREO_HANDLING_CHAR,
+                allowed_values=task.species.FILESYSTEM__STEREO_HANDLING_VALS,
+                extra_kwargs=(
+                    ('default', task.species.STEREO_HANDLING_DEF),),
+            ),
+            specifier(
+                al.FILESYSTEM_PREFIX, out=True,
+                opt_char=FILESYSTEM_PREFIX_CHAR.upper(),
+                extra_kwargs=(('default', FILESYSTEM_PREFIX_DEF),),
             ),
         )
     )

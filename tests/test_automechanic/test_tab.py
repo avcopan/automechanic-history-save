@@ -14,19 +14,19 @@ TYPS = (float, int, int, int, float)
 TBL = tab.from_records(VALS, KEYS, typs=TYPS)
 
 
-def test__fancy_iter():
-    """ test tab.fancy_iter
+def test__iter_():
+    """ test tab.iter_
     """
     tbl = TBL[list((A_KEY,) + B_KEYS)]
 
     tbl = tbl[tbl[A_KEY] > 5]
 
     fancy_keys = (A_KEY, B_KEYS)
-    fancy_vals = tuple(tab.fancy_iter(tbl, fancy_keys))
+    fancy_vals = tuple(tab.iter_(tbl, fancy_keys))
     assert fancy_vals == ((10.0, (11, 12, 13)), (15.0, (16, 17, 18)),
                           (20.0, (21, 22, 23)))
 
-    fancy_vals = tuple(tab.fancy_enum(tbl, fancy_keys))
+    fancy_vals = tuple(tab.enum_(tbl, fancy_keys))
     assert fancy_vals == ((2, (10.0, (11, 12, 13))), (3, (15.0, (16, 17, 18))),
                           (4, (20.0, (21, 22, 23))))
 
@@ -37,11 +37,17 @@ def test__from_records():
     tbl = TBL[list((A_KEY,) + B_KEYS)]
 
     fancy_keys = (A_KEY, B_KEYS)
-    fancy_vals = tuple(tab.fancy_iter(tbl, fancy_keys))
+    fancy_vals = tuple(tab.iter_(tbl, fancy_keys))
     group_typs = (float, int)
     tbl_ = tab.from_records(fancy_vals, fancy_keys, group_typs)
 
     assert tab.equal(tbl, tbl_)
+
+    tbl = tab.from_records([], ('a', 'b', 'c'))
+    assert tab.keys_(tbl) == ('a', 'b', 'c')
+
+    tbl = tab.from_records([], ('a', ('b', 'c')))
+    assert tab.keys_(tbl) == ('a', 'b', 'c')
 
 
 def test__read_csv():
@@ -52,7 +58,7 @@ def test__read_csv():
                             sum, [B_KEYS], ['c'], [int])
 
     _, tbl2_fle = tempfile.mkstemp()
-    tab.write_csv(tbl2, tbl2_fle)
+    tab.write_csv(tbl2_fle, tbl2)
     tbl2_ = tab.read_csv(tbl2_fle)
     assert tab.equal(tbl2, tbl2_)
 
@@ -94,10 +100,56 @@ def test__has_keys():
     assert tab.has_keys(TBL, (A_KEY, B_KEYS, 'd')) is False
 
 
+def test__next_index_save_key():
+    """ test tab.next_index_save_key
+    """
+    tbl = tab.from_records([], ('a', 'i0_', 'b', 'i3_'))
+    assert tab.next_index_save_key(tbl) == 'i4_'
+
+
+def test__save_index():
+    """ test tab.save_index
+    """
+    # make sure this runs for now
+    tbl = tab.save_index(TBL)
+    tbl = tab.save_index(tbl)
+    tbl = tab.save_index(tbl)
+    print(tbl)
+
+
+def test__left_join():
+    """ test tab.left_join
+    """
+    # for now, just make sure this runs
+    vals_lst = ([0, 1], [3], [4, 5, 6], [7], [8, 9])
+    vals = [[idx, val] for idx, vals in enumerate(vals_lst) for val in vals]
+    vals.pop(2)
+    tbl = tab.save_index(TBL)
+    tbl2 = tab.from_records(vals, ('i0_', 'd'), typs=(int, int))
+    tbl3 = tab.left_join(tbl, tbl2, key='i0_')
+    print(tbl3)
+
+
+def test__right_join():
+    """ test tab.right_join
+    """
+    # for now, just make sure this runs
+    vals_lst = ([0, 1], [3], [4, 5, 6], [7], [8, 9])
+    vals = [[idx, val] for idx, vals in enumerate(vals_lst) for val in vals]
+    vals.pop(2)
+    tbl = tab.save_index(TBL)
+    tbl2 = tab.from_records(vals, ('i0_', 'd'), typs=(int, int))
+    tbl3 = tab.right_join(tbl2, tbl, key='i0_')
+    print(tbl3)
+
+
 if __name__ == '__main__':
-    test__fancy_iter()
+    test__iter_()
     test__from_records()
     test__read_csv()
     test__update()
     test__set_typs()
     test__has_keys()
+    test__next_index_save_key()
+    test__save_index()
+    test__right_join()

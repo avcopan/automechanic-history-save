@@ -5,7 +5,8 @@ from ._ipyx2z import from_geometry as _x2m_from_geometry
 from ._ipyx2z import bonds as _x2m_bonds
 from ._irdkit import from_mol_block as _rdm_from_mol_block
 from ._irdkit import to_inchi as _rdm_to_inchi
-from .gr import radicals as _gr_radicals
+from .graph import edges as _graph_edges
+from .graph.res import radical_sites as _resonance_graph_radical_sites
 from ..rere.pattern import escape as _escape
 from ..rere.pattern import capturing as _capturing
 from ..rere.pattern import zero_or_more as _zero_or_more
@@ -49,20 +50,16 @@ def atoms(geo):
     return atms
 
 
-def bonds(geo):
-    """ molecule bonds, as a dictionary
+def resonance_graph(geo):
+    """ molecule resonance graph
     """
-    x2m = _x2m_from_geometry(geo)
-    return _x2m_bonds(x2m, ridx=0)
+    asbs, _ = zip(*geo)
+    bnds = {}
+    if len(geo) > 1:
+        x2m = _x2m_from_geometry(geo)
+        bnds = _x2m_bonds(x2m, ridx=0)
 
-
-def graph(geo):
-    """ molecule graph
-    """
-    atms = atoms(geo)
-    bnds = bonds(geo)
-    gra = (atms, bnds)
-    return gra
+    return (asbs, bnds)
 
 
 def mol_block(geo):
@@ -72,7 +69,8 @@ def mol_block(geo):
     # form the header:
     _head = ('\nautomechanic\n\n'
              '{natms:>3d}{nbnds:>3d}  0  0  0  0  0  0  0  0999 V2000')
-    bnds = bonds(geo)
+    rgr = resonance_graph(geo)
+    bnds = _graph_edges(rgr)
     natms = len(geo)
     nbnds = len(bnds)
     head = _head.format(natms=natms, nbnds=nbnds)
@@ -88,18 +86,19 @@ def mol_block(geo):
     sections.append(body_atms)
 
     # form the bonds block of the body:
-    _bnd_line = '{i:>3d}{j:>3d}{t:>3d}  0  0  0  0'
-    bkeys, btyps = zip(*bnds.items())
-    bkeys = list(map(sorted, bkeys))
-    one_index_bkeys = numpy.add(bkeys, 1)
-    body_bnds = '\n'.join(
-        _bnd_line.format(i=i, j=j, t=t)
-        for (i, j), t in zip(one_index_bkeys, btyps))
-    sections.append(body_bnds)
+    if bnds:
+        _bnd_line = '{i:>3d}{j:>3d}{t:>3d}  0  0  0  0'
+        bkeys, btyps = zip(*bnds.items())
+        bkeys = list(map(sorted, bkeys))
+        one_index_bkeys = numpy.add(bkeys, 1)
+        body_bnds = '\n'.join(
+            _bnd_line.format(i=i, j=j, t=t)
+            for (i, j), t in zip(one_index_bkeys, btyps))
+        sections.append(body_bnds)
 
     # form the properties block of the body:
     _rad_line = 'M  RAD  1{i:>4d}{m:>4d}'
-    rads = _gr_radicals(graph(geo))
+    rads = _resonance_graph_radical_sites(rgr)
     if rads:
         rkeys, rvals = zip(*rads.items())
         mults = numpy.add(rvals, 1)

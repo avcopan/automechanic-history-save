@@ -12,6 +12,7 @@ dependencies:
     - pandas
     - matplotlib
     - networkx
+    - pyyaml
     - pytest
     - pytest-cov
     - future

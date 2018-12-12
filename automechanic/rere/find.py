@@ -47,6 +47,13 @@ def multiple_capture(pattern, string):
     return match.groups() if match else None
 
 
+def multiple_named_capture(pattern, string):
+    """ capture dictionary from first match for a pattern with named captures
+    """
+    match = re.search(pattern, string, flags=re.MULTILINE)
+    return match.groupdict() if match and match.groupdict() else None
+
+
 def captures(pattern, string):
     """ captures for all matches of a capturing pattern
     """
@@ -91,7 +98,7 @@ def replace(pattern, repl, string):
     return re.sub(pattern, repl, string, count=0, flags=re.MULTILINE)
 
 
-def sections_with_headline(pattern, string):
+def headlined_sections(pattern, string):
     """ return sections with headlines matching a pattern
     """
     lines = string.splitlines()

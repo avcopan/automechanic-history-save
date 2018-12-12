@@ -4,29 +4,49 @@ from __future__ import unicode_literals
 from builtins import open
 import os
 import time
-from .tab import write_csv as _write_csv
+import yaml
 
 
-def read_txt(file_txt):
-    """ read in a text file as a string
-    """
-    with open(file_txt, encoding='utf8', errors='ignore') as file_obj:
-        file_str = file_obj.read()
-
-    return file_str
-
-
-def timestamp_if_exists(fpath):
+def timestamp_if_exists(file_pth):
     """ open a file, avoiding overwrites if requested
     """
-    if os.path.isfile(fpath):
+    if os.path.isfile(file_pth):
         time_stamp = time.strftime("%Y%m%d-%H%M%S")
-        new_fpath = "{:s}_{:s}".format(fpath, time_stamp)
-        os.rename(fpath, new_fpath)
+        new_file_pth = "{:s}_{:s}".format(file_pth, time_stamp)
+        os.rename(file_pth, new_file_pth)
 
 
-def write_csv(tbl, file_path, float_format=None):
-    """ write table to a CSV file
+def read_string(file_pth):
+    """ read in a file as a string
     """
-    timestamp_if_exists(file_path)
-    _write_csv(tbl, file_path, float_format=float_format)
+    with open(file_pth, encoding='utf8', errors='ignore') as file_obj:
+        string = file_obj.read()
+
+    return string
+
+
+# def write_string(file_pth, string):
+#     """ write a string to a file
+#     """
+#     with open(file_pth, mode='w') as file_obj:
+#         file_obj.write(string)
+
+
+# def read_yaml(file_pth):
+#     """ read in a yaml file as a dictionary
+#     """
+#     with open(file_pth) as file_obj:
+#         dct = yaml.load(file_obj)
+#         assert isinstance(dct, dict)
+#
+#     return dct
+
+
+def write_yaml(file_pth, dct):
+    """ write a dictionary to a yaml file
+    """
+    assert isinstance(dct, dict)
+    with open(file_pth, mode='w') as file_obj:
+        dct = yaml.dump(dct, file_obj, default_flow_style=False)
+
+    return dct

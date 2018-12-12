@@ -293,14 +293,59 @@ def test__smiles__inchi():
     """ test mol.smiles.inchi
     """
     assert mol.smiles.inchi(C2H2F2_SMI) == C2H2F2_ICH
-    assert mol.smiles.inchi(C2H2F2_SMI_NO_STEREO) == C2H2F2_ICH_NO_STEREO
-    assert (mol.smiles.inchi(C2H2F2_SMI_NO_STEREO, force_stereo=True)
-            == C2H2F2_ICH_STEREO_UNKNOWN)
 
-    assert (mol.smiles.inchi(C2H4CLF_SMI_NO_STEREO)
-            == 'InChI=1S/C2H4ClF/c1-2(3)4/h2H,1H3')
-    assert (mol.smiles.inchi(C2H4CLF_SMI_NO_STEREO, force_stereo=True)
-            == 'InChI=1/C2H4ClF/c1-2(3)4/h2H,1H3/t2?')
+
+def test__molfile__inchi():
+    """ test mol.molfile.inchi
+    """
+    mlf = """
+     RDKit          2D
+
+  0  0  0  0  0  0  0  0  0  0999 V3000
+M  V30 BEGIN CTAB
+M  V30 COUNTS 4 3 0 0 0
+M  V30 BEGIN ATOM
+M  V30 1 C 0 0 0 0
+M  V30 2 C 1.5 0 0 0
+M  V30 3 F -0.75 -1.29904 0 0
+M  V30 4 F 2.25 1.29904 0 0
+M  V30 END ATOM
+M  V30 BEGIN BOND
+M  V30 1 2 1 2
+M  V30 2 1 1 3
+M  V30 3 1 2 4
+M  V30 END BOND
+M  V30 END CTAB
+M  END
+
+"""
+    mlf2 = """
+     RDKit          2D
+
+  0  0  0  0  0  0  0  0  0  0999 V3000
+M  V30 BEGIN CTAB
+M  V30 COUNTS 5 4 0 0 0
+M  V30 BEGIN ATOM
+M  V30 1 C 0 0 0 0
+M  V30 2 C 1 0 0 0
+M  V30 3 F 1 -1 0 0
+M  V30 4 F 0 -1 0 0
+M  V30 5 Cl 1 1 0 0
+M  V30 END ATOM
+M  V30 BEGIN BOND
+M  V30 1 2 1 2
+M  V30 2 1 1 4
+M  V30 3 1 2 3
+M  V30 4 1 2 5
+M  V30 END BOND
+M  V30 END CTAB
+M  END
+
+"""
+    # ich = 'InChI=1S/C2HClF2/c3-2(5)1-4/h1H/b2-1+'
+    print(mol.molfile.inchi(mlf))
+    print(mol.molfile.inchi(mlf2))
+    # print(mol.inchi.molfile(ich))
 
 
 def test__inchi__smiles():
@@ -473,6 +518,7 @@ def test__geom__resonance_graph():
 
 if __name__ == '__main__':
     test__smiles__inchi()
+    test__molfile__inchi()
     test__inchi__smiles()
     # test__inchi__recalculate()
     test__inchi__is_closed()

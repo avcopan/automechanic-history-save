@@ -2,10 +2,11 @@
 """
 import itertools
 from .geom import inchi as _inchi_from_geometry
+from ._irdkit import from_inchi as _rdm_from_inchi
 from ._irdkit import to_inchi as _rdm_to_inchi
 from ._irdkit import to_smiles as _rdm_to_smiles
+from ._irdkit import to_molfile as _rdm_to_molfile
 from ._irdkit import inchi_to_inchi_key as _inchi_to_inchi_key
-from ._irdkit import from_inchi as _rdm_from_inchi
 from ._irdkit import geometry as _rdm_to_geometry
 from ._irdkit import connectivity_graph as _rdm_to_connectivity_graph
 from ._ipybel import from_inchi as _pbm_from_inchi
@@ -31,6 +32,14 @@ def smiles(ich):
     rdm = _rdm_from_inchi(ich)
     smi = _rdm_to_smiles(rdm)
     return smi
+
+
+def molfile(ich):
+    """ MOLFile string from an InChI string
+    """
+    rdm = _rdm_from_inchi(ich)
+    mfl = _rdm_to_molfile(rdm)
+    return mfl
 
 
 def recalculate(ich, force_stereo=False):
@@ -198,18 +207,6 @@ def known_tetrahedral_stereo_elements(ich):
                  if not _ends_with(_escape('?'), ele))
 
 
-# vv
-def _expand_unknown_stereo_element(ele):
-    _pattern = _escape('?') + _STRING_END
-    if not _ends_with(_pattern, ele):
-        ret = (ele,)
-    else:
-        ele_m = _replace(_pattern, '-', ele)
-        ele_p = _replace(_pattern, '+', ele)
-        ret = (ele_m, ele_p)
-    return ret
-
-
 def compatible_stereoisomers(ich):
     """ expand InChI string into its stereomers
     """
@@ -218,6 +215,16 @@ def compatible_stereoisomers(ich):
 
     def _tetrahedral_stereo_layer_from_elements(eles):
         return 't' + ','.join(eles)
+
+    def _expand_unknown_stereo_element(ele):
+        _pattern = _escape('?') + _STRING_END
+        if not _ends_with(_pattern, ele):
+            ret = (ele,)
+        else:
+            ele_m = _replace(_pattern, '-', ele)
+            ele_p = _replace(_pattern, '+', ele)
+            ret = (ele_m, ele_p)
+        return ret
 
     ich_bas = core_parent(ich)
     ich_b_eles = list(double_bond_stereo_elements(ich))

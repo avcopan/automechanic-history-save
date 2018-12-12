@@ -3,7 +3,7 @@
 import numpy
 from ._ipyx2z import from_geometry as _x2m_from_geometry
 from ._ipyx2z import bonds as _x2m_bonds
-from ._irdkit import from_mol_block as _rdm_from_mol_block
+from ._irdkit import from_molfile as _rdm_from_molfile2
 from ._irdkit import to_inchi as _rdm_to_inchi
 from .graph import edges as _graph_edges
 from .graph.res import radical_sites as _resonance_graph_radical_sites
@@ -15,20 +15,19 @@ from ..rere.find import split as _split
 from ..rere.find import single_capture as _single_capture
 
 
-def inchi(geo, force_stereo=False):
+def inchi(geo):
     """ InChI string of a cartesian geometry
     """
-    ich, _ = inchi_with_order(geo, force_stereo=force_stereo)
+    ich, _ = inchi_with_order(geo)
     return ich
 
 
-def inchi_with_order(geo, force_stereo=False):
+def inchi_with_order(geo):
     """ InChI string of a cartesian geometry
     """
-    mbl = mol_block(geo)
-    rdm = _rdm_from_mol_block(mbl)
-    _options = '-SUU' if force_stereo else ''
-    ich, ich_aux = _rdm_to_inchi(rdm, options=_options, with_aux_info=True)
+    mbl = molfile2(geo)
+    rdm = _rdm_from_molfile2(mbl)
+    ich, ich_aux = _rdm_to_inchi(rdm, with_aux_info=True)
     ich_ord = _parse_inchi_order_from_auxinfo(ich_aux)
     return ich, ich_ord
 
@@ -62,7 +61,7 @@ def resonance_graph(geo):
     return (asbs, bnds)
 
 
-def mol_block(geo):
+def molfile2(geo):
     """ mol block string of a cartesian geometry
     """
     sections = []

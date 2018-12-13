@@ -41,6 +41,7 @@ def from_inchi(ich):
 def to_molfile(rdm):
     """ rdkit molecule object from a mol block string
     """
+    rdm = _rd_chem.AddHs(rdm)
     mlf = _rd_chem.rdmolfiles.MolToMolBlock(rdm, forceV3000=True)
     return mlf
 

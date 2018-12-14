@@ -12,8 +12,11 @@ _NEWLINE = '\n'
 
 class FMT():
     """ MOLFile V3000 format specifications """
-    _HEAD = '\n  automech\n' + _NEWLINE
-    _FOOT = '  M  END' + _NEWLINE
+    _HEAD = ('' + _NEWLINE +
+             '  automech  2D grid' + _NEWLINE +
+             '' + _NEWLINE +
+             '  0  0  0  0  0  0  0  0  0  0999 V3000' + _NEWLINE)
+    _FOOT = 'M  END' + _NEWLINE
     _CTAB = 'CTAB'
     _ATOM = 'ATOM'
     _BOND = 'BOND'
@@ -48,20 +51,32 @@ class FMT():
         X_KEY = 'x'
         Y_KEY = 'y'
         Z_KEY = 'z'
+        MULT_KEY = 'mult'
         VAL_KEY = 'valence'
-        MULT_KEY = 'multiplicity'
+        CFG_KEY = 'stereo_config'
         LINE = (_V3_PFX +
-                _SPACE + _ENTRY(key=I_KEY, fmt='d') +   # index
+                _ENTRY(key=I_KEY, fmt='d') +   # index
                 _SPACE + _ENTRY(key=S_KEY, fmt='s') +   # symbol
                 _SPACE + _ENTRY(key=X_KEY, fmt='.3f') +     # x coordinate
                 _SPACE + _ENTRY(key=Y_KEY, fmt='.3f') +     # y coordinate
                 _SPACE + _ENTRY(key=Z_KEY, fmt='.3f') +     # z coordinate
-                _SPACE + 'VAL=' + _ENTRY(key=VAL_KEY, fmt='d') +
                 _SPACE + 'RAD=' + _ENTRY(key=MULT_KEY, fmt='d') +
+                _SPACE + 'VAL=' + _ENTRY(key=VAL_KEY, fmt='d') +
+                _SPACE + 'CFG=' + _ENTRY(key=CFG_KEY, fmt='d') +
                 _NEWLINE).format
 
     class BOND():
         """ _ """
+        I_KEY = 'i'
+        ORDER_KEY = 'order'
+        I1_KEY = 'i1'
+        I2_KEY = 'i2'
+        LINE = (_V3_PFX +
+                _ENTRY(key=I_KEY, fmt='d') +      # index
+                _SPACE + _ENTRY(key=ORDER_KEY, fmt='d') +  # order
+                _SPACE + _ENTRY(key=I1_KEY, fmt='d') +     # atom1 index
+                _SPACE + _ENTRY(key=I2_KEY, fmt='d') +     # atom2 index
+                _NEWLINE).format
 
 
 def inchi(mlf):

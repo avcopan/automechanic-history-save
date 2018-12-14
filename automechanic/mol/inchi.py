@@ -20,7 +20,7 @@ from ..rere.pattern_lib import LOWERCASE_LETTER as _LOWERCASE_LETTER
 from ..rere.pattern_lib import NONWHITESPACE as _NONWHITESPACE
 from ..rere.pattern_lib import STRING_START as _STRING_START
 from ..rere.pattern_lib import STRING_END as _STRING_END
-from ..rere.find import single_capture as _single_capture
+from ..rere.find import first_capture as _first_capture
 from ..rere.find import ends_with as _ends_with
 from ..rere.find import replace as _replace
 from ..rere.find import split as _split
@@ -64,7 +64,7 @@ def prefix(ich):
     _body = _escape('InChI=') + _one_or_more(_NONWHITESPACE, greedy=False)
     _end = _escape('/')
     _pattern = _start + _capturing(_body) + _end
-    return _single_capture(_pattern, ich)
+    return _first_capture(_pattern, ich)
 
 
 def formula_layer(ich):
@@ -74,7 +74,7 @@ def formula_layer(ich):
     _body = _one_or_more(_NONWHITESPACE, greedy=False)
     _end = _one_of_these([_escape('/'), _STRING_END])
     _pattern = _start + _capturing(_body) + _end
-    return _single_capture(_pattern, ich)
+    return _first_capture(_pattern, ich)
 
 
 def sublayer(ich, key):
@@ -85,7 +85,7 @@ def sublayer(ich, key):
     _body = _one_or_more(_NONWHITESPACE, greedy=False)
     _end = _one_of_these([slash, _STRING_END])
     _pattern = _start + _capturing(_body) + _end
-    return _single_capture(_pattern, ich)
+    return _first_capture(_pattern, ich)
 
 
 def with_sublayers(ich, keys):

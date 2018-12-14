@@ -1,7 +1,38 @@
 """ test the automechanic.mol.graph module
 """
+from automechanic import mol
 from automechanic.mol import graph2 as graph
 from automechanic.mol import graph as old_graph
+
+
+def test__vertex_neighbor_keys():
+    """ test graph.vertex_neighbor_keys
+    """
+    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0)),
+           {frozenset({1, 3}): None, frozenset({2, 3}): None,
+            frozenset({0, 3}): None})
+    print(graph.vertex_neighbor_keys(gra, 3))
+
+
+def test__permute_vertices():
+    """ test graph.permute_vertices
+    """
+    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0)),
+           {frozenset({1, 3}): None, frozenset({2, 3}): None,
+            frozenset({0, 3}): None})
+    assert (graph.permute_vertices(gra, (3, 1, 2, 0))
+            == ((('C', 0), ('F', 0), ('H', 0), ('H', 0)),
+                {frozenset({0, 1}): None, frozenset({0, 2}): None,
+                 frozenset({0, 3}): None}))
+
+
+def test__conn__make_implicit():
+    """ test graph.conn.make_implicit
+    """
+    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0), ('H', 0), ('H', 0)),
+           {frozenset({1, 3}): None, frozenset({2, 3}): None,
+            frozenset({0, 3}): None, frozenset({4, 5}): None})
+    print(graph.conn.make_implicit(gra))
 
 
 def test__conn__possible_spin_multiplicities():
@@ -26,7 +57,12 @@ def test__conn__molfile():
     """ test graph.conn.molfile
     """
     ch2f1_cgr = ((('C', 2), ('F', 0)), {frozenset([0, 1]): None})
-    print(graph.conn.molfile(ch2f1_cgr))
+    ch2f1_mlf = graph.conn.molfile(ch2f1_cgr)
+    ch2f1_ich = mol.molfile.inchi(ch2f1_mlf)
+    ch2f1_cgr2 = mol.inchi.connectivity_graph(ch2f1_ich)
+    print(ch2f1_mlf)
+    print(ch2f1_ich)
+    print(ch2f1_cgr2)
 
 
 def test__old_res__radical_sites():
@@ -63,4 +99,7 @@ if __name__ == '__main__':
     test__old_res__radical_sites()
     test__old_conn__possible_spin_multiplicities()
     test__conn__possible_spin_multiplicities()
-    test__conn__molfile()
+    # test__conn__molfile()
+    test__conn__make_implicit()
+    test__permute_vertices()
+    test__vertex_neighbor_keys()

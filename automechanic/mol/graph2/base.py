@@ -5,6 +5,7 @@ terminology:
     - edges: a dictionary; keyed by frozenset pairs of `vertex keys`, which
       will be termed `edge keys`
 """
+from ._perm import inverse as _inverse_permutation
 
 
 def vertices(gra):
@@ -38,3 +39,37 @@ def vertex_edges(gra, vkey):
     """
     edgs = edges(gra)
     return {ekey: evals for ekey, evals in edgs.items() if vkey in ekey}
+
+
+def vertex_neighbor_keys(gra, vkey):
+    """ keys for vertices adjacent to this one
+    """
+    vtx_ekeys = vertex_edges(gra, vkey).keys()
+    vtx_nkeys, = zip(*(ekey - {vkey} for ekey in vtx_ekeys))
+    return tuple(sorted(vtx_nkeys))
+
+
+def permute_vertices(gra, vkeys_permutation):
+    """ permute graph vertices
+    """
+    assert tuple(sorted(vkeys_permutation)) == vertex_keys(gra)
+    vtcs = vertices(gra)
+    edgs = edges(gra)
+    ret_vtcs = tuple(vtcs[i] for i in vkeys_permutation)
+
+    vkey_map = dict(enumerate(_inverse_permutation(vkeys_permutation)))
+    ret_edgs = _edges_for_new_vertex_keys(edgs, vkey_map=vkey_map)
+
+    return (ret_vtcs, ret_edgs)
+
+
+def _edges_for_new_vertex_keys(edgs, vkey_map):
+    if not edgs:
+        ret_edgs = {}
+    else:
+        ekeys = edgs.keys()
+        evals = edgs.values()
+        ret_ekeys = tuple(frozenset(map(vkey_map.__getitem__, ekey))
+                          for ekey in ekeys)
+        ret_edgs = dict(zip(ret_ekeys, evals))
+    return ret_edgs

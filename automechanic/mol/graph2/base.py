@@ -49,6 +49,21 @@ def vertex_neighbor_keys(gra, vkey):
     return tuple(sorted(vtx_nkeys))
 
 
+def delete_vertices(gra, vkeys):
+    """ delete vertices and their associated edges
+    """
+    vtcs = vertices(gra)
+    edgs = edges(gra)
+    vkeys_left = tuple(vkey for vkey in vertex_keys(gra) if vkey not in vkeys)
+    ekeys_left = tuple(ekey for ekey in edge_keys(gra)
+                       if not any(evkey in vkeys for evkey in ekey))
+    vkey_map = dict(map(reversed, enumerate(vkeys_left)))
+    vtcs = tuple(vtcs[vkey] for vkey in vkeys_left)
+    edgs = {ekey: edgs[ekey] for ekey in ekeys_left}
+    edgs = _edges_for_new_vertex_keys(edgs, vkey_map)
+    return (vtcs, edgs)
+
+
 def permute_vertices(gra, vkeys_permutation):
     """ permute graph vertices
     """

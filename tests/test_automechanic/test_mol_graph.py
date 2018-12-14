@@ -5,13 +5,24 @@ from automechanic.mol import graph2 as graph
 from automechanic.mol import graph as old_graph
 
 
+def test__delete_vertices():
+    """ test graph.delete_vertices
+    """
+    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0), ('H', 0), ('H', 0)),
+           {frozenset({1, 3}): None, frozenset({2, 3}): None,
+            frozenset({0, 3}): None, frozenset({4, 5}): None})
+    assert (graph.delete_vertices(gra, (3,))
+            == ((('H', 0), ('F', 0), ('H', 0), ('H', 0), ('H', 0)),
+                {frozenset({3, 4}): None}))
+
+
 def test__vertex_neighbor_keys():
     """ test graph.vertex_neighbor_keys
     """
     gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0)),
            {frozenset({1, 3}): None, frozenset({2, 3}): None,
             frozenset({0, 3}): None})
-    print(graph.vertex_neighbor_keys(gra, 3))
+    assert graph.vertex_neighbor_keys(gra, 3) == (0, 1, 2)
 
 
 def test__permute_vertices():
@@ -26,13 +37,14 @@ def test__permute_vertices():
                  frozenset({0, 3}): None}))
 
 
-def test__conn__make_implicit():
-    """ test graph.conn.make_implicit
+def test__conn__make_hydrogens_implicit():
+    """ test graph.conn.make_hydrogens_implicit
     """
     gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0), ('H', 0), ('H', 0)),
            {frozenset({1, 3}): None, frozenset({2, 3}): None,
             frozenset({0, 3}): None, frozenset({4, 5}): None})
-    print(graph.conn.make_implicit(gra))
+    assert (graph.conn.make_hydrogens_implicit(gra)
+            == ((('F', 0), ('C', 2), ('H', 1)), {frozenset({0, 1}): None}))
 
 
 def test__conn__possible_spin_multiplicities():
@@ -100,6 +112,7 @@ if __name__ == '__main__':
     test__old_conn__possible_spin_multiplicities()
     test__conn__possible_spin_multiplicities()
     # test__conn__molfile()
-    test__conn__make_implicit()
+    test__conn__make_hydrogens_implicit()
     test__permute_vertices()
     test__vertex_neighbor_keys()
+    test__delete_vertices()

@@ -7,10 +7,12 @@ edges: bond connectivity only (no bond orders or anything)
 """
 import numpy
 from .base import vertices as _vertices
+from .base import edges as _edges
 from .base import vertex_keys as _vertex_keys
 from .base import edge_keys as _edge_keys
 from .base import vertex_edges as _vertex_edges
 from .base import vertex_neighbor_keys as _vertex_neighbor_keys
+from .base import delete_vertices as _delete_vertices
 from .base import permute_vertices as _permute_vertices
 from ..atom import valence as _atom_valence
 from ..molfile import FMT as _MLF
@@ -23,7 +25,7 @@ def atomic_symbols(cgr):
     return atm_syms
 
 
-def implicit_hydrogen_counts(cgr):
+def hydrogen_counts(cgr):
     """ atomic symbols
     """
     _, atm_hcnts = zip(*_vertices(cgr))
@@ -38,37 +40,65 @@ def valences(cgr):
     return atm_val_elec_cnts
 
 
-def _backbone_atom_keys(cgr):
-    atm_keys = _vertex_keys(cgr)
+def change_hydrogen_count(cgr, atm_key, nhyd):
+    """ change the hydrogen count of an atom
+    """
     atm_syms = atomic_symbols(cgr)
-    hv_atm_keys = tuple(key for key in atm_keys if atm_syms[key] != 'H')
-    hy_atm_keys = tuple(key for key in atm_keys if atm_syms[key] == 'H'
-                        if all(key < nkey and atm_syms[nkey] == 'H'
-                               for nkey in _vertex_neighbor_keys(cgr, key)))
-    return hv_atm_keys + hy_atm_keys
+    atm_hcnts = list(hydrogen_counts(cgr))
+    edgs = _edges(cgr)
+    atm_hcnts[atm_key] += nhyd
+    atms = tuple(zip(atm_syms, atm_hcnts))
+    return (atms, edgs)
 
 
-def make_implicit(cgr):
+def _is_backbone_key(cgr, atm_key):
+    atm_keys = _vertex_keys(cgr)
+    assert atm_key in atm_keys
+    atm_syms = atomic_symbols(cgr)
+    atm_sym = atm_syms[atm_key]
+    natm_keys = _vertex_neighbor_keys(cgr, atm_key)
+    natm_syms = [atm_syms[natm_key] for natm_key in natm_keys]
+    return atm_sym != 'H' or all(
+        natm_sym == 'H' and atm_key < natm_key
+        for natm_sym, natm_key in zip(natm_syms, natm_keys))
+
+
+def _backbone_keys(cgr):
+    return tuple(atm_key for atm_key in _vertex_keys(cgr)
+                 if _is_backbone_key(cgr, atm_key))
+
+
+def _non_backbone_keys(cgr):
+    return tuple(atm_key for atm_key in _vertex_keys(cgr)
+                 if not _is_backbone_key(cgr, atm_key))
+
+
+def _neighboring_hydrogen_keys(cgr, atm_key):
+    assert atm_key in _vertex_keys(cgr)
+    atm_syms = atomic_symbols(cgr)
+    return tuple(natm_key for natm_key in _vertex_neighbor_keys(cgr, atm_key)
+                 if atm_syms[natm_key] == 'H')
+
+
+def make_hydrogens_implicit(cgr):
     """ make explicit hydrogens implicit
     """
-    atm_keys_permutation = tuple(numpy.argsort(
-        # should use numpy.equal, but it's not implemented for strings -- ??
-        numpy.array(atomic_symbols(cgr)) == 'H'))
-    cgr = _permute_vertices(cgr, atm_keys_permutation)
-    atm_keys = _backbone_atom_keys(cgr)
-
-    # atm_keys = _vertex_keys(cgr)
-    # atm_syms = atomic_symbols(cgr)
-    # atm_hcnts = implicit_hydrogen_counts(cgr)
-    # print(atm_syms)
-    # print(atm_hcnts)
+    atm_keys_perm = _backbone_keys(cgr) + _non_backbone_keys(cgr)
+    cgr = _permute_vertices(cgr, atm_keys_perm)
+    bbn_keys = _backbone_keys(cgr)
+    for bbn_key in bbn_keys:
+        hyd_keys = _neighboring_hydrogen_keys(cgr, bbn_key)
+        nhyd = len(hyd_keys)
+        cgr = _delete_vertices(cgr, hyd_keys)
+        cgr = change_hydrogen_count(cgr, bbn_key, nhyd)
+    return cgr
 
 
 def sigma_bond_counts(cgr):
     """ sigma bond count for each atom
     """
     atm_keys = _vertex_keys(cgr)
-    atm_hcnts = implicit_hydrogen_counts(cgr)
+    atm_hcnts = hydrogen_counts(cgr)
     assert all(numpy.greater_equal(atm_hcnts, 0))
     atm_cnn_elec_cnts = tuple(len(_vertex_edges(cgr, key)) for key in atm_keys)
     atm_sig_elec_cnts = numpy.add(atm_cnn_elec_cnts, atm_hcnts)

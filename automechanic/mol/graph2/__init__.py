@@ -6,6 +6,7 @@ from .base import vertex_keys
 from .base import edge_keys
 from .base import vertex_edges
 from .base import vertex_neighbor_keys
+from .base import delete_vertices
 from .base import permute_vertices
 from . import conn
 

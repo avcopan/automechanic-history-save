@@ -2,6 +2,8 @@
 """
 import itertools
 from .geom import inchi as _inchi_from_geometry
+from .graph2.conn import (make_hydrogens_implicit as
+                          _graph_conn_make_hydrogens_implicit)
 from ._irdkit import from_inchi as _rdm_from_inchi
 from ._irdkit import to_inchi as _rdm_to_inchi
 from ._irdkit import to_smiles as _rdm_to_smiles
@@ -138,6 +140,7 @@ def connectivity_graph(ich):
     """
     rdm = _rdm_from_inchi(ich)
     cgr = _rdm_to_connectivity_graph(rdm)
+    cgr = _graph_conn_make_hydrogens_implicit(cgr)
     return cgr
 
 

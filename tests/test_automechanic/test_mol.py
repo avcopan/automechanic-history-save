@@ -298,54 +298,20 @@ def test__smiles__inchi():
 def test__molfile__inchi():
     """ test mol.molfile.inchi
     """
-    mlf = """
-     RDKit          2D
-
-  0  0  0  0  0  0  0  0  0  0999 V3000
-M  V30 BEGIN CTAB
-M  V30 COUNTS 4 3 0 0 0
-M  V30 BEGIN ATOM
-M  V30 1 C 0 0 0 0
-M  V30 2 C 1.5 0 0 0
-M  V30 3 F -0.75 -1.29904 0 0
-M  V30 4 F 2.25 1.29904 0 0
-M  V30 END ATOM
-M  V30 BEGIN BOND
-M  V30 1 2 1 2
-M  V30 2 1 1 3
-M  V30 3 1 2 4
-M  V30 END BOND
-M  V30 END CTAB
-M  END
-
-"""
-    mlf2 = """
-     RDKit          2D
-
-  0  0  0  0  0  0  0  0  0  0999 V3000
-M  V30 BEGIN CTAB
-M  V30 COUNTS 5 4 0 0 0
-M  V30 BEGIN ATOM
-M  V30 1 C 0 0 0 0
-M  V30 2 C 1 0 0 0
-M  V30 3 F 1 -1 0 0
-M  V30 4 F 0 -1 0 0
-M  V30 5 Cl 1 1 0 0
-M  V30 END ATOM
-M  V30 BEGIN BOND
-M  V30 1 2 1 2
-M  V30 2 1 1 4
-M  V30 3 1 2 3
-M  V30 4 1 2 5
-M  V30 END BOND
-M  V30 END CTAB
-M  END
-
-"""
-    # ich = 'InChI=1S/C2HClF2/c3-2(5)1-4/h1H/b2-1+'
-    print(mol.molfile.inchi(mlf))
-    print(mol.molfile.inchi(mlf2))
-    # print(mol.inchi.molfile(ich))
+    mlf = ('\n  automech  2D grid\n\n'
+           '  0  0  0  0  0  0  0  0  0  0999 V3000\n'
+           'M  V30 BEGIN CTAB\n'
+           'M  V30 COUNTS 2 1 0 0 0\n'
+           'M  V30 BEGIN ATOM\n'
+           'M  V30 1 C 0.000 0.000 0.000 RAD=2 VAL=3 CFG=0\n'
+           'M  V30 2 F 0.000 0.000 0.000 RAD=1 VAL=1 CFG=0\n'
+           'M  V30 END ATOM\n'
+           'M  V30 BEGIN BOND\n'
+           'M  V30 1 1 1 2\n'
+           'M  V30 END BOND\n'
+           'M  V30 END CTAB\n'
+           'M  END\n')
+    assert mol.molfile.inchi(mlf) == 'InChI=1S/CH2F/c1-2/h1H2'
 
 
 def test__inchi__smiles():
@@ -454,10 +420,9 @@ def test__inchi__connectivity_graph():
     """ test mol.inchi.connectivity_graph
     """
     assert (mol.inchi.connectivity_graph(C2H2F2_ICH)
-            == (('C', 'C', 'F', 'F', 'H', 'H'),
+            == ((('C', 1), ('C', 1), ('F', 0), ('F', 0)),
                 {frozenset({0, 1}): None, frozenset({0, 2}): None,
-                 frozenset({1, 3}): None, frozenset({0, 4}): None,
-                 frozenset({1, 5}): None}))
+                 frozenset({1, 3}): None}))
 
 
 def test__inchi__has_unknown_stereo_elements():

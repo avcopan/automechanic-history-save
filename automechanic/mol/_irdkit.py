@@ -98,7 +98,7 @@ def connectivity_graph(rdm):
     rdm = _rd_chem.AddHs(rdm)
     atms = rdm.GetAtoms()
     bnds = rdm.GetBonds()
-    asbs = tuple(rda.GetSymbol() for rda in atms)
+    asbs = tuple((rda.GetSymbol(), 0) for rda in atms)
     cnns = {frozenset([rdb.GetBeginAtomIdx(), rdb.GetEndAtomIdx()]): None
             for rdb in bnds}
     return (asbs, cnns)

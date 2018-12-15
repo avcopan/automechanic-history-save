@@ -49,19 +49,32 @@ def vertex_neighbor_keys(gra, vkey):
     return tuple(sorted(vtx_nkeys))
 
 
+def induced_subgraph(gra, vkeys):
+    """ the subgraph induced by a set of vertices
+    """
+    assert set(vkeys) <= set(vertex_keys(gra))
+    vtcs = vertices(gra)
+    edgs = edges(gra)
+    ekeys = tuple(ekey for ekey in edge_keys(gra)
+                  if all(edg_vkey in vkeys for edg_vkey in ekey))
+    vkey_map = dict(map(reversed, enumerate(vkeys)))
+    vtcs = tuple(vtcs[vkey] for vkey in vkeys)
+    edgs = {ekey: edgs[ekey] for ekey in ekeys}
+    edgs = _edges_for_new_vertex_keys(edgs, vkey_map)
+    return (vtcs, edgs)
+
+
 def delete_vertices(gra, vkeys):
     """ delete vertices and their associated edges
     """
-    vtcs = vertices(gra)
-    edgs = edges(gra)
-    vkeys_left = tuple(vkey for vkey in vertex_keys(gra) if vkey not in vkeys)
-    ekeys_left = tuple(ekey for ekey in edge_keys(gra)
-                       if not any(evkey in vkeys for evkey in ekey))
-    vkey_map = dict(map(reversed, enumerate(vkeys_left)))
-    vtcs = tuple(vtcs[vkey] for vkey in vkeys_left)
-    edgs = {ekey: edgs[ekey] for ekey in ekeys_left}
-    edgs = _edges_for_new_vertex_keys(edgs, vkey_map)
-    return (vtcs, edgs)
+    all_vkeys = vertex_keys(gra)
+    assert set(vkeys) <= set(all_vkeys)
+    return induced_subgraph(gra, set(all_vkeys) - set(vkeys))
+
+
+def branch(gra, edg_vkey1, edg_vkey2):
+    """ return the branch extending from edg_vkey2 away from edg_vkey1
+    """
 
 
 def permute_vertices(gra, vkeys_permutation):

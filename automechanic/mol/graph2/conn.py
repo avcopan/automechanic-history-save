@@ -122,6 +122,24 @@ def pi_or_radical_atoms(cgr):
             zip(_vertex_keys(cgr), nonsigma_electron_counts(cgr)) if cnt > 0}
 
 
+def resonance_graphs(cgr):
+    """ get all possible pi resonance graphs from a connectivity graph
+    """
+    raise NotImplementedError
+
+
+def stereogenic_atoms(cgr):
+    """ identify all stereogenic atoms in the connectivity graph
+    """
+    raise NotImplementedError
+
+
+def stereogenic_bonds(cgr):
+    """ identify all stereogenic bonds in this connectivity graph
+    """
+    raise NotImplementedError
+
+
 def possible_spin_multiplicities(cgr):
     """ possible spin multiplicities for this molecule connectivity
     """

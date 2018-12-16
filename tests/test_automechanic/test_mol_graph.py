@@ -4,6 +4,15 @@ from automechanic import mol
 from automechanic.mol import graph2 as graph
 
 
+def test__vertex_neighbor_keys():
+    """ test graph.vertex_neighbor_keys
+    """
+    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0)),
+           {frozenset({1, 3}): None, frozenset({2, 3}): None,
+            frozenset({0, 3}): None})
+    assert graph.vertex_neighbor_keys(gra, 3) == (0, 1, 2)
+
+
 def test__induced_subgraph():
     """ test graph.induced_subgraph
     """
@@ -26,13 +35,40 @@ def test__delete_vertices():
                 {frozenset({3, 4}): None}))
 
 
-def test__vertex_neighbor_keys():
-    """ test graph.vertex_neighbor_keys
+def test__branch():
+    """ test graph.branch
     """
-    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0)),
-           {frozenset({1, 3}): None, frozenset({2, 3}): None,
-            frozenset({0, 3}): None})
-    assert graph.vertex_neighbor_keys(gra, 3) == (0, 1, 2)
+    gra = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
+            ('C', 2), ('C', 1), ('O', 0)),
+           {frozenset({4, 6}): None, frozenset({6, 7}): None,
+            frozenset({0, 2}): None, frozenset({8, 7}): None,
+            frozenset({2, 4}): None, frozenset({3, 5}): None,
+            frozenset({1, 3}): None, frozenset({5, 7}): None})
+    assert (graph.branch(gra, 7, 5) ==
+            ((('C', 3), ('C', 1), ('C', 1), ('C', 1)),
+             {frozenset({1, 2}): None, frozenset({0, 1}): None,
+              frozenset({2, 3}): None}))
+    assert (graph.branch(gra, 7, 6) ==
+            ((('C', 3), ('C', 1), ('C', 1), ('C', 2), ('C', 1)),
+             {frozenset({2, 3}): None, frozenset({3, 4}): None,
+              frozenset({0, 1}): None, frozenset({1, 2}): None}))
+    assert (graph.branch(gra, 7, 8) ==
+            ((('O', 0), ('C', 1)), {frozenset({0, 1}): None}))
+
+    gra = ((('C', 1), ('C', 1), ('C', 2), ('C', 1), ('F', 0)),
+           {frozenset({3, 4}): None, frozenset({2, 3}): None,
+            frozenset({0, 1}): None, frozenset({0, 2}): None,
+            frozenset({1, 3}): None})
+    assert (graph.branch(gra, 3, 1) ==
+            ((('C', 1), ('C', 1), ('C', 2), ('C', 1)),
+             {frozenset({2, 3}): None, frozenset({0, 1}): None,
+              frozenset({0, 2}): None, frozenset({1, 3}): None}))
+    assert (graph.branch(gra, 3, 2) ==
+            ((('C', 1), ('C', 1), ('C', 2), ('C', 1)),
+             {frozenset({2, 3}): None, frozenset({0, 1}): None,
+              frozenset({0, 2}): None, frozenset({1, 3}): None}))
+    assert (graph.branch(gra, 3, 4) ==
+            ((('C', 1), ('F', 0)), {frozenset({0, 1}): None}))
 
 
 def test__permute_vertices():
@@ -55,11 +91,6 @@ def test__conn__make_hydrogens_implicit():
             frozenset({0, 3}): None, frozenset({4, 5}): None})
     assert (graph.conn.make_hydrogens_implicit(gra)
             == ((('F', 0), ('C', 2), ('H', 1)), {frozenset({0, 1}): None}))
-
-
-def test__conn__stereogenic_atoms():
-    """ test graph.conn.stereogenic_atoms
-    """
 
 
 def test__conn__possible_spin_multiplicities():
@@ -110,3 +141,4 @@ if __name__ == '__main__':
     test__conn__possible_spin_multiplicities()
     test__conn__make_hydrogens_implicit()
     test__conn__molfile()
+    test__branch()

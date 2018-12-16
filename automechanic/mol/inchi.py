@@ -1,6 +1,7 @@
 """ functions operating on InChI strings
 """
 import itertools
+import numpy
 from .geom import inchi as _inchi_from_geometry
 from .graph2.conn import (make_hydrogens_implicit as
                           _graph_conn_make_hydrogens_implicit)
@@ -15,10 +16,12 @@ from ._ipybel import from_inchi as _pbm_from_inchi
 from ._ipybel import geometry as _pbm_to_geometry
 from ..rere.pattern import escape as _escape
 from ..rere.pattern import capturing as _capturing
+from ..rere.pattern import zero_or_more as _zero_or_more
 from ..rere.pattern import one_or_more as _one_or_more
 from ..rere.pattern import one_of_these as _one_of_these
 from ..rere.pattern import not_followed_by as _not_followed_by
 from ..rere.pattern_lib import LOWERCASE_LETTER as _LOWERCASE_LETTER
+from ..rere.pattern_lib import UNSIGNED_INTEGER as _UNSIGNED_INTEGER
 from ..rere.pattern_lib import NONWHITESPACE as _NONWHITESPACE
 from ..rere.pattern_lib import STRING_START as _STRING_START
 from ..rere.pattern_lib import STRING_END as _STRING_END
@@ -139,9 +142,27 @@ def connectivity_graph(ich):
     """ connectivity graph from an InChI string
     """
     rdm = _rdm_from_inchi(ich)
+
+    # make sure the InChI string was valid and that the graph will be
+    # inchi-sorted
+    ich_, ich_aux = _rdm_to_inchi(rdm, with_aux_info=True)
+    ich_ord = _parse_inchi_order_from_auxinfo(ich_aux)
+    assert list(ich_ord) == sorted(ich_ord)
+    assert core_parent(ich) == core_parent(ich_)
+
     cgr = _rdm_to_connectivity_graph(rdm)
     cgr = _graph_conn_make_hydrogens_implicit(cgr)
     return cgr
+
+
+def _parse_inchi_order_from_auxinfo(ich_aux):
+    _comma = _escape(',')
+    _pattern = _escape('/N:') + _capturing(
+        _zero_or_more(_UNSIGNED_INTEGER + _comma) + _UNSIGNED_INTEGER)
+    one_index_order_str = _first_capture(_pattern, ich_aux)
+    one_index_order = tuple(map(int, _split(_comma, one_index_order_str)))
+    order = tuple(numpy.subtract(one_index_order, 1))
+    return order
 
 
 def _inchi_matches_geometry(ich, geo):

@@ -8,6 +8,7 @@ from .base import vertex_edges
 from .base import vertex_neighbor_keys
 from .base import induced_subgraph
 from .base import delete_vertices
+from .base import branch
 from .base import permute_vertices
 from . import conn
 
@@ -16,6 +17,6 @@ __all__ = [
     'conn',
     # base functions
     'vertices', 'edges', 'vertex_keys', 'edge_keys', 'vertex_edges',
-    'vertex_neighbor_keys', 'induced_subgraph', 'delete_vertices',
+    'vertex_neighbor_keys', 'induced_subgraph', 'delete_vertices', 'branch',
     'permute_vertices'
 ]

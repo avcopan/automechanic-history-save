@@ -5,6 +5,7 @@ terminology:
     - edges: a dictionary; keyed by frozenset pairs of `vertex keys`, which
       will be termed `edge keys`
 """
+from itertools import chain as _chain
 from ._perm import inverse as _inverse_permutation
 
 
@@ -72,9 +73,27 @@ def delete_vertices(gra, vkeys):
     return induced_subgraph(gra, set(all_vkeys) - set(vkeys))
 
 
-def branch(gra, edg_vkey1, edg_vkey2):
-    """ return the branch extending from edg_vkey2 away from edg_vkey1
+def _branch_vertex_keys(gra, vkeys, seen_vkeys, excl_vkeys):
+    new_vkeys = vkeys - seen_vkeys
+    if new_vkeys:
+        new_vkey_neighbors = set(_chain(
+            *(vertex_neighbor_keys(gra, vkey) for vkey in new_vkeys)))
+        vkeys.update(new_vkey_neighbors - excl_vkeys)
+        seen_vkeys.update(new_vkeys)
+        _branch_vertex_keys(gra, vkeys, seen_vkeys, excl_vkeys)
+    return vkeys
+
+
+def branch(gra, vkey1, vkey2, excl_vkeys=None):
+    """ return the branch extending from vkey1 and vkey2 away from vkey1
+
+    vkey1 and vkey2 must be adjacent
     """
+    assert frozenset({vkey1, vkey2}) in edge_keys(gra)
+    excl_vkeys = {vkey1} if excl_vkeys is None else excl_vkeys.union({vkey1})
+    vkeys = _branch_vertex_keys(gra, {vkey2}, set(), excl_vkeys)
+    vkeys.add(vkey1)
+    return induced_subgraph(gra, vkeys)
 
 
 def permute_vertices(gra, vkeys_permutation):

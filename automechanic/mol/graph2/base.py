@@ -9,6 +9,7 @@ from itertools import chain as _chain
 from ._perm import inverse as _inverse_permutation
 from ._inetworkx import from_automechanic_graph as _nxg_from_graph
 from ._inetworkx import isomorphism as _nxg_isomorphism
+from ._inetworkx import cycle_keys_list as _nxg_cycle_keys_list
 
 
 def vertices(gra):
@@ -103,27 +104,11 @@ def branch(gra, key1, key2, excl_keys=None):
     return induced_subgraph(gra, bch_keys)
 
 
-def _ring_keys_list_recursive(gra, ring_keys_lst, chain_keys_lst):
-    next_chain_keys_lst = []
-    for chain_keys in chain_keys_lst:
-        nkeys = set(vertex_neighbor_keys(gra, chain_keys[-1]))
-        if chain_keys[0] in nkeys:
-            ring_keys_lst.append(chain_keys)
-        for nkey in nkeys - {chain_keys[0], chain_keys[-2]}:
-            next_chain_keys_lst.append(chain_keys + [nkey])
-        _ring_keys_list_recursive(gra, ring_keys_lst, next_chain_keys_lst)
-    return ring_keys_lst
-
-
-def ring_keys_list(gra):
+def cycle_keys_list(gra):
     """ return keys for all rings (cycles) in the graph
     """
-    rng_keys_lst = []
-    for ekey in edge_keys(gra):
-        if not any(set(rng_keys) > ekey for rng_keys in rng_keys_lst):
-            rng_keys_lst += _ring_keys_list_recursive(gra, [], [list(ekey)])
-
-    print(rng_keys_lst)
+    nxg = _nxg_from_graph(gra)
+    return _nxg_cycle_keys_list(nxg)
 
 
 def permute_vertices(gra, perm_keys):

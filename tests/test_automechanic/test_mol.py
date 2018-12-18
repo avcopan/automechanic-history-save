@@ -349,6 +349,14 @@ def test__inchi__prefix():
     assert mol.inchi.prefix(C2H2F2_ICH_STEREO_UNKNOWN) == 'InChI=1'
 
 
+def test__inchi__version():
+    """ test mol.inchi.version
+    """
+    assert mol.inchi.version(C2H2F2_ICH) == '1S'
+    assert mol.inchi.version(C2H2F2_ICH_NO_STEREO) == '1S'
+    assert mol.inchi.version(C2H2F2_ICH_STEREO_UNKNOWN) == '1'
+
+
 def test__inchi__formula_layer():
     """ test mol.inchi.formula_layer
     """
@@ -425,6 +433,12 @@ def test__inchi__connectivity_graph():
                  frozenset({1, 3}): None}))
 
 
+def test__inchi__stereo_graph():
+    """ test mol.inchi.stereo_graph
+    """
+    print(mol.inchi.stereo_graph(C8H13O_ICH))
+
+
 def test__inchi__has_unknown_stereo_elements():
     """ test mol.inchi.has_unknown_stereo_elements
     """
@@ -471,36 +485,30 @@ def test__inchi_key__second_hash():
         mol.inchi.inchi_key(C2H2F2_ICH_STEREO_UNKNOWN)) == 'HXYFBOIP')
 
 
-def test__geom__resonance_graph():
-    """ test mol.geom.resonance_graph()
-    """
-    assert (mol.geom.resonance_graph(C2H2F2_GEO)
-            == (('F', 'C', 'C', 'F', 'H', 'H'),
-                {frozenset({0, 1}): 1, frozenset({1, 2}): 2,
-                 frozenset({1, 4}): 1, frozenset({2, 3}): 1,
-                 frozenset({2, 5}): 1}))
-
-
 if __name__ == '__main__':
-    test__smiles__inchi()
-    test__molfile__inchi()
-    test__inchi__smiles()
-    # test__inchi__recalculate()
-    test__inchi__is_closed()
-    # test__inchi__prefix()
-    # test__inchi__formula_layer()
-    # test__inchi__sublayer()
-    test__inchi__with_sublayers()
-    # test__inchi__inchi_key()
-    # test__inchi__geometry()
+    # test__smiles__inchi()
+    # test__molfile__inchi()
+    # test__inchi__smiles()
+    # # test__inchi__recalculate()
+    # test__inchi__is_closed()
+    # # test__inchi__prefix()
+    # # test__inchi__formula_layer()
+    # # test__inchi__sublayer()
+    # test__inchi__with_sublayers()
+    # # test__inchi__inchi_key()
+    # # test__inchi__geometry()
+    # # test__inchi__connectivity_graph()
+    # test__inchi__has_unknown_stereo_elements()
+    # test__inchi_key__is_standard_neutral()
+    # test__inchi_key__first_hash()
+    # test__inchi_key__second_hash()
+    # # test__inchi__compatible_stereoisomers()
+    # # test__geom__inchi_with_order()
+    # # test__geom__atoms()
+    # # test__geom__bonds()
+    # # test__geom__graph()
     # test__inchi__connectivity_graph()
-    test__inchi__has_unknown_stereo_elements()
-    test__inchi_key__is_standard_neutral()
-    test__inchi_key__first_hash()
-    test__inchi_key__second_hash()
-    # test__inchi__compatible_stereoisomers()
-    # test__geom__inchi_with_order()
-    # test__geom__atoms()
-    # test__geom__bonds()
-    # test__geom__graph()
-    test__inchi__connectivity_graph()
+    # test__inchi__stereo_graph()
+    test__inchi__prefix()
+    test__inchi__version()
+    test__inchi__formula_layer()

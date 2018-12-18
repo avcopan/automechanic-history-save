@@ -11,7 +11,7 @@ from .base import isomorphic
 from .base import induced_subgraph
 from .base import delete_vertices
 from .base import branch
-from .base import ring_keys_list
+from .base import cycle_keys_list
 from .base import permute_vertices
 from . import conn
 
@@ -21,5 +21,5 @@ __all__ = [
     # base functions
     'vertices', 'edges', 'vertex_keys', 'edge_keys', 'vertex_edges',
     'vertex_neighbor_keys', 'isomorphism', 'isomorphic', 'induced_subgraph',
-    'delete_vertices', 'branch', 'ring_keys_list', 'permute_vertices'
+    'delete_vertices', 'branch', 'cycle_keys_list', 'permute_vertices'
 ]

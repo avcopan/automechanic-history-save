@@ -17,6 +17,7 @@ from .base import vertex_edges as _vertex_edges
 from .base import vertex_neighbor_keys as _vertex_neighbor_keys
 from .base import delete_vertices as _delete_vertices
 from .base import branch as _branch
+from .base import cycle_keys_list as _cycle_keys_list
 from .base import permute_vertices as _permute_vertices
 from .base import isomorphic as _isomorphic
 from ..atom import valence as _atom_valence
@@ -164,8 +165,11 @@ def stereogenic_bonds(cgr):
     def _bond_is_stereo_candidate(bnd_key):
         nsig_elec_cnts = nonsigma_electron_counts(cgr)
         not_linear = any(nsig_elec_cnts[atm_key] < 2 for atm_key in bnd_key)
-        return not_linear
-        # TODO: filter out <8-membered rings
+        cyc_keys_lst = _cycle_keys_list(cgr)
+        # follow InChI rule, ignoring stereo bonds in rings of size < 8
+        not_in_small_cycle = not any(bnd_key < set(cyc_keys) for cyc_keys in
+                                     cyc_keys_lst if len(cyc_keys) < 8)
+        return not_linear and not_in_small_cycle
 
     def _atom_is_symmetric_on_bond(atm_key, bonded_atm_key):
         nkeys = _vertex_neighbor_keys(cgr, atm_key)
@@ -184,12 +188,6 @@ def stereogenic_bonds(cgr):
                                                potential_pi_bond_keys(cgr))
                  if not any(_starmap(_atom_is_symmetric_on_bond,
                                      _permutations(bnd_key))))
-
-
-def resonance_graphs(cgr):
-    """ get all possible pi resonance graphs from a connectivity graph
-    """
-    raise NotImplementedError(cgr)
 
 
 def possible_spin_multiplicities(cgr):

@@ -81,8 +81,8 @@ def test__branch():
             ((('C', 1), ('F', 0)), {frozenset({0, 1}): None}))
 
 
-def test__ring_keys_list():
-    """ test graph.ring_keys_list
+def test__cycle_keys_list():
+    """ test graph.cycle_keys_list
     """
     gra = ((('C', 1), ('C', 0), ('C', 0), ('C', 0), ('C', 0), ('N', 2),
             ('N', 0), ('N', 0), ('N', 0), ('N', 1), ('O', 1)),
@@ -92,7 +92,7 @@ def test__ring_keys_list():
             frozenset({2, 5}): None, frozenset({1, 6}): None,
             frozenset({0, 7}): None, frozenset({9, 4}): None,
             frozenset({1, 3}): None, frozenset({8, 4}): None})
-    print(graph.ring_keys_list(gra))
+    assert graph.cycle_keys_list(gra) == ((0, 1, 3, 6, 7), (1, 2, 3, 4, 8, 9))
 
 
 def test__permute_vertices():
@@ -168,10 +168,16 @@ def test__conn__stereogenic_bonds():
              frozenset({0, 2}): None, frozenset({8, 7}): None,
              frozenset({2, 4}): None, frozenset({3, 5}): None,
              frozenset({1, 3}): None, frozenset({5, 7}): None})
+    # small-ring double bond (not treated as stereogenic)
+    cgr4 = ((('C', 3), ('C', 1), ('C', 0), ('C', 1), ('F', 0)),
+            {frozenset({3, 4}): None, frozenset({2, 3}): None,
+             frozenset({1, 2}): None, frozenset({0, 2}): None,
+             frozenset({1, 3}): None})
     assert graph.conn.stereogenic_bonds(cgr0) == ()
     assert graph.conn.stereogenic_bonds(cgr1) == (frozenset({0, 1}),)
     assert graph.conn.stereogenic_bonds(cgr2) == (frozenset({2, 4}),
                                                   frozenset({3, 5}))
+    assert graph.conn.stereogenic_bonds(cgr4) == ()
 
 
 def test__conn__possible_spin_multiplicities():
@@ -220,7 +226,7 @@ if __name__ == '__main__':
     test__induced_subgraph()
     test__delete_vertices()
     test__branch()
-    test__ring_keys_list()
+    test__cycle_keys_list()
     test__permute_vertices()
     test__conn__possible_spin_multiplicities()
     test__conn__make_hydrogens_implicit()

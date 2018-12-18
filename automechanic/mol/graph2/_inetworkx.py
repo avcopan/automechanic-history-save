@@ -18,6 +18,13 @@ def from_automechanic_graph(gra):
     return nxg
 
 
+def cycle_keys_list(nxg):
+    """ minimum cycle basis for the graph
+    """
+    cyc_keys_lst = networkx.algorithms.cycles.minimum_cycle_basis(nxg)
+    return tuple(map(tuple, cyc_keys_lst))
+
+
 def isomorphism(nxg1, nxg2):
     """ graph isomorphism
     """

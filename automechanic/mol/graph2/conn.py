@@ -145,6 +145,8 @@ def potential_pi_bond_keys(cgr):
 
 def stereogenic_atoms(cgr):
     """ identify all stereogenic atoms in the connectivity graph
+
+    currently missing allene stereo
     """
     keys = []
     sig_bnd_cnts = sigma_bond_counts(cgr)
@@ -161,6 +163,8 @@ def stereogenic_atoms(cgr):
 
 def stereogenic_bonds(cgr):
     """ identify all stereogenic bonds in this connectivity graph
+
+    currently missing cumulene stereo
     """
     def _bond_is_stereo_candidate(bnd_key):
         nsig_elec_cnts = nonsigma_electron_counts(cgr)

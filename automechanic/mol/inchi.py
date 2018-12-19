@@ -1,6 +1,8 @@
 """ functions operating on InChI strings
 """
 import itertools
+from string import ascii_lowercase as _ascii_lowercase
+
 import numpy
 from .geom import inchi as _inchi_from_geometry
 from .graph2.conn import (make_hydrogens_implicit as
@@ -15,25 +17,42 @@ from ._irdkit import connectivity_graph as _rdm_to_connectivity_graph
 from ._ipybel import from_inchi as _pbm_from_inchi
 from ._ipybel import geometry as _pbm_to_geometry
 from ..rere.pattern import escape as _escape
-from ..rere.pattern import capturing as _capturing
 from ..rere.pattern import named_capturing as _named_capturing
-from ..rere.pattern import zero_or_more as _zero_or_more
 from ..rere.pattern import one_or_more as _one_or_more
 from ..rere.pattern import one_of_these as _one_of_these
 from ..rere.pattern import not_followed_by as _not_followed_by
-# from ..rere.pattern_lib import ANY_CHAR as _ANY_CHAR
 from ..rere.pattern_lib import LOWERCASE_LETTER as _LOWERCASE_LETTER
 from ..rere.pattern_lib import UNSIGNED_INTEGER as _UNSIGNED_INTEGER
 from ..rere.pattern_lib import NONWHITESPACE as _NONWHITESPACE
 from ..rere.pattern_lib import STRING_START as _STRING_START
 from ..rere.pattern_lib import STRING_END as _STRING_END
-from ..rere.find import first_capture as _first_capture
 from ..rere.find import first_named_capture as _first_named_capture
-from ..rere.find import ends_with as _ends_with
-from ..rere.find import replace as _replace
-from ..rere.find import split as _split
+from ..rere.find import all_captures as _all_captures
 
 _INCHI_SUBLAYER_END = _one_of_these([_escape('/'), _STRING_END])
+_NONWHITESPACES_NONGREEDY = _one_or_more(_NONWHITESPACE, greedy=False)
+_STEREO_UNKNOWN_VAL = 'u'
+_STEREO_UNDEFINED_VAL = '?'
+_STEREO_MINUS_VAL = '-'
+_STEREO_PLUS_VAL = '+'
+
+
+def _key_layer(key):
+    assert key in _ascii_lowercase
+
+    class _KEYxLAYER():
+        LAYER_KEY = 'all'
+        CONTENT_KEY = 'content'
+
+        _START = _escape('/')
+        _LAYER = key + _named_capturing(_NONWHITESPACES_NONGREEDY,
+                                        name=CONTENT_KEY)
+        _END = _INCHI_SUBLAYER_END
+
+        PATTERN = _START + _named_capturing(_LAYER, name=LAYER_KEY) + _END
+
+    _KEYxLAYER.__name__ = 'KEYxLAYER(\'{:s}\')'.format(key)
+    return _KEYxLAYER
 
 
 class PARSE():
@@ -41,24 +60,87 @@ class PARSE():
 
     class PREFIX():
         """ _ """
-        _START = _STRING_START + _escape('InChI=')
-        _VERSION = _one_or_more(_NONWHITESPACE, greedy=False)
+        LAYER_KEY = 'all'
+        CONTENT_KEY = 'content'
+
+        _START = _STRING_START
+        _LAYER = (_escape('InChI=') +
+                  _named_capturing(_NONWHITESPACES_NONGREEDY,
+                                   name=CONTENT_KEY))
         _END = _INCHI_SUBLAYER_END
 
-        ALL_KEY = 'all'
-        VERSION_KEY = 'version'
-        PATTERN = _named_capturing(
-            _START + _named_capturing(_VERSION, name=VERSION_KEY),
-            name=ALL_KEY) + _END
+        PATTERN = _START + _named_capturing(_LAYER, name=LAYER_KEY) + _END
 
     class FORMULA():
         """ _ """
-        _START = _escape('/') + _not_followed_by(_LOWERCASE_LETTER)
-        _FORMULA = _one_or_more(_NONWHITESPACE, greedy=False)
+        LAYER_KEY = 'all'
+        CONTENT_KEY = 'content'
+
+        _START = _escape('/')
+        _LAYER = (_not_followed_by(_LOWERCASE_LETTER) +
+                  _named_capturing(_NONWHITESPACES_NONGREEDY,
+                                   name=CONTENT_KEY))
         _END = _INCHI_SUBLAYER_END
 
-        ALL_KEY = 'all'
-        PATTERN = _START + _named_capturing(_FORMULA, name=ALL_KEY) + _END
+        PATTERN = _START + _named_capturing(_LAYER, name=LAYER_KEY) + _END
+
+    KEY_LAYER = _key_layer
+
+    class AUXINFO():
+        """ _ """
+
+        class NUMBERING():
+            """ _ """
+            LAYER_KEY = 'all'
+            CONTENT_KEY = 'content'
+
+            _START = _escape('/')
+            _LAYER = (_escape('N:') +
+                      _named_capturing(_NONWHITESPACES_NONGREEDY,
+                                       name=CONTENT_KEY))
+            _END = _INCHI_SUBLAYER_END
+
+            PATTERN = _START + _named_capturing(_LAYER, name=LAYER_KEY) + _END
+
+            class NUMBER():
+                """ _ """
+                PATTERN = _UNSIGNED_INTEGER
+
+    class ATOMxSTEREO(_key_layer('t')):
+        """ _ """
+
+        class TERM():
+            """ _ """
+            KEY_KEY = 'key'
+            VAL_KEY = 'val'
+
+            PLUS_VAL = _STEREO_PLUS_VAL
+            MINUS_VAL = _STEREO_MINUS_VAL
+            UNKNOWN_VALS = (_STEREO_UNKNOWN_VAL, _STEREO_UNDEFINED_VAL)
+            VALS = (MINUS_VAL, PLUS_VAL) + UNKNOWN_VALS
+
+            _KEY = _UNSIGNED_INTEGER
+            _VAL = _one_of_these(list(map(_escape, VALS)))
+            PATTERN = (_named_capturing(_KEY, name=KEY_KEY) +
+                       _named_capturing(_VAL, name=VAL_KEY))
+
+    class BONDxSTEREO(_key_layer('b')):
+        """ _ """
+
+        class TERM():
+            """ _ """
+            KEY_KEY = 'key'
+            VAL_KEY = 'val'
+
+            PLUS_VAL = _STEREO_PLUS_VAL
+            MINUS_VAL = _STEREO_MINUS_VAL
+            UNKNOWN_VALS = (_STEREO_UNKNOWN_VAL, _STEREO_UNDEFINED_VAL)
+            VALS = (MINUS_VAL, PLUS_VAL) + UNKNOWN_VALS
+
+            _KEY = _UNSIGNED_INTEGER + _escape('-') + _UNSIGNED_INTEGER
+            _VAL = _one_of_these(list(map(_escape, VALS)))
+            PATTERN = (_named_capturing(_KEY, name=KEY_KEY) +
+                       _named_capturing(_VAL, name=VAL_KEY))
 
 
 def smiles(ich):
@@ -97,7 +179,7 @@ def prefix(ich):
     """
     cap_dct = _first_named_capture(PARSE.PREFIX.PATTERN, ich)
     assert cap_dct
-    pfx = cap_dct[PARSE.PREFIX.ALL_KEY]
+    pfx = cap_dct[PARSE.PREFIX.LAYER_KEY]
     return pfx
 
 
@@ -106,7 +188,7 @@ def version(ich):
     """
     cap_dct = _first_named_capture(PARSE.PREFIX.PATTERN, ich)
     assert cap_dct
-    ver = cap_dct[PARSE.PREFIX.VERSION_KEY]
+    ver = cap_dct[PARSE.PREFIX.CONTENT_KEY]
     return ver
 
 
@@ -115,44 +197,104 @@ def formula_layer(ich):
     """
     cap_dct = _first_named_capture(PARSE.FORMULA.PATTERN, ich)
     assert cap_dct
-    fml = cap_dct[PARSE.FORMULA.ALL_KEY]
+    fml = cap_dct[PARSE.FORMULA.LAYER_KEY]
     return fml
 
 
-def sublayer(ich, key):
+def key_layer(ich, key):
     """ a sublayer from the InChI string, by key
     """
-    slash = _escape('/')
-    _start = slash + key
-    _body = _one_or_more(_NONWHITESPACE, greedy=False)
-    _end = _one_of_these([slash, _STRING_END])
-    _pattern = _start + _capturing(_body) + _end
-    return _first_capture(_pattern, ich)
+    key_layer_parser = PARSE.KEY_LAYER(key)
+    cap_dct = _first_named_capture(key_layer_parser.PATTERN, ich)
+    return cap_dct[key_layer_parser.LAYER_KEY] if cap_dct else None
 
 
-def with_sublayers(ich, keys):
-    """ InChI string with only the main layer
+def key_layer_content(ich, key):
+    """ a sublayer from the InChI string, by key
     """
-    ich_pfx = prefix(ich)
-    ich_fml = formula_layer(ich)
-
-    parts = [ich_pfx, ich_fml]
-
-    for key in keys:
-        sub = sublayer(ich, key=key)
-        if sub:
-            parts.append('{key:s}{sub:s}'.format(key=key, sub=sub))
-
-    ich_bas = '/'.join(parts)
-    return ich_bas
+    key_layer_parser = PARSE.KEY_LAYER(key)
+    cap_dct = _first_named_capture(key_layer_parser.PATTERN, ich)
+    return cap_dct[key_layer_parser.CONTENT_KEY] if cap_dct else None
 
 
 def core_parent(ich):
     """ get the InChI string of the core parent structure
     """
-    ich_cp = with_sublayers(ich, ('c', 'h'))
-    assert is_closed(ich_cp)
-    return ich_cp
+    lyrs = [prefix(ich), formula_layer(ich)]
+    for key in ('c', 'h'):
+        lyr = key_layer(ich, key=key)
+        if lyr is not None:
+            lyrs.append(lyr)
+    return '/'.join(lyrs)
+
+
+def atom_stereo_elements(ich):
+    """ atom stereo keys and values
+    """
+    cap_dct = _first_named_capture(PARSE.ATOMxSTEREO.PATTERN, ich)
+    ret = ()
+    if cap_dct:
+        lyr = cap_dct[PARSE.ATOMxSTEREO.LAYER_KEY]
+        ret = _all_captures(PARSE.ATOMxSTEREO.TERM.PATTERN, lyr)
+    return ret
+
+
+def bond_stereo_elements(ich):
+    """ bond stereo keys and values
+    """
+    cap_dct = _first_named_capture(PARSE.BONDxSTEREO.PATTERN, ich)
+    ret = ()
+    if cap_dct:
+        lyr = cap_dct[PARSE.BONDxSTEREO.LAYER_KEY]
+        ret = _all_captures(PARSE.BONDxSTEREO.TERM.PATTERN, lyr)
+    return ret
+
+
+def has_unknown_stereo_elements(ich):
+    """ does this InChI string have unknown stereo elements?
+    """
+    ich_ste = recalculate(ich, force_stereo=True)
+    return (atom_stereo_elements(ich_ste) !=
+            _known_atom_stereo_elements(ich_ste) or
+            bond_stereo_elements(ich_ste) !=
+            _known_bond_stereo_elements(ich_ste))
+
+
+def compatible_stereoisomers(ich):
+    """ expand InChI string to its compatible stereoisomers
+    """
+    atm_terms_lst = []
+    for num, (key, val) in enumerate(
+            atom_stereo_elements(recalculate(ich, force_stereo=True))):
+        terms = ([key + val] if val not in PARSE.ATOMxSTEREO.TERM.UNKNOWN_VALS
+                 else [key + PARSE.ATOMxSTEREO.TERM.MINUS_VAL] if num == 0
+                 else [key + PARSE.ATOMxSTEREO.TERM.MINUS_VAL,
+                       key + PARSE.ATOMxSTEREO.TERM.PLUS_VAL])
+        atm_terms_lst.append(terms)
+
+    bnd_terms_lst = []
+    for key, val in bond_stereo_elements(recalculate(ich, force_stereo=True)):
+        terms = ([key + val] if val not in PARSE.BONDxSTEREO.TERM.UNKNOWN_VALS
+                 else [key + PARSE.BONDxSTEREO.TERM.MINUS_VAL,
+                       key + PARSE.BONDxSTEREO.TERM.PLUS_VAL])
+        bnd_terms_lst.append(terms)
+
+    ich_cp = core_parent(ich)
+    ich_lst = [ich_cp]
+    if bnd_terms_lst:
+        lyr_lst = ['b' + ','.join(terms)
+                   for terms in itertools.product(*bnd_terms_lst)]
+        ich_lst = [ich_start + '/' + lyr
+                   for ich_start, lyr in itertools.product(ich_lst, lyr_lst)]
+
+    if atm_terms_lst:
+        lyr_lst = ['t' + ','.join(terms)
+                   for terms in itertools.product(*atm_terms_lst)]
+        ich_lst = [ich_start + '/' + lyr
+                   for ich_start, lyr in itertools.product(ich_lst, lyr_lst)]
+
+    ich_lst = tuple(map(recalculate, ich_lst))
+    return ich_lst
 
 
 def inchi_key(ich):
@@ -178,29 +320,44 @@ def connectivity_graph(ich):
     return cgr
 
 
+def stereo_graph(ich):
+    """ stereo graph from an InChI string
+    """
+    def _int_minus_one(int_str):
+        return int(int_str) - 1
+
+    def _atom_key(ich_atm_key):
+        return _int_minus_one(ich_atm_key)
+
+    def _bond_key(ich_bnd_key):
+        return frozenset(map(_int_minus_one, str.split(ich_bnd_key, '-')))
+
+    def _value(ich_ste_val):
+        assert ich_ste_val in ('-', '+')
+        return False if ich_ste_val == '-' else True
+
+    atms, cnns = connectivity_graph(ich)
+    assert not has_unknown_stereo_elements(ich)
+    atm_ste_dct = {_atom_key(key): _value(val)
+                   for key, val in atom_stereo_elements(ich)}
+    bnd_ste_dct = {_bond_key(key): _value(val)
+                   for key, val in bond_stereo_elements(ich)}
+    assert set(atm_ste_dct.keys()) <= set(range(len(atms)))
+    assert set(bnd_ste_dct.keys()) <= set(cnns.keys())
+    atms = tuple((sym, hcnt, atm_ste_dct[key]) if key in atm_ste_dct else
+                 (sym, hcnt, None) for key, (sym, hcnt) in enumerate(atms))
+    bnds = cnns.copy()
+    bnds.update(bnd_ste_dct)
+    return (atms, bnds)
+
+
 def _parse_inchi_order_from_auxinfo(ich_aux):
-    _comma = _escape(',')
-    _pattern = _escape('/N:') + _capturing(
-        _zero_or_more(_UNSIGNED_INTEGER + _comma) + _UNSIGNED_INTEGER)
-    one_index_order_str = _first_capture(_pattern, ich_aux)
-    one_index_order = tuple(map(int, _split(_comma, one_index_order_str)))
-    order = tuple(numpy.subtract(one_index_order, 1))
-    return order
-
-
-# def stereo_graph(ich):
-#     """ stereo graph from an InChI string
-#     """
-#     cgr = connectivity_graph(ich)
-#     assert not has_unknown_stereo_elements(ich)
-#     print(cgr)
-#     _atom_stereo_values(ich)
-#     _bond_stereo_values(ich)
-#
-#
-# def _bond_stereo_values(ich):
-#     eles = bond_stereo_elements(ich)
-#     print(eles)
+    cap_dct = _first_named_capture(PARSE.AUXINFO.NUMBERING.PATTERN, ich_aux)
+    lyr = cap_dct[PARSE.AUXINFO.NUMBERING.CONTENT_KEY]
+    one_index_numbering = tuple(
+        map(int, _all_captures(PARSE.AUXINFO.NUMBERING.NUMBER.PATTERN, lyr)))
+    numbering = tuple(numpy.subtract(one_index_numbering, 1))
+    return numbering
 
 
 def geometry(ich):
@@ -209,125 +366,31 @@ def geometry(ich):
     try:
         rdm = _rdm_from_inchi(ich)
         geo = _rdm_to_geometry(rdm)
-        assert _inchi_matches_geometry(ich, geo)
+        assert matches_geometry(ich, geo)
     except (AssertionError, RuntimeError):
         pbm = _pbm_from_inchi(ich)
         geo = _pbm_to_geometry(pbm)
-        assert _inchi_matches_geometry(ich, geo)
+        assert matches_geometry(ich, geo)
     return geo
 
 
-def _inchi_matches_geometry(ich, geo):
-    ich_from_geo = _inchi_from_geometry(geo)
-    ich1 = core_parent(ich)
-    ich2 = core_parent(ich_from_geo)
-    assert ich1 == ich2
-    ez1 = known_bond_stereo_elements(ich)
-    ez2 = known_bond_stereo_elements(ich_from_geo)
-    th1 = known_atom_stereo_elements(ich)
-    th2 = known_atom_stereo_elements(ich_from_geo)
-    ret = set(ez1) <= set(ez2) and set(th1) <= set(th2)
-    return ret
-
-
-def has_unknown_stereo_elements(ich):
-    """ does this InChI have unknown stereo elements
+def matches_geometry(ich, geo):
+    """ does this inchi string match this geometry?
     """
-    return bool(unknown_bond_stereo_elements(ich) or
-                unknown_atom_stereo_elements(ich))
+    geo_ich = _inchi_from_geometry(geo)
+    assert key_layer(ich, 'c') == key_layer(geo_ich, 'c')
+    assert key_layer(ich, 'h') == key_layer(geo_ich, 'h')
+    return (set(_known_atom_stereo_elements(ich)) <=
+            set(_known_atom_stereo_elements(geo_ich)) and
+            set(_known_bond_stereo_elements(ich)) <=
+            set(_known_bond_stereo_elements(geo_ich)))
 
 
-def bond_stereo_elements(ich):
-    """ double bond stereo elements
-    """
-    ich = recalculate(ich, force_stereo=True)
-    sub = sublayer(ich, 'b')
-    eles = _split(',', sub) if sub else ()
-    return tuple(eles)
+def _known_atom_stereo_elements(ich):
+    return tuple((key, val) for key, val in atom_stereo_elements(ich)
+                 if val not in PARSE.ATOMxSTEREO.TERM.UNKNOWN_VALS)
 
 
-def atom_stereo_elements(ich):
-    """ atom stereo elements
-    """
-    ich = recalculate(ich, force_stereo=True)
-    sub = sublayer(ich, 't')
-    eles = _split(',', sub) if sub else ()
-    return tuple(eles)
-
-
-def unknown_bond_stereo_elements(ich):
-    """ known double bond stereo elements
-    """
-    return tuple(ele for ele in bond_stereo_elements(ich)
-                 if _ends_with(_escape('?'), ele))
-
-
-def unknown_atom_stereo_elements(ich):
-    """ known atom stereo elements
-    """
-    return tuple(ele for ele in atom_stereo_elements(ich)
-                 if _ends_with(_escape('?'), ele))
-
-
-def known_bond_stereo_elements(ich):
-    """ known double bond stereo elements
-    """
-    return tuple(ele for ele in bond_stereo_elements(ich)
-                 if not _ends_with(_escape('?'), ele))
-
-
-def known_atom_stereo_elements(ich):
-    """ known atom stereo elements
-    """
-    return tuple(ele for ele in atom_stereo_elements(ich)
-                 if not _ends_with(_escape('?'), ele))
-
-
-def compatible_stereoisomers(ich):
-    """ expand InChI string into its stereomers
-    """
-    def _bond_stereo_layer_from_elements(eles):
-        return 'b' + ','.join(eles)
-
-    def _atom_stereo_layer_from_elements(eles):
-        return 't' + ','.join(eles)
-
-    def _expand_unknown_stereo_element(ele):
-        _pattern = _escape('?') + _STRING_END
-        if not _ends_with(_pattern, ele):
-            ret = (ele,)
-        else:
-            ele_m = _replace(_pattern, '-', ele)
-            ele_p = _replace(_pattern, '+', ele)
-            ret = (ele_m, ele_p)
-        return ret
-
-    ich_bas = core_parent(ich)
-    ich_b_eles = list(bond_stereo_elements(ich))
-    ich_t_eles = list(atom_stereo_elements(ich))
-
-    # the first atom stereo center is always assigned to '-'
-    if ich_t_eles:
-        _pattern = _escape('?') + _STRING_END
-        ich_t_eles[0] = _replace(_pattern, '-', ich_t_eles[0])
-
-    ich_lst = [ich_bas]
-    if ich_b_eles:
-        ich_b_eles_lst = itertools.product(
-            *map(_expand_unknown_stereo_element, ich_b_eles))
-        ich_b_lst = list(map(_bond_stereo_layer_from_elements,
-                             ich_b_eles_lst))
-        ich_lst = ['/'.join((ich_start, ich_end)) for ich_start, ich_end in
-                   itertools.product(ich_lst, ich_b_lst)]
-
-    if ich_t_eles:
-        ich_t_eles_lst = itertools.product(
-            *map(_expand_unknown_stereo_element, ich_t_eles))
-        ich_t_lst = list(map(_atom_stereo_layer_from_elements,
-                             ich_t_eles_lst))
-        ich_lst = ['/'.join((ich_start, ich_end)) for ich_start, ich_end in
-                   itertools.product(ich_lst, ich_t_lst)]
-
-    # recalculating restores the /m and /s sublayers
-    ich_lst = tuple(map(recalculate, ich_lst))
-    return ich_lst
+def _known_bond_stereo_elements(ich):
+    return tuple((key, val) for key, val in bond_stereo_elements(ich)
+                 if val not in PARSE.BONDxSTEREO.TERM.UNKNOWN_VALS)

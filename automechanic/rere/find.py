@@ -36,7 +36,7 @@ def matcher(pattern):
 def all_captures(pattern, string):
     """ capture(s) for all matches of a capturing pattern
     """
-    return re.findall(pattern, string, flags=re.MULTILINE)
+    return tuple(re.findall(pattern, string, flags=re.MULTILINE))
 
 
 def first_capture(pattern, string):
@@ -64,7 +64,7 @@ def first_named_capture(pattern, string):
 def split(pattern, string):
     """ split string at matches
     """
-    return re.split(pattern, string, maxsplit=0, flags=re.MULTILINE)
+    return tuple(re.split(pattern, string, maxsplit=0, flags=re.MULTILINE))
 
 
 def split_words(string):

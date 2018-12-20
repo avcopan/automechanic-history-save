@@ -49,7 +49,10 @@ def vertex_neighbor_keys(gra, key):
     """ keys for vertices adjacent to this one
     """
     vtx_ekeys = vertex_edges(gra, key).keys()
-    vtx_nkeys, = zip(*(ekey - {key} for ekey in vtx_ekeys))
+    if vtx_ekeys:
+        vtx_nkeys, = zip(*(ekey - {key} for ekey in vtx_ekeys))
+    else:
+        vtx_nkeys = ()
     return tuple(sorted(vtx_nkeys))
 
 

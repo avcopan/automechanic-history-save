@@ -1,7 +1,6 @@
 """ test the automechanic.mol.graph module
 """
 import numpy
-from automechanic import mol
 from automechanic.mol import graph2 as graph
 
 
@@ -122,12 +121,21 @@ def test__conn__potential_pi_bond_keys():
     """
     cgr = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
             ('C', 2), ('C', 1), ('O', 0)),
-           {frozenset({4, 6}): None, frozenset({6, 7}): None,
-            frozenset({0, 2}): None, frozenset({8, 7}): None,
-            frozenset({2, 4}): None, frozenset({3, 5}): None,
-            frozenset({1, 3}): None, frozenset({5, 7}): None})
+           {frozenset({4, 6}): 1, frozenset({6, 7}): 1,
+            frozenset({0, 2}): 1, frozenset({8, 7}): 1,
+            frozenset({2, 4}): 1, frozenset({3, 5}): 1,
+            frozenset({1, 3}): 1, frozenset({5, 7}): 1})
     assert (graph.conn.potential_pi_bond_keys(cgr)
             == (frozenset({2, 4}), frozenset({3, 5})))
+
+
+def test__conn__resonance_graphs():
+    """ test graph.conn.resonance_graphs
+    """
+    c4_cgr = ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
+              {frozenset({0, 2}): None, frozenset({1, 3}): None,
+               frozenset({2, 3}): None})
+    print(graph.conn.resonance_graphs(c4_cgr))
 
 
 def test__conn__stereogenic_atoms():
@@ -198,26 +206,55 @@ def test__conn__possible_spin_multiplicities():
     assert graph.conn.possible_spin_multiplicities(o2_cgr) == (1, 3)
 
 
-def test__conn__molfile():
-    """ test graph.conn.molfile
+def test__conn__inchi():
+    """ test graph.conn.inchi
     """
-    # RDKit can't handle these, so we need a workaround:
-    # ch1_cgr = ((('C', 0),), {})
-    # ch1_cgr = ((('C', 1),), {})
+    catm_cgr = ((('C', 0),), {})
+    natm_cgr = ((('N', 0),), {})
+    oatm_cgr = ((('O', 0),), {})
+    ch1_cgr = ((('C', 1),), {})
     ch2_cgr = ((('C', 2),), {})
     ch3_cgr = ((('C', 3),), {})
     ch2f1_cgr = ((('C', 2), ('F', 0)), {frozenset([0, 1]): None})
     c2h2f2_cgr = ((('C', 1), ('C', 1), ('F', 0), ('F', 0)),
                   {frozenset({0, 1}): None, frozenset({0, 2}): None,
                    frozenset({1, 3}): None})
-    assert (mol.molfile.inchi(graph.conn.molfile(ch2f1_cgr))
-            == 'InChI=1S/CH2F/c1-2/h1H2')
-    assert (mol.molfile.inchi(graph.conn.molfile(ch2_cgr))
-            == 'InChI=1S/CH2/h1H2')
-    assert (mol.molfile.inchi(graph.conn.molfile(ch3_cgr))
-            == 'InChI=1S/CH3/h1H3')
-    assert (mol.molfile.inchi(graph.conn.molfile(c2h2f2_cgr))
-            == 'InChI=1S/C2H2F2/c3-1-2-4/h1-2H')
+    assert graph.conn.inchi(catm_cgr) == 'InChI=1S/C'
+    assert graph.conn.inchi(natm_cgr) == 'InChI=1S/N'
+    assert graph.conn.inchi(oatm_cgr) == 'InChI=1S/O'
+    assert graph.conn.inchi(ch1_cgr) == 'InChI=1S/CH/h1H'
+    assert graph.conn.inchi(ch2_cgr) == 'InChI=1S/CH2/h1H2'
+    assert graph.conn.inchi(ch3_cgr) == 'InChI=1S/CH3/h1H3'
+    assert graph.conn.inchi(ch2f1_cgr) == 'InChI=1S/CH2F/c1-2/h1H2'
+    assert graph.conn.inchi(c2h2f2_cgr) == 'InChI=1S/C2H2F2/c3-1-2-4/h1-2H'
+
+
+def test__conn__inchi_numbering():
+    """ test graph.conn.inchi_numbering
+    """
+    ch3_cgr = ((('H', 0), ('H', 0), ('H', 0), ('C', 0)),
+               {frozenset({0, 3}): None, frozenset({1, 3}): None,
+                frozenset({2, 3}): None})
+    c2h2f2_cgr = ((('F', 0), ('F', 0), ('C', 1), ('C', 1)),
+                  {frozenset({2, 3}): None, frozenset({1, 2}): None,
+                   frozenset({0, 3}): None})
+    assert graph.conn.inchi_numbering(ch3_cgr) == (3,)
+    assert graph.conn.inchi_numbering(c2h2f2_cgr) == (2, 3, 1, 0)
+    assert graph.conn.inchi_numbering(
+        graph.permute_vertices(c2h2f2_cgr, (2, 3, 1, 0))) == (0, 1, 2, 3)
+
+
+def test__res__radical_atom_keys():
+    """ test graph.res.radical_atom_keys()
+    """
+    hatm_rgr = ((('H', 0),), {})
+    c2h2_rgr = ((('C', 2), ('C', 2)),
+                {frozenset({0, 1}): 2})
+    c3h6_rgr = ((('C', 2), ('C', 2), ('C', 2)),
+                {frozenset({0, 1}): 1, frozenset({1, 2}): 1})
+    assert graph.res.radical_atom_keys(hatm_rgr) == (0,)
+    assert graph.res.radical_atom_keys(c2h2_rgr) == ()
+    assert graph.res.radical_atom_keys(c3h6_rgr) == (0, 2)
 
 
 if __name__ == '__main__':
@@ -231,6 +268,9 @@ if __name__ == '__main__':
     test__conn__possible_spin_multiplicities()
     test__conn__make_hydrogens_implicit()
     test__conn__potential_pi_bond_keys()
+    test__conn__resonance_graphs()
     test__conn__stereogenic_atoms()
     test__conn__stereogenic_bonds()
-    test__conn__molfile()
+    test__conn__inchi()
+    test__conn__inchi_numbering()
+    test__res__radical_atom_keys()

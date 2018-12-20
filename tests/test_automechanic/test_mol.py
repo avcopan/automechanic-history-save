@@ -524,6 +524,15 @@ def test__inchi__stereo_graph():
                  frozenset({1, 3}): None, frozenset({5, 7}): None}))
 
 
+def test__geom__connectivity_graph():
+    """ test mol.geom.connectivity_graph()
+    """
+    assert (mol.geom.connectivity_graph(C2H2F2_GEO)
+            == ((('F', 0), ('C', 1), ('C', 1), ('F', 0)),
+                {frozenset({0, 1}): None, frozenset({2, 3}): None,
+                 frozenset({1, 2}): None}))
+
+
 if __name__ == '__main__':
     # test__smiles__inchi()
     # test__molfile__inchi()
@@ -548,3 +557,4 @@ if __name__ == '__main__':
     test__inchi_key__first_hash()
     test__inchi_key__second_hash()
     test__inchi_key__is_standard_neutral()
+    test__geom__connectivity_graph()

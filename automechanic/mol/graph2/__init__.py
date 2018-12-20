@@ -14,10 +14,11 @@ from .base import branch
 from .base import cycle_keys_list
 from .base import permute_vertices
 from . import conn
+from . import res
 
 __all__ = [
     # submodules
-    'conn',
+    'conn', 'res',
     # base functions
     'vertices', 'edges', 'vertex_keys', 'edge_keys', 'vertex_edges',
     'vertex_neighbor_keys', 'isomorphism', 'isomorphic', 'induced_subgraph',

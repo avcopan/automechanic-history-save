@@ -2,11 +2,6 @@
 """
 import itertools
 from string import ascii_lowercase as _ascii_lowercase
-
-import numpy
-from .geom import inchi as _inchi_from_geometry
-from .graph2.conn import (make_hydrogens_implicit as
-                          _graph_conn_make_hydrogens_implicit)
 from ._irdkit import from_inchi as _rdm_from_inchi
 from ._irdkit import to_inchi as _rdm_to_inchi
 from ._irdkit import to_smiles as _rdm_to_smiles
@@ -16,6 +11,10 @@ from ._irdkit import geometry as _rdm_to_geometry
 from ._irdkit import connectivity_graph as _rdm_to_connectivity_graph
 from ._ipybel import from_inchi as _pbm_from_inchi
 from ._ipybel import geometry as _pbm_to_geometry
+from ._inchi_aux import numbering as _ich_aux_numbering
+from .geom import inchi as _inchi_from_geometry
+from .graph2.conn import (make_hydrogens_implicit as
+                          _graph_conn_make_hydrogens_implicit)
 from ..rere.pattern import escape as _escape
 from ..rere.pattern import named_capturing as _named_capturing
 from ..rere.pattern import one_or_more as _one_or_more
@@ -29,8 +28,8 @@ from ..rere.pattern_lib import STRING_END as _STRING_END
 from ..rere.find import first_named_capture as _first_named_capture
 from ..rere.find import all_captures as _all_captures
 
-_INCHI_SUBLAYER_END = _one_of_these([_escape('/'), _STRING_END])
 _NONWHITESPACES_NONGREEDY = _one_or_more(_NONWHITESPACE, greedy=False)
+_INCHI_SUBLAYER_END = _one_of_these([_escape('/'), _STRING_END])
 _STEREO_UNKNOWN_VAL = 'u'
 _STEREO_UNDEFINED_VAL = '?'
 _STEREO_MINUS_VAL = '-'
@@ -85,26 +84,6 @@ class PARSE():
         PATTERN = _START + _named_capturing(_LAYER, name=LAYER_KEY) + _END
 
     KEY_LAYER = _key_layer
-
-    class AUXINFO():
-        """ _ """
-
-        class NUMBERING():
-            """ _ """
-            LAYER_KEY = 'all'
-            CONTENT_KEY = 'content'
-
-            _START = _escape('/')
-            _LAYER = (_escape('N:') +
-                      _named_capturing(_NONWHITESPACES_NONGREEDY,
-                                       name=CONTENT_KEY))
-            _END = _INCHI_SUBLAYER_END
-
-            PATTERN = _START + _named_capturing(_LAYER, name=LAYER_KEY) + _END
-
-            class NUMBER():
-                """ _ """
-                PATTERN = _UNSIGNED_INTEGER
 
     class ATOMxSTEREO(_key_layer('t')):
         """ _ """
@@ -311,8 +290,8 @@ def connectivity_graph(ich):
     # make sure the InChI string was valid and that the graph will be
     # inchi-sorted
     ich_, ich_aux = _rdm_to_inchi(rdm, with_aux_info=True)
-    ich_ord = _parse_inchi_order_from_auxinfo(ich_aux)
-    assert list(ich_ord) == sorted(ich_ord)
+    nums = _ich_aux_numbering(ich_aux)
+    assert list(nums) == sorted(nums)
     assert core_parent(ich) == core_parent(ich_)
 
     cgr = _rdm_to_connectivity_graph(rdm)
@@ -334,7 +313,7 @@ def stereo_graph(ich):
 
     def _value(ich_ste_val):
         assert ich_ste_val in ('-', '+')
-        return False if ich_ste_val == '-' else True
+        return ich_ste_val == '+'
 
     atms, cnns = connectivity_graph(ich)
     assert not has_unknown_stereo_elements(ich)
@@ -349,15 +328,6 @@ def stereo_graph(ich):
     bnds = cnns.copy()
     bnds.update(bnd_ste_dct)
     return (atms, bnds)
-
-
-def _parse_inchi_order_from_auxinfo(ich_aux):
-    cap_dct = _first_named_capture(PARSE.AUXINFO.NUMBERING.PATTERN, ich_aux)
-    lyr = cap_dct[PARSE.AUXINFO.NUMBERING.CONTENT_KEY]
-    one_index_numbering = tuple(
-        map(int, _all_captures(PARSE.AUXINFO.NUMBERING.NUMBER.PATTERN, lyr)))
-    numbering = tuple(numpy.subtract(one_index_numbering, 1))
-    return numbering
 
 
 def geometry(ich):

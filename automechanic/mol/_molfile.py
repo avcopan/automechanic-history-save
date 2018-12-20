@@ -1,5 +1,6 @@
 """ functions operating on MOLFile V3000 strings
 """
+import numpy
 from ._irdkit import from_molfile as _rdm_from_molfile
 from ._irdkit import to_inchi as _rdm_to_inchi
 
@@ -79,9 +80,52 @@ class FMT():
                 _NEWLINE).format
 
 
-def inchi(mlf):
+def to_inchi(mlf, with_aux_info=False):
     """ InChI string from a MOLFile string
     """
     rdm = _rdm_from_molfile(mlf)
-    ich = _rdm_to_inchi(rdm)
-    return ich
+    ret = _rdm_to_inchi(rdm, with_aux_info=with_aux_info)
+    return ret
+
+
+def from_data(atm_syms, atm_bnd_cnts, atm_rad_cnts, bnd_keys, atm_xyzs=None):
+    """ MOLFile string from data
+    """
+    atm_keys = tuple(range(len(atm_syms)))
+    atm_cnt = len(atm_keys)
+    bnd_cnt = len(bnd_keys)
+    assert max(atm_rad_cnts) <= 2  # can't handle >2 radical electrons
+    atm_vals = tuple(atm_bnd_cnt if atm_bnd_cnt != 0 else -1
+                     for atm_bnd_cnt in atm_bnd_cnts)
+    atm_xyzs = numpy.zeros((atm_cnt, 3)) if atm_xyzs is None else atm_xyzs
+
+    # counts line
+    is_chiral = False
+    counts_line = FMT.COUNTS.LINE(
+        **{FMT.COUNTS.NA_KEY: atm_cnt,
+           FMT.COUNTS.NB_KEY: bnd_cnt,
+           FMT.COUNTS.CHI_KEY: is_chiral})
+
+    atom_block = ''.join((
+        FMT.ATOM.LINE(**{FMT.ATOM.I_KEY: key+1,
+                         FMT.ATOM.S_KEY: sym,
+                         FMT.ATOM.X_KEY: x,
+                         FMT.ATOM.Y_KEY: y,
+                         FMT.ATOM.Z_KEY: z,
+                         FMT.ATOM.VAL_KEY: val,
+                         FMT.ATOM.MULT_KEY: rad_cnt+1,
+                         FMT.ATOM.CFG_KEY: 0})
+        for key, sym, (x, y, z), val, rad_cnt
+        in zip(atm_keys, atm_syms, atm_xyzs, atm_vals, atm_rad_cnts)))
+
+    bond_block = ''.join((
+        FMT.BOND.LINE(**{FMT.BOND.I_KEY: i+1,
+                         FMT.BOND.ORDER_KEY: 1,
+                         FMT.BOND.I1_KEY: min(bnd_key)+1,
+                         FMT.BOND.I2_KEY: max(bnd_key)+1})
+        for i, bnd_key in enumerate(bnd_keys)))
+
+    mlf = FMT.STRING(**{FMT.COUNTS_KEY: counts_line,
+                        FMT.ATOM_KEY: atom_block,
+                        FMT.BOND_KEY: bond_block})
+    return mlf

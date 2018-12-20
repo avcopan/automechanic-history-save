@@ -8,139 +8,83 @@ edges: bond connectivity only (no bond orders or anything)
 from itertools import starmap as _starmap
 from itertools import combinations as _combinations
 from itertools import permutations as _permutations
-import numpy
 from .base import vertices as _vertices
-from .base import edges as _edges
-from .base import vertex_keys as _vertex_keys
 from .base import edge_keys as _edge_keys
-from .base import vertex_edges as _vertex_edges
 from .base import vertex_neighbor_keys as _vertex_neighbor_keys
-from .base import delete_vertices as _delete_vertices
 from .base import branch as _branch
 from .base import cycle_keys_list as _cycle_keys_list
-from .base import permute_vertices as _permute_vertices
 from .base import isomorphic as _isomorphic
-from ..atom import valence as _atom_valence
-from ..atom import lone_pair_count as _atom_lone_pair_count
-from ..molfile import FMT as _MLF
+from ._shared import atomic_symbols
+from ._shared import hydrogen_counts
+from ._shared import valences
+from ._shared import change_hydrogen_count
+from ._shared import backbone_keys
+from ._shared import nonbackbone_keys
+from ._shared import neighboring_hydrogen_keys
+from ._shared import make_hydrogens_implicit
+from .res import radical_electron_counts as _res_radical_electron_counts
+from .res import sigma_bond_counts as _res_sigma_bond_counts
+from .res import (possible_spin_multiplicities as
+                  _res_possible_spin_multiplicities)
+from .res import inchi as _res_inchi
+from .res import inchi_numbering as _res_inchi_numbering
+from .res import open_pi_bond_keys as _res_open_pi_bond_keys
 
 
-def atomic_symbols(cgr):
-    """ atomic symbols
-    """
-    syms, _ = zip(*_vertices(cgr))
-    return syms
-
-
-def hydrogen_counts(cgr):
-    """ atomic symbols
-    """
-    _, hcnts = zip(*_vertices(cgr))
-    return hcnts
-
-
-def valences(cgr):
-    """ valences for each atom (independent of connectivity)
-    """
-    syms = atomic_symbols(cgr)
-    val_elec_cnts = tuple(map(_atom_valence, syms))
-    return val_elec_cnts
-
-
-def lone_pair_counts(cgr):
-    """ lone pair counts for each atom (independent of connectivity)
-    """
-    syms = atomic_symbols(cgr)
-    lp_cnts = tuple(map(_atom_lone_pair_count, syms))
-    return lp_cnts
-
-
-def change_hydrogen_count(cgr, key, nhyd):
-    """ change the hydrogen count of an atom
-    """
-    syms = atomic_symbols(cgr)
-    hcnts = list(hydrogen_counts(cgr))
-    edgs = _edges(cgr)
-    hcnts[key] += nhyd
-    atms = tuple(zip(syms, hcnts))
-    return (atms, edgs)
-
-
-def _is_backbone_key(cgr, key):
-    assert key in _vertex_keys(cgr)
-    syms = atomic_symbols(cgr)
-    sym = syms[key]
-    nkeys = _vertex_neighbor_keys(cgr, key)
-    nsyms = [syms[nkey] for nkey in nkeys]
-    return sym != 'H' or all(
-        nsym == 'H' and key < nkey
-        for nsym, nkey in zip(nsyms, nkeys))
-
-
-def _backbone_keys(cgr):
-    return tuple(key for key in _vertex_keys(cgr)
-                 if _is_backbone_key(cgr, key))
-
-
-def _non_backbone_keys(cgr):
-    return tuple(key for key in _vertex_keys(cgr)
-                 if not _is_backbone_key(cgr, key))
-
-
-def _neighboring_hydrogen_keys(cgr, key):
-    assert key in _vertex_keys(cgr)
-    syms = atomic_symbols(cgr)
-    return tuple(nkey for nkey in _vertex_neighbor_keys(cgr, key)
-                 if syms[nkey] == 'H')
-
-
-def make_hydrogens_implicit(cgr):
-    """ make explicit hydrogens implicit
-    """
-    keys_perm = _backbone_keys(cgr) + _non_backbone_keys(cgr)
-    cgr = _permute_vertices(cgr, keys_perm)
-    bbn_keys = _backbone_keys(cgr)
-    for bbn_key in bbn_keys:
-        hyd_keys = _neighboring_hydrogen_keys(cgr, bbn_key)
-        nhyd = len(hyd_keys)
-        cgr = _delete_vertices(cgr, hyd_keys)
-        cgr = change_hydrogen_count(cgr, bbn_key, nhyd)
-    return cgr
+def _no_pi_resonance_graph(cgr):
+    atms = _vertices(cgr)
+    bnds = {bnd_key: 1 for bnd_key in _edge_keys(cgr)}
+    rgr = (atms, bnds)
+    return rgr
 
 
 def sigma_bond_counts(cgr):
     """ sigma bond count for each atom
     """
-    keys = _vertex_keys(cgr)
-    hcnts = hydrogen_counts(cgr)
-    assert all(numpy.greater_equal(hcnts, 0))
-    cnn_elec_cnts = tuple(len(_vertex_edges(cgr, key)) for key in keys)
-    sig_elec_cnts = numpy.add(cnn_elec_cnts, hcnts)
-    return tuple(sig_elec_cnts)
+    rgr = _no_pi_resonance_graph(cgr)
+    return _res_sigma_bond_counts(rgr)
 
 
 def nonsigma_electron_counts(cgr):
     """ the number of pi or radical electrons for each atom
     """
-    nonsig_elec_cnts = numpy.subtract(valences(cgr), sigma_bond_counts(cgr))
-    # disallow hypervalent atoms
-    assert all(numpy.greater_equal(nonsig_elec_cnts, 0))
-    return tuple(nonsig_elec_cnts)
-
-
-def pi_or_radical_atom_keys(cgr):
-    """ atoms with pi or radical electrons
-    """
-    return tuple(key for key, cnt in enumerate(nonsigma_electron_counts(cgr))
-                 if cnt > 0)
+    rgr = _no_pi_resonance_graph(cgr)
+    return _res_radical_electron_counts(rgr)
 
 
 def potential_pi_bond_keys(cgr):
-    """ potential pi bond keys (adjacent sites with pi/radical electrons)
+    """ keys for connections that could be pi bonds
     """
-    bnd_keys = _edge_keys(cgr)
-    pi_rad_keys = set(pi_or_radical_atom_keys(cgr))
-    return tuple(bnd_key for bnd_key in bnd_keys if bnd_key <= pi_rad_keys)
+    rgr = _no_pi_resonance_graph(cgr)
+    return _res_open_pi_bond_keys(rgr)
+
+
+def resonance_graphs(cgr):
+    """ all possible resonance graphs with this sigma bonding structure
+    """
+    rgr = _no_pi_resonance_graph(cgr)
+    print(rgr)
+
+
+def possible_spin_multiplicities(cgr):
+    """ possible spin multiplicities for this molecule connectivity
+    """
+    rgr = _no_pi_resonance_graph(cgr)
+    return _res_possible_spin_multiplicities(rgr)
+
+
+def inchi(cgr):
+    """ InChI string of a connectivity graph
+    """
+    rgr = _no_pi_resonance_graph(cgr)
+    return _res_inchi(rgr)
+
+
+def inchi_numbering(cgr):
+    """ InChI numbering of backbone atoms
+    """
+    rgr = _no_pi_resonance_graph(cgr)
+    return _res_inchi_numbering(rgr)
 
 
 def stereogenic_atoms(cgr):
@@ -188,65 +132,15 @@ def stereogenic_bonds(cgr):
             ret = _isomorphic(bch1, bch2)
         return ret
 
-    return tuple(bnd_key for bnd_key in filter(_bond_is_stereo_candidate,
-                                               potential_pi_bond_keys(cgr))
-                 if not any(_starmap(_atom_is_symmetric_on_bond,
-                                     _permutations(bnd_key))))
+    ret = tuple(bnd_key for bnd_key in filter(_bond_is_stereo_candidate,
+                                              potential_pi_bond_keys(cgr))
+                if not any(_starmap(_atom_is_symmetric_on_bond,
+                                    _permutations(bnd_key))))
+    return ret
 
 
-def possible_spin_multiplicities(cgr):
-    """ possible spin multiplicities for this molecule connectivity
-    """
-    nonsig_elec_cnt = sum(nonsigma_electron_counts(cgr))
-    return _spin_multiplicities(nonsig_elec_cnt)
-
-
-def molfile(cgr):
-    """ MOLFile string of a connectivity graph
-    """
-    atm_keys = _vertex_keys(cgr)
-    bnd_keys = _edge_keys(cgr)
-    atm_syms = atomic_symbols(cgr)
-    atm_rad_cnts = nonsigma_electron_counts(cgr)
-    atm_sig_cnts = sigma_bond_counts(cgr)
-
-    # counts line
-    atm_cnt = len(atm_keys)
-    bnd_cnt = len(bnd_keys)
-    is_chiral = False
-    counts_line = _MLF.COUNTS.LINE(
-        **{_MLF.COUNTS.NA_KEY: atm_cnt,
-           _MLF.COUNTS.NB_KEY: bnd_cnt,
-           _MLF.COUNTS.CHI_KEY: is_chiral})
-
-    atom_block = ''.join((
-        _MLF.ATOM.LINE(**{_MLF.ATOM.I_KEY: atm_key+1,
-                          _MLF.ATOM.S_KEY: atm_sym,
-                          _MLF.ATOM.X_KEY: 0,
-                          _MLF.ATOM.Y_KEY: 0,
-                          _MLF.ATOM.Z_KEY: 0,
-                          _MLF.ATOM.VAL_KEY: atm_sig_cnt,
-                          _MLF.ATOM.MULT_KEY: atm_rad_cnt+1,
-                          _MLF.ATOM.CFG_KEY: 0})
-        for atm_key, atm_sym, atm_rad_cnt, atm_sig_cnt
-        in zip(atm_keys, atm_syms, atm_rad_cnts, atm_sig_cnts)))
-
-    bond_block = ''.join((
-        _MLF.BOND.LINE(**{_MLF.BOND.I_KEY: i+1,
-                          _MLF.BOND.ORDER_KEY: 1,
-                          _MLF.BOND.I1_KEY: min(bnd_key)+1,
-                          _MLF.BOND.I2_KEY: max(bnd_key)+1})
-        for i, bnd_key in enumerate(bnd_keys)))
-
-    mlf = _MLF.STRING(**{_MLF.COUNTS_KEY: counts_line,
-                         _MLF.ATOM_KEY: atom_block,
-                         _MLF.BOND_KEY: bond_block})
-    return mlf
-
-
-def _spin_multiplicities(nelecs):
-    assert nelecs >= 0
-    mult_max = nelecs + 1
-    mult_min = 2 if (mult_max % 2 == 0) else 1
-    mults = tuple(range(mult_min, mult_max+1, 2))
-    return mults
+__all__ = [
+    'atomic_symbols', 'hydrogen_counts', 'valences', 'change_hydrogen_count',
+    'backbone_keys', 'nonbackbone_keys', 'neighboring_hydrogen_keys',
+    'make_hydrogens_implicit'
+]

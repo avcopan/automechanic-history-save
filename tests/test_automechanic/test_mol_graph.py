@@ -1,7 +1,7 @@
 """ test the automechanic.mol.graph module
 """
 import numpy
-from automechanic.mol import graph2 as graph
+from automechanic.mol import graph
 
 
 def test__freeze():

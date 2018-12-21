@@ -13,8 +13,8 @@ from ._ipybel import from_inchi as _pbm_from_inchi
 from ._ipybel import geometry as _pbm_to_geometry
 from ._inchi_aux import numbering as _ich_aux_numbering
 from .geom import inchi as _inchi_from_geometry
-from .graph2.conn import (make_hydrogens_implicit as
-                          _graph_conn_make_hydrogens_implicit)
+from .graph.conn import (make_hydrogens_implicit as
+                         _graph_conn_make_hydrogens_implicit)
 from ..rere.pattern import escape as _escape
 from ..rere.pattern import named_capturing as _named_capturing
 from ..rere.pattern import one_or_more as _one_or_more

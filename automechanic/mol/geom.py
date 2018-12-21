@@ -4,8 +4,8 @@ import itertools
 import numpy
 from ._irdkit import from_molfile as _rdm_from_molfile2
 from ._irdkit import to_inchi as _rdm_to_inchi
-from .graph2.conn import (make_hydrogens_implicit as
-                          _graph_conn_make_hydrogens_implicit)
+from .graph.conn import (make_hydrogens_implicit as
+                         _graph_conn_make_hydrogens_implicit)
 from ..rere.pattern import escape as _escape
 from ..rere.pattern import capturing as _capturing
 from ..rere.pattern import zero_or_more as _zero_or_more

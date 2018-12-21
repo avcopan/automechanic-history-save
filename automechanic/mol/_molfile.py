@@ -72,11 +72,13 @@ class FMT():
         ORDER_KEY = 'order'
         I1_KEY = 'i1'
         I2_KEY = 'i2'
+        CFG_KEY = 'stereo_config'
         LINE = (_V3_PFX +
                 _ENTRY(key=I_KEY, fmt='d') +      # index
                 _SPACE + _ENTRY(key=ORDER_KEY, fmt='d') +  # order
                 _SPACE + _ENTRY(key=I1_KEY, fmt='d') +     # atom1 index
                 _SPACE + _ENTRY(key=I2_KEY, fmt='d') +     # atom2 index
+                _SPACE + 'CFG=' + _ENTRY(key=CFG_KEY, fmt='d') +
                 _NEWLINE).format
 
 
@@ -88,15 +90,16 @@ def to_inchi(mlf, with_aux_info=False):
     return ret
 
 
-def from_data(atm_syms, atm_bnd_cnts, atm_rad_cnts, bnd_keys, atm_xyzs=None):
+def from_data(atm_syms, atm_tot_bnd_cnts, atm_rad_cnts, bnd_ord_dct,
+              atm_xyzs=None):
     """ MOLFile string from data
     """
     atm_keys = tuple(range(len(atm_syms)))
     atm_cnt = len(atm_keys)
-    bnd_cnt = len(bnd_keys)
+    bnd_cnt = len(bnd_ord_dct)
     assert max(atm_rad_cnts) <= 2  # can't handle >2 radical electrons
     atm_vals = tuple(atm_bnd_cnt if atm_bnd_cnt != 0 else -1
-                     for atm_bnd_cnt in atm_bnd_cnts)
+                     for atm_bnd_cnt in atm_tot_bnd_cnts)
     atm_xyzs = numpy.zeros((atm_cnt, 3)) if atm_xyzs is None else atm_xyzs
 
     # counts line
@@ -120,10 +123,11 @@ def from_data(atm_syms, atm_bnd_cnts, atm_rad_cnts, bnd_keys, atm_xyzs=None):
 
     bond_block = ''.join((
         FMT.BOND.LINE(**{FMT.BOND.I_KEY: i+1,
-                         FMT.BOND.ORDER_KEY: 1,
+                         FMT.BOND.ORDER_KEY: bnd_ord,
                          FMT.BOND.I1_KEY: min(bnd_key)+1,
-                         FMT.BOND.I2_KEY: max(bnd_key)+1})
-        for i, bnd_key in enumerate(bnd_keys)))
+                         FMT.BOND.I2_KEY: max(bnd_key)+1,
+                         FMT.BOND.CFG_KEY: 2})
+        for i, (bnd_key, bnd_ord) in enumerate(bnd_ord_dct.items())))
 
     mlf = FMT.STRING(**{FMT.COUNTS_KEY: counts_line,
                         FMT.ATOM_KEY: atom_block,

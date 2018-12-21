@@ -140,13 +140,31 @@ def test__conn__potential_pi_bond_keys():
             == (frozenset({2, 4}), frozenset({3, 5})))
 
 
-def test__conn__resonance_graphs():
+def test__conn__low_spin_resonance_graphs():
     """ test graph.conn.resonance_graphs
     """
     c4_cgr = ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
               {frozenset({0, 2}): None, frozenset({1, 3}): None,
                frozenset({2, 3}): None})
-    assert len(graph.conn.resonance_graphs(c4_cgr)) == 14
+    c3h6_cgr = ((('C', 2), ('C', 1), ('C', 2)),
+                {frozenset({0, 1}): None, frozenset({1, 2}): None})
+    assert (
+        graph.conn.low_spin_resonance_graphs(c4_cgr) ==
+        (
+            ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
+             {frozenset({0, 2}): 3, frozenset({1, 3}): 3,
+              frozenset({2, 3}): 1}),
+        )
+    )
+    assert (
+        graph.conn.low_spin_resonance_graphs(c3h6_cgr) ==
+        (
+            ((('C', 2), ('C', 1), ('C', 2)),
+             {frozenset({0, 1}): 1, frozenset({1, 2}): 2}),
+            ((('C', 2), ('C', 1), ('C', 2)),
+             {frozenset({0, 1}): 2, frozenset({1, 2}): 1}),
+        )
+    )
 
 
 def test__conn__stereogenic_atoms():
@@ -230,6 +248,9 @@ def test__conn__inchi():
     c2h2f2_cgr = ((('C', 1), ('C', 1), ('F', 0), ('F', 0)),
                   {frozenset({0, 1}): None, frozenset({0, 2}): None,
                    frozenset({1, 3}): None})
+    c4_cgr = ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
+              {frozenset({0, 2}): 1, frozenset({1, 3}): 1,
+               frozenset({2, 3}): 1})
     assert graph.conn.inchi(catm_cgr) == 'InChI=1S/C'
     assert graph.conn.inchi(natm_cgr) == 'InChI=1S/N'
     assert graph.conn.inchi(oatm_cgr) == 'InChI=1S/O'
@@ -238,6 +259,7 @@ def test__conn__inchi():
     assert graph.conn.inchi(ch3_cgr) == 'InChI=1S/CH3/h1H3'
     assert graph.conn.inchi(ch2f1_cgr) == 'InChI=1S/CH2F/c1-2/h1H2'
     assert graph.conn.inchi(c2h2f2_cgr) == 'InChI=1S/C2H2F2/c3-1-2-4/h1-2H'
+    assert graph.conn.inchi(c4_cgr) == 'InChI=1S/C4/c1-3-4-2'
 
 
 def test__conn__inchi_numbering():
@@ -268,6 +290,15 @@ def test__res__radical_atom_keys():
     assert graph.res.radical_atom_keys(c3h6_rgr) == (0, 2)
 
 
+def test__res__pi_bond_forming_resonances():
+    """ test graph.res.pi_bond_forming_resonances
+    """
+    c4_cgr = ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
+              {frozenset({0, 2}): 1, frozenset({1, 3}): 1,
+               frozenset({2, 3}): 1})
+    assert len(graph.res.pi_bond_forming_resonances(c4_cgr)) == 14
+
+
 if __name__ == '__main__':
     test__freeze()
     test__vertex_neighbor_keys()
@@ -280,9 +311,10 @@ if __name__ == '__main__':
     test__conn__possible_spin_multiplicities()
     test__conn__make_hydrogens_implicit()
     test__conn__potential_pi_bond_keys()
-    test__conn__resonance_graphs()
+    test__conn__low_spin_resonance_graphs()
     test__conn__stereogenic_atoms()
     test__conn__stereogenic_bonds()
     test__conn__inchi()
     test__conn__inchi_numbering()
     test__res__radical_atom_keys()
+    test__res__pi_bond_forming_resonances()

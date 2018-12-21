@@ -117,6 +117,16 @@ def pi_bond_forming_resonances(rgr):
     return rgrs
 
 
+def low_spin_resonances(rgr):
+    """ determine the lowest-spin resonances of this resonance graph
+    """
+    rgrs = pi_bond_forming_resonances(rgr)
+    mult_maxs = tuple(map(maximum_spin_multiplicity, rgrs))
+    min_mult_max = min(mult_maxs)
+    return tuple(rgr for rgr, mult_max in zip(rgrs, mult_maxs)
+                 if mult_max == min_mult_max)
+
+
 def maximum_spin_multiplicity(rgr):
     """ highest possible spin multiplicity
     """
@@ -161,15 +171,15 @@ def _inchi_with_numbering(rgr):
         ich, nums = ich_nums_hardcoded
     else:
         # get the InChI string from its MOLFile string
-        bnd_keys = _edge_keys(rgr)
+        bnds = _edges(rgr)
         atm_syms = atomic_symbols(rgr)
         atm_rad_cnts = radical_electron_counts(rgr)
-        atm_bnd_cnts = bond_counts(rgr)
+        atm_tot_bnd_cnts = bond_counts(rgr)
 
         mlf = _mlf_from_data(atm_syms=atm_syms,
-                             atm_bnd_cnts=atm_bnd_cnts,
+                             atm_tot_bnd_cnts=atm_tot_bnd_cnts,
                              atm_rad_cnts=atm_rad_cnts,
-                             bnd_keys=bnd_keys)
+                             bnd_ord_dct=bnds)
         ich, ich_aux = _mlf_to_inchi(mlf, with_aux_info=True)
         nums = _ich_aux_numbering(ich_aux)
     return ich, nums

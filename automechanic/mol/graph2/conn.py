@@ -29,6 +29,7 @@ from .res import (possible_spin_multiplicities as
 from .res import inchi as _res_inchi
 from .res import inchi_numbering as _res_inchi_numbering
 from .res import open_pi_bond_keys as _res_open_pi_bond_keys
+from .res import pi_bond_forming_resonances as _res_pi_bond_forming_resonances
 
 
 def _no_pi_resonance_graph(cgr):
@@ -63,7 +64,7 @@ def resonance_graphs(cgr):
     """ all possible resonance graphs with this sigma bonding structure
     """
     rgr = _no_pi_resonance_graph(cgr)
-    print(rgr)
+    return _res_pi_bond_forming_resonances(rgr)
 
 
 def possible_spin_multiplicities(cgr):

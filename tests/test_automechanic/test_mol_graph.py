@@ -4,6 +4,17 @@ import numpy
 from automechanic.mol import graph2 as graph
 
 
+def test__freeze():
+    """ test graph.freeze
+    """
+    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0)),
+           {frozenset({1, 3}): None, frozenset({2, 3}): None,
+            frozenset({0, 3}): None})
+    frz_gra = graph.freeze(gra)
+    assert hash(frz_gra)
+    assert gra == graph.unfreeze(frz_gra)
+
+
 def test__vertex_neighbor_keys():
     """ test graph.vertex_neighbor_keys
     """
@@ -135,7 +146,7 @@ def test__conn__resonance_graphs():
     c4_cgr = ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
               {frozenset({0, 2}): None, frozenset({1, 3}): None,
                frozenset({2, 3}): None})
-    print(graph.conn.resonance_graphs(c4_cgr))
+    assert len(graph.conn.resonance_graphs(c4_cgr)) == 14
 
 
 def test__conn__stereogenic_atoms():
@@ -258,6 +269,7 @@ def test__res__radical_atom_keys():
 
 
 if __name__ == '__main__':
+    test__freeze()
     test__vertex_neighbor_keys()
     test__isomorphism()
     test__induced_subgraph()

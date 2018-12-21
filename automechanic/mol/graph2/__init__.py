@@ -4,6 +4,8 @@ from .base import vertices
 from .base import edges
 from .base import vertex_keys
 from .base import edge_keys
+from .base import freeze
+from .base import unfreeze
 from .base import vertex_edges
 from .base import vertex_neighbor_keys
 from .base import isomorphism

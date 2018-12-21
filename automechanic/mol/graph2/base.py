@@ -35,7 +35,24 @@ def vertex_keys(gra):
 def edge_keys(gra):
     """ edge keys
     """
-    return set(iter(edges(gra)))
+    return tuple(edges(gra).keys())
+
+
+def freeze(gra):
+    """ freeze a graph (make edges immutable)
+    """
+    vtcs = tuple(vertices(gra))
+    frz_edgs = tuple(sorted(dict(edges(gra)).items()))
+    frz_gra = (vtcs, frz_edgs)
+    return frz_gra
+
+
+def unfreeze(gra):
+    """ unfreeze a graph (make edges mutable)
+    """
+    vtcs = tuple(vertices(gra))
+    edgs = dict(edges(gra))
+    return (vtcs, edgs)
 
 
 def vertex_edges(gra, key):

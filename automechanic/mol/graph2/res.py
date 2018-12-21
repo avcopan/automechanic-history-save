@@ -5,10 +5,15 @@ vertices: atomic symbols and implicit hydrogen counts
 edges: bond connectivity and bond orders
     {{0, 1}: 1, {1, 2}: 2, ...}
 """
+from itertools import chain as _chain
 import numpy
+from .base import vertices as _vertices
 from .base import vertex_keys as _vertex_keys
 from .base import vertex_edges as _vertex_edges
+from .base import edges as _edges
 from .base import edge_keys as _edge_keys
+from .base import freeze as _freeze
+from .base import unfreeze as _unfreeze
 from ._shared import atomic_symbols
 from ._shared import hydrogen_counts
 from ._shared import valences
@@ -29,6 +34,23 @@ def bond_counts(rgr):
     return bnd_cnts
 
 
+def sigma_bond_counts(rgr):
+    """ sigma bond counts for each atm
+    """
+    hcnts = hydrogen_counts(rgr)
+    xcnts = tuple(len(_vertex_edges(rgr, key)) for key in _vertex_keys(rgr))
+    sig_bnd_cnts = numpy.add(hcnts, xcnts)
+    return sig_bnd_cnts
+
+
+def lone_pair_counts(cgr):
+    """ lone pair counts for each atom (independent of connectivity)
+    """
+    syms = atomic_symbols(cgr)
+    lp_cnts = tuple(map(_atom_lone_pair_count, syms))
+    return lp_cnts
+
+
 def radical_electron_counts(rgr):
     """ the number of radical electrons for each atom
     """
@@ -45,50 +67,76 @@ def radical_atom_keys(rgr):
                  if cnt > 0)
 
 
+def _potential_pi_bond_count(rgr, bnd_key):
+    assert bnd_key in _edge_keys(rgr)
+    rad_elec_cnts = radical_electron_counts(rgr)
+    return min(map(rad_elec_cnts.__getitem__, bnd_key))
+
+
 def open_pi_bond_keys(rgr):
     """ open pi bond (adjacent radical site) keys
     """
     bnd_keys = _edge_keys(rgr)
-    rad_keys = set(radical_atom_keys(rgr))
-    return tuple(bnd_key for bnd_key in bnd_keys if bnd_key <= rad_keys)
+    return tuple(bnd_key for bnd_key in bnd_keys
+                 if _potential_pi_bond_count(rgr, bnd_key) > 0)
 
 
-def lone_pair_counts(cgr):
-    """ lone pair counts for each atom (independent of connectivity)
+def change_bond_order(rgr, bnd_key, change):
+    """ change the order of a bond
     """
-    syms = atomic_symbols(cgr)
-    lp_cnts = tuple(map(_atom_lone_pair_count, syms))
-    return lp_cnts
+    atms = _vertices(rgr)
+    bnds = _edges(rgr)
+    assert change <= _potential_pi_bond_count(rgr, bnd_key)
+    bnds[bnd_key] += change
+    assert bnds[bnd_key] >= 1
+    rgr = (atms, bnds)
+    return rgr
 
 
-def sigma_bond_counts(rgr):
-    """ sigma bond counts for each atm
-    """
-    hcnts = hydrogen_counts(rgr)
-    xcnts = tuple(len(_vertex_edges(rgr, key)) for key in _vertex_keys(rgr))
-    sig_bnd_cnts = numpy.add(hcnts, xcnts)
-    return sig_bnd_cnts
+def _filter_repeats(rgrs):
+    unique_rgrs = set(map(_freeze, rgrs))
+    return tuple(map(_unfreeze, sorted(unique_rgrs)))
 
 
 def pi_bond_forming_resonances(rgr):
     """ recursively determine all pi-bond forming resonances
     """
-    print(rgr)
+    open_pi_keys = open_pi_bond_keys(rgr)
+
+    if len(open_pi_keys) == 1:
+        key, = open_pi_keys
+        rgrs = (rgr, change_bond_order(rgr, key, change=+1))
+    else:
+        seed_rgrs = _filter_repeats(
+            change_bond_order(rgr, key, change=+1) for key in open_pi_keys)
+        rgrs = (rgr,)
+        rgrs += tuple(_chain(
+            *(pi_bond_forming_resonances(seed_rgr) for seed_rgr in seed_rgrs)))
+
+    rgrs = _filter_repeats(rgrs)
+    return rgrs
+
+
+def maximum_spin_multiplicity(rgr):
+    """ highest possible spin multiplicity
+    """
+    rad_elec_cnt = sum(radical_electron_counts(rgr))
+    return rad_elec_cnt + 1
+
+
+def minimum_spin_multiplicity(rgr):
+    """ lowest possible spin multiplicity
+    """
+    rad_elec_cnt = sum(radical_electron_counts(rgr))
+    return 2 if (rad_elec_cnt % 2 == 1) else 1
 
 
 def possible_spin_multiplicities(rgr):
     """ possible spin multiplicities for this resonance graph
     """
-    rad_elec_cnt = sum(radical_electron_counts(rgr))
-    return _spin_multiplicities(rad_elec_cnt)
-
-
-def _spin_multiplicities(nelecs):
-    assert nelecs >= 0
-    mult_max = nelecs + 1
-    mult_min = 2 if (mult_max % 2 == 0) else 1
-    mults = tuple(range(mult_min, mult_max+1, 2))
-    return mults
+    mult_min = minimum_spin_multiplicity(rgr)
+    mult_max = maximum_spin_multiplicity(rgr)
+    return tuple(range(mult_min, mult_max+1, 2))
 
 
 def inchi(rgr):

@@ -140,7 +140,7 @@ def test__conn__potential_pi_bond_keys():
             == (frozenset({2, 4}), frozenset({3, 5})))
 
 
-def test__conn__low_spin_resonance_graphs():
+def test__conn__lowspin_resonance_graphs():
     """ test graph.conn.resonance_graphs
     """
     c4_cgr = ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
@@ -149,7 +149,7 @@ def test__conn__low_spin_resonance_graphs():
     c3h6_cgr = ((('C', 2), ('C', 1), ('C', 2)),
                 {frozenset({0, 1}): None, frozenset({1, 2}): None})
     assert (
-        graph.conn.low_spin_resonance_graphs(c4_cgr) ==
+        graph.conn.lowspin_resonance_graphs(c4_cgr) ==
         (
             ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
              {frozenset({0, 2}): 3, frozenset({1, 3}): 3,
@@ -157,7 +157,7 @@ def test__conn__low_spin_resonance_graphs():
         )
     )
     assert (
-        graph.conn.low_spin_resonance_graphs(c3h6_cgr) ==
+        graph.conn.lowspin_resonance_graphs(c3h6_cgr) ==
         (
             ((('C', 2), ('C', 1), ('C', 2)),
              {frozenset({0, 1}): 1, frozenset({1, 2}): 2}),
@@ -299,6 +299,56 @@ def test__res__pi_bond_forming_resonances():
     assert len(graph.res.pi_bond_forming_resonances(c4_cgr)) == 14
 
 
+def test__res__connectivity_graph():
+    """ test graph.res.connectivity_graph
+    """
+    rgr = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
+            ('C', 2), ('C', 1), ('O', 0)),
+           {frozenset({4, 6}): 1, frozenset({6, 7}): 1, frozenset({0, 2}): 1,
+            frozenset({8, 7}): 1, frozenset({2, 4}): 2, frozenset({3, 5}): 2,
+            frozenset({1, 3}): 1, frozenset({5, 7}): 1})
+    cgr = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
+            ('C', 2), ('C', 1), ('O', 0)),
+           {frozenset({4, 6}): None, frozenset({6, 7}): None,
+            frozenset({0, 2}): None, frozenset({8, 7}): None,
+            frozenset({2, 4}): None, frozenset({3, 5}): None,
+            frozenset({1, 3}): None, frozenset({5, 7}): None})
+    assert graph.res.connectivity_graph(rgr) == cgr
+
+
+def test__stereo__connectivity_graph():
+    """ test graph.stereo.connectivity_graph
+    """
+    sgr = ((('C', 3, None), ('C', 3, None), ('C', 1, None),
+            ('C', 1, None), ('C', 1, None), ('C', 1, None),
+            ('C', 2, None), ('C', 1, False), ('O', 0, None)),
+           {frozenset({4, 6}): None, frozenset({6, 7}): None,
+            frozenset({0, 2}): None, frozenset({8, 7}): None,
+            frozenset({2, 4}): False, frozenset({3, 5}): False,
+            frozenset({1, 3}): None, frozenset({5, 7}): None})
+    cgr = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
+            ('C', 2), ('C', 1), ('O', 0)),
+           {frozenset({4, 6}): None, frozenset({6, 7}): None,
+            frozenset({0, 2}): None, frozenset({8, 7}): None,
+            frozenset({2, 4}): None, frozenset({3, 5}): None,
+            frozenset({1, 3}): None, frozenset({5, 7}): None})
+    assert graph.stereo.connectivity_graph(sgr) == cgr
+
+
+def test__stereo__inchi():
+    """ test graph.stereo.inchi
+    """
+    import automechanic.mol.graph._molfile as _molfile
+    sgr = ((('C', 3, None), ('C', 3, None), ('C', 1, None),
+            ('C', 1, None), ('C', 1, None), ('C', 1, None),
+            ('C', 2, None), ('C', 1, False), ('O', 0, None)),
+           {frozenset({4, 6}): None, frozenset({6, 7}): None,
+            frozenset({0, 2}): None, frozenset({8, 7}): None,
+            frozenset({2, 4}): False, frozenset({3, 5}): False,
+            frozenset({1, 3}): None, frozenset({5, 7}): None})
+    print(_molfile.from_stereo_graph(sgr))
+
+
 if __name__ == '__main__':
     test__freeze()
     test__vertex_neighbor_keys()
@@ -311,10 +361,13 @@ if __name__ == '__main__':
     test__conn__possible_spin_multiplicities()
     test__conn__make_hydrogens_implicit()
     test__conn__potential_pi_bond_keys()
-    test__conn__low_spin_resonance_graphs()
+    test__conn__lowspin_resonance_graphs()
     test__conn__stereogenic_atoms()
     test__conn__stereogenic_bonds()
     test__conn__inchi()
     test__conn__inchi_numbering()
     test__res__radical_atom_keys()
     test__res__pi_bond_forming_resonances()
+    test__res__connectivity_graph()
+    test__stereo__connectivity_graph()
+    test__stereo__inchi()

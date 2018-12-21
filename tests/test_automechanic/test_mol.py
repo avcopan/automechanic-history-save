@@ -295,25 +295,6 @@ def test__smiles__inchi():
     assert mol.smiles.inchi(C2H2F2_SMI) == C2H2F2_ICH
 
 
-def test__molfile__inchi():
-    """ test mol.molfile.inchi
-    """
-    mlf = ('\n  automech  2D grid\n\n'
-           '  0  0  0  0  0  0  0  0  0  0999 V3000\n'
-           'M  V30 BEGIN CTAB\n'
-           'M  V30 COUNTS 2 1 0 0 0\n'
-           'M  V30 BEGIN ATOM\n'
-           'M  V30 1 C 0.000 0.000 0.000 RAD=2 VAL=3 CFG=0\n'
-           'M  V30 2 F 0.000 0.000 0.000 RAD=1 VAL=1 CFG=0\n'
-           'M  V30 END ATOM\n'
-           'M  V30 BEGIN BOND\n'
-           'M  V30 1 1 1 2\n'
-           'M  V30 END BOND\n'
-           'M  V30 END CTAB\n'
-           'M  END\n')
-    assert mol.molfile.inchi(mlf) == 'InChI=1S/CH2F/c1-2/h1H2'
-
-
 def test__inchi__smiles():
     """ test mol.inchi.smiles
     """

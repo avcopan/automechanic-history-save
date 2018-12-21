@@ -17,12 +17,14 @@ from .base import cycle_keys_list
 from .base import permute_vertices
 from . import conn
 from . import res
+from . import stereo
 
 __all__ = [
     # submodules
-    'conn', 'res',
+    'conn', 'res', 'stereo',
     # base functions
-    'vertices', 'edges', 'vertex_keys', 'edge_keys', 'vertex_edges',
-    'vertex_neighbor_keys', 'isomorphism', 'isomorphic', 'induced_subgraph',
-    'delete_vertices', 'branch', 'cycle_keys_list', 'permute_vertices'
+    'vertices', 'edges', 'vertex_keys', 'edge_keys', 'freeze', 'unfreeze',
+    'vertex_edges', 'vertex_neighbor_keys', 'isomorphism', 'isomorphic',
+    'induced_subgraph', 'delete_vertices', 'branch', 'cycle_keys_list',
+    'permute_vertices'
 ]

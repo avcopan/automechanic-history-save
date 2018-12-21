@@ -18,6 +18,7 @@ from ._shared import atomic_symbols
 from ._shared import hydrogen_counts
 from ._shared import valences
 from ._shared import make_hydrogens_implicit
+from ._shared import connectivity_graph
 from ..atom import lone_pair_count as _atom_lone_pair_count
 from .._molfile import from_data as _mlf_from_data
 from .._molfile import to_inchi as _mlf_to_inchi
@@ -117,7 +118,7 @@ def pi_bond_forming_resonances(rgr):
     return rgrs
 
 
-def low_spin_resonances(rgr):
+def lowspin_resonances(rgr):
     """ determine the lowest-spin resonances of this resonance graph
     """
     rgrs = pi_bond_forming_resonances(rgr)
@@ -180,6 +181,7 @@ def _inchi_with_numbering(rgr):
                              atm_tot_bnd_cnts=atm_tot_bnd_cnts,
                              atm_rad_cnts=atm_rad_cnts,
                              bnd_ord_dct=bnds)
+        print(mlf)
         ich, ich_aux = _mlf_to_inchi(mlf, with_aux_info=True)
         nums = _ich_aux_numbering(ich_aux)
     return ich, nums
@@ -195,3 +197,7 @@ def _inchi_with_numbering_hardcoded_exception(rgr):
         nums = (1,) if atomic_symbols(rgr) == ('H', 'C') else (0,)
         ret = ('InChI=1S/CH/h1H', nums)
     return ret
+
+
+__all__ = ['atomic_symbols', 'hydrogen_counts', 'valences',
+           'make_hydrogens_implicit', 'connectivity_graph']

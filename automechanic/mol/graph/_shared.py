@@ -4,23 +4,36 @@ from .base import vertices as _vertices
 from .base import vertex_keys as _vertex_keys
 from .base import vertex_neighbor_keys as _vertex_neighbor_keys
 from .base import edges as _edges
+from .base import edge_keys as _edge_keys
 from .base import delete_vertices as _delete_vertices
 from .base import permute_vertices as _permute_vertices
 from ..atom import valence as _atom_valence
 
 
-def atomic_symbols(cgr):
+def atomic_symbols(xgr):
     """ atomic symbols
     """
-    syms = list(zip(*_vertices(cgr)))[0]
+    syms = list(zip(*_vertices(xgr)))[0]
     return syms
 
 
-def hydrogen_counts(cgr):
+def hydrogen_counts(xgr):
     """ atomic symbols
     """
-    hcnts = list(zip(*_vertices(cgr)))[1]
+    hcnts = list(zip(*_vertices(xgr)))[1]
     return hcnts
+
+
+def connectivity_graph(xgr):
+    """ strip this graph down to a basic connectivity graph
+    """
+    syms = atomic_symbols(xgr)
+    hcnts = hydrogen_counts(xgr)
+    atms = tuple(zip(syms, hcnts))
+    cnn_keys = _edge_keys(xgr)
+    cnns = {cnn_key: None for cnn_key in cnn_keys}
+    cgr = (atms, cnns)
+    return cgr
 
 
 def valences(cgr):

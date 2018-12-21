@@ -29,7 +29,7 @@ from .res import (possible_spin_multiplicities as
 from .res import inchi as _res_inchi
 from .res import inchi_numbering as _res_inchi_numbering
 from .res import open_pi_bond_keys as _res_open_pi_bond_keys
-from .res import low_spin_resonances as _res_low_spin_resonances
+from .res import lowspin_resonances as _res_lowspin_resonances
 
 
 def _no_pi_resonance_graph(cgr):
@@ -60,11 +60,19 @@ def potential_pi_bond_keys(cgr):
     return _res_open_pi_bond_keys(rgr)
 
 
-def low_spin_resonance_graphs(cgr):
+def lowspin_resonance_graphs(cgr):
     """ all possible resonance graphs with this sigma bonding structure
     """
     rgr = _no_pi_resonance_graph(cgr)
-    return _res_low_spin_resonances(rgr)
+    return _res_lowspin_resonances(rgr)
+
+
+def resonance_graph(cgr):
+    """ an arbitrary low-spin resonance graph with this sigma bonding structure
+    """
+    rgrs = lowspin_resonance_graphs(cgr)
+    assert rgrs
+    return rgrs[0]
 
 
 def possible_spin_multiplicities(cgr):
@@ -77,17 +85,19 @@ def possible_spin_multiplicities(cgr):
 def inchi(cgr):
     """ InChI string of a connectivity graph
     """
-    rgrs = low_spin_resonance_graphs(cgr)
-    assert rgrs
-    return _res_inchi(rgrs[0])
+    return _res_inchi(resonance_graph(cgr))
 
 
 def inchi_numbering(cgr):
     """ InChI numbering of backbone atoms
     """
-    rgrs = low_spin_resonance_graphs(cgr)
-    assert rgrs
-    return _res_inchi_numbering(rgrs[0])
+    return _res_inchi_numbering(resonance_graph(cgr))
+
+
+def stereogenic_atom_keys(cgr):
+    """ stereogenic atoms and their neighbors in CIP priority
+    """
+    print(cgr)
 
 
 def stereogenic_atoms(cgr):

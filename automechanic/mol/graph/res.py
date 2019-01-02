@@ -61,7 +61,7 @@ def radical_electron_counts(rgr):
     return tuple(rad_elec_cnts)
 
 
-def radical_atom_keys(rgr):
+def radical_sorted_atom_keys(rgr):
     """ keys to atoms with radical electrons
     """
     return tuple(key for key, cnt in enumerate(radical_electron_counts(rgr))

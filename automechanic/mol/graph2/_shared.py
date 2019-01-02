@@ -1,95 +1,127 @@
 """ shared molecular graph functions
 """
+from ._inetworkx import from_graph as _nxg_from_graph
+from ._inetworkx import isomorphism as _nxg_isomorphism
 
 SYMBOL_POS = 0
 HCOUNT_POS = 1
 PARITY_POS = 2
 
 
-def _from_data(atm_keys, atm_vals, bnd_keys, bnd_vals):
-    """ construct molecular graph from data
-    """
-    assert len(atm_keys) == len(atm_vals)
-    assert len(bnd_keys) == len(bnd_vals)
-    assert all(isinstance(bnd_key, frozenset) and len(bnd_key) == 2
-               for bnd_key in bnd_keys)
-    assert frozenset.union(*bnd_keys) <= set(atm_keys)
-    atms = dict(zip(atm_keys, atm_vals))
-    bnds = dict(zip(bnd_keys, bnd_vals))
-    xgr = (atms, bnds)
-    return xgr
-
-
 def atoms(xgr):
-    """ atoms
+    """ atoms, as a dictionary
     """
-    atms, _ = xgr
-    return atms
+    atm_dct, _ = xgr
+    return atm_dct
 
 
 def bonds(xgr):
-    """ bonds
+    """ bonds, as a dictionary
     """
-    _, bnds = xgr
-    return bnds
+    _, bnd_dct = xgr
+    return bnd_dct
 
 
 def atom_keys(xgr):
     """ sorted atom keys
     """
-    atm_keys, _ = zip(*_sorted_atoms_list(xgr))
-    return atm_keys
-
-
-def _atom_values(xgr):
-    """ atom values, sorted by atom key
-    """
-    _, atm_vals = zip(*_sorted_atoms_list(xgr))
-    return atm_vals
-
-
-def atom_symbols(xgr):
-    """ atomic symbols, sorted by atom key
-    """
-    atm_syms = list(zip(*_atom_values(xgr)))[SYMBOL_POS]
-    return atm_syms
-
-
-def atom_hydrogen_counts(xgr):
-    """ atom hydrogen counts, sorted by atom key
-    """
-    atm_hyd_cnts = list(zip(*_atom_values(xgr)))[HCOUNT_POS]
-    return atm_hyd_cnts
-
-
-def atom_stereo_parities(xgr):
-    """ atom hydrogen counts, sorted by atom key
-    """
-    atm_pars = list(zip(*_atom_values(xgr)))[PARITY_POS]
-    return atm_pars
+    return tuple(sorted(atoms(xgr).keys()))
 
 
 def bond_keys(xgr):
     """ sorted bond keys
     """
-    atm_keys, _ = zip(*_sorted_bonds_list(xgr))
-    return atm_keys
+    return tuple(sorted(bonds(xgr).keys(), key=sorted))
 
 
-def _bond_values(xgr):
-    """ bond values, sorted by key
+def _atom_values_at_position(xgr, pos):
+    atm_dct = atoms(xgr)
+    atm_keys = atm_dct.keys()
+    atm_vals = atm_dct.values()
+    pos_atm_vals = list(zip(*atm_vals))[pos]
+    return dict(zip(atm_keys, pos_atm_vals))
+
+
+def atom_symbols(xgr):
+    """ atom symbols, as a dictionary
     """
-    _, atm_vals = zip(*_sorted_bonds_list(xgr))
-    return atm_vals
+    return _atom_values_at_position(xgr, SYMBOL_POS)
 
 
-def _sorted_atoms_list(xgr):
-    """ sorted list of atoms
+def atom_hydrogen_counts(xgr):
+    """ atom symbols, as a dictionary
     """
-    return sorted(atoms(xgr).items(), key=lambda x: x[0])
+    return _atom_values_at_position(xgr, HCOUNT_POS)
 
 
-def _sorted_bonds_list(xgr):
-    """ sorted list of bonds
+def _atom_stereo_parities(xgr):
+    return _atom_values_at_position(xgr, PARITY_POS)
+
+
+def atom_neighbor_keys(xgr):
+    """ keys of neighboring atoms, by atom
     """
-    return sorted(bonds(xgr).items(), key=lambda x: tuple(sorted(x[0])))
+    atm_keys = atom_keys(xgr)
+    bnd_keys = bond_keys(xgr)
+    return {atm_key: tuple(sorted(next(iter(bnd_key - {atm_key}))
+                                  for bnd_key in bnd_keys
+                                  if atm_key in bnd_key))
+            for atm_key in atm_keys}
+
+
+def relabel(xgr, atm_key_dct):
+    """ relabel the graph with new atom keys
+    """
+    atm_dct = atoms(xgr)
+    bnd_dct = bonds(xgr)
+    atm_keys = atm_dct.keys()
+    atm_vals = atm_dct.values()
+    bnd_keys = bnd_dct.keys()
+    bnd_vals = bnd_dct.values()
+
+    assert set(atm_key_dct.keys()) == set(atom_keys(xgr))
+
+    atm_keys = list(map(atm_key_dct.__getitem__, atm_keys))
+    bnd_keys = list(map(
+        frozenset,
+        (map(atm_key_dct.__getitem__, bnd_key) for bnd_key in bnd_keys)))
+
+    atm_dct = dict(zip(atm_keys, atm_vals))
+    bnd_dct = dict(zip(bnd_keys, bnd_vals))
+    xgr = (atm_dct, bnd_dct)
+    return xgr
+
+
+def isomorphic(xgr1, xgr2):
+    """ are these molecular graphs isomorphic?
+    """
+    return isomorphism(xgr1, xgr2) is not None
+
+
+def isomorphism(xgr1, xgr2):
+    """ graph isomorphism (relabeling of `xgr1` to produce `xgr2`)
+    """
+    nxg1 = _nxg_from_graph(xgr1)
+    nxg2 = _nxg_from_graph(xgr2)
+    iso_dct = _nxg_isomorphism(nxg1, nxg2)
+    return iso_dct
+
+
+def _from_data(atm_keys, bnd_keys, atm_dcts, bnd_dct):
+    atm_dcts = [_fill_nones(atm_dct, atm_keys) for atm_dct in atm_dcts]
+    bnd_dct = _fill_nones(bnd_dct, bnd_keys)
+
+    assert all(set(atm_dct.keys()) == set(atm_keys) for atm_dct in atm_dcts)
+    assert set(bnd_dct.keys()) == set(bnd_keys)
+
+    atm_dct = dict(zip(
+        atm_keys,
+        zip(*(map(atm_dct.__getitem__, atm_keys) for atm_dct in atm_dcts))
+    ))
+
+    xgr = (atm_dct, bnd_dct)
+    return xgr
+
+
+def _fill_nones(dct, keys):
+    return dict((key, dct[key]) if key in dct else (key, None) for key in keys)

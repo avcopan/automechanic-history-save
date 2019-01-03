@@ -74,6 +74,22 @@ def test__conn__branch():
             ({7: ('C', 1), 8: ('O', 0)}, {frozenset({7, 8}): None}))
 
 
+def test__conn__ring_keys_list():
+    """ test graph.conn.ring_keys_list
+    """
+    cgr = ({0: ('C', 1), 1: ('C', 0), 2: ('C', 0), 3: ('C', 0), 4: ('C', 0),
+            5: ('N', 2), 6: ('N', 0), 7: ('N', 0), 8: ('N', 0), 9: ('N', 1),
+            10: ('O', 1)},
+           {frozenset({10, 4}): None, frozenset({8, 2}): None,
+            frozenset({0, 6}): None, frozenset({9, 3}): None,
+            frozenset({1, 2}): None, frozenset({3, 7}): None,
+            frozenset({2, 5}): None, frozenset({1, 6}): None,
+            frozenset({0, 7}): None, frozenset({9, 4}): None,
+            frozenset({1, 3}): None, frozenset({8, 4}): None})
+    assert (graph.conn.ring_keys_list(cgr) ==
+            ((0, 1, 3, 6, 7), (1, 2, 3, 4, 8, 9)))
+
+
 def test__conn__isomorphism():
     """ test graph.conn.isomorphism
     """
@@ -83,6 +99,18 @@ def test__conn__isomorphism():
         pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
         cgr_pmt = graph.conn.relabel(cgr, pmt_dct)
         assert graph.conn.isomorphism(cgr, cgr_pmt) == pmt_dct
+
+
+def test__conn__inchi():
+    """ test graph.conn.inchi
+    """
+    cgr = C8H13O_CGR
+    natms = len(graph.conn.atoms(cgr))
+    for _ in range(10):
+        pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
+        cgr_pmt = graph.conn.relabel(cgr, pmt_dct)
+        assert graph.conn.inchi(cgr_pmt) == C8H13O_ICH_NO_STEREO
+        assert graph.conn.atom_inchi_numbers(cgr_pmt) == pmt_dct
 
 
 def test__res__atom_bond_valences():
@@ -109,18 +137,6 @@ def test__res__from_data():
         atm_hyd_cnt_dct=graph.res.atom_hydrogen_counts(C8H13O_RGR),
         bnd_ord_dct=graph.res.bond_orders(C8H13O_RGR)
     )
-
-
-def test__res__inchi():
-    """ test graph.res.inchi
-    """
-    rgr = C8H13O_RGR
-    natms = len(graph.conn.atoms(rgr))
-    for _ in range(10):
-        pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
-        rgr_pmt = graph.res.relabel(rgr, pmt_dct)
-        assert graph.res.inchi(rgr_pmt) == C8H13O_ICH_NO_STEREO
-        assert graph.res.atom_inchi_numbers(rgr_pmt) == pmt_dct
 
 
 def test__stereo__from_data():
@@ -156,15 +172,23 @@ def test__stereo__is_chiral():
     assert graph.stereo.is_chiral(C2H2CL2F2_MP_SGR) is True
 
 
+def test__stereo__inchi():
+    """ test graph.stereo.inchi
+    """
+    graph.stereo.inchi(C8H13O_CGR)
+
+
 if __name__ == '__main__':
     test__conn__from_data()
     test__conn__atom_neighbor_keys()
     test__conn__branch()
+    test__conn__ring_keys_list()
     test__conn__isomorphism()
+    test__conn__inchi()
     test__res__from_data()
     test__res__atom_bond_valences()
     test__res__atom_radical_valences()
-    test__res__inchi()
     test__stereo__from_data()
     test__stereo__reflection()
     test__stereo__is_chiral()
+    test__stereo__inchi()

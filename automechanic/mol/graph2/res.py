@@ -23,10 +23,6 @@ from ._shared import isomorphic
 from ._shared import highspin_resonance_graph
 from ._shared import _from_data
 from ._dict import values_by_key as _values_by_key
-from ._molfile import from_data as _mlf_from_data
-from ._irdkit import from_molfile as _rdm_from_molfile
-from ._irdkit import to_inchi as _rdm_to_inchi
-from .._inchi_aux import numbering as _ich_aux_numbering
 
 
 def from_data(atm_keys, bnd_keys, atm_sym_dct, atm_hyd_cnt_dct, bnd_ord_dct):
@@ -69,38 +65,6 @@ def atom_radical_valences(rgr):
     return {atm_key: atm_rad_vlc
             for atm_key, atm_rad_vlc in zip(atm_keys, atm_rad_vlcs)
             if atm_rad_vlc}
-
-
-def inchi(rgr):
-    """ InChI string of a resonance graph """
-    ich, _ = _inchi_with_atom_priorities(rgr)
-    return ich
-
-
-def atom_inchi_numbers(rgr):
-    """ InChI numbering of backbone atoms
-    """
-    _, nums = _inchi_with_atom_priorities(rgr)
-    return nums
-
-
-def _inchi_with_atom_priorities(rgr):
-    """ InChI string of this resonance graph
-    """
-    atm_keys = atom_keys(rgr)
-    bnd_keys = bond_keys(rgr)
-    atm_syms = _values_by_key(atom_symbols(rgr), atm_keys)
-    atm_bnd_vlcs = _values_by_key(atom_bond_valences(rgr), atm_keys)
-    atm_rad_vlcs = _values_by_key(atom_radical_valences(rgr), atm_keys, fill=0)
-    bnd_ords = _values_by_key(bond_orders(rgr), bnd_keys)
-    mlf = _mlf_from_data(atm_keys, bnd_keys, atm_syms, atm_bnd_vlcs,
-                         atm_rad_vlcs, bnd_ords)
-    rdm = _rdm_from_molfile(mlf, with_stereo=False)
-    ich, ich_aux = _rdm_to_inchi(rdm, with_aux_info=True)
-    nums = _ich_aux_numbering(ich_aux)
-    assert len(atm_keys) == len(nums)
-    atm_ich_num_dct = dict(zip(atm_keys, nums))
-    return ich, atm_ich_num_dct
 
 
 __all__ = ['atoms', 'bonds', 'atom_keys', 'bond_keys', 'atom_symbols',

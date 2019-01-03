@@ -17,10 +17,13 @@ from ._shared import atom_neighbor_keys
 from ._shared import branch
 from ._shared import relabel
 from ._shared import subgraph
+from ._shared import ring_keys_list
 from ._shared import isomorphism
 from ._shared import isomorphic
 from ._shared import highspin_resonance_graph
 from ._shared import _from_data
+from ._to_inchi import inchi
+from ._to_inchi import atom_inchi_numbers
 
 
 def from_data(atm_keys, bnd_keys, atm_sym_dct, atm_hyd_cnt_dct):
@@ -38,5 +41,6 @@ def from_data(atm_keys, bnd_keys, atm_sym_dct, atm_hyd_cnt_dct):
 __all__ = ['atoms', 'bonds', 'atom_keys', 'bond_keys', 'atom_symbols',
            'atom_hydrogen_counts', 'atom_nuclear_charges',
            'atom_total_valences', 'atom_bonds', 'atom_neighbor_keys',
-           'branch', 'relabel', 'subgraph',
-           'isomorphism', 'isomorphic', 'highspin_resonance_graph']
+           'branch', 'relabel', 'subgraph', 'ring_keys_list',
+           'isomorphism', 'isomorphic', 'highspin_resonance_graph',
+           'inchi', 'atom_inchi_numbers']

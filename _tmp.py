@@ -36,19 +36,19 @@ MLF2 = """
 M  V30 BEGIN CTAB
 M  V30 COUNTS 6 5 0 0 1
 M  V30 BEGIN ATOM
-M  V30 1 C 0.000 0.000 0.000 RAD=1 VAL=4
-M  V30 2 C 0.000 0.000 0.000 RAD=1 VAL=4
-M  V30 3 F 0.000 0.000 0.000 RAD=1 VAL=1
-M  V30 4 CL 0.000 0.000 0.000 RAD=1 VAL=1
-M  V30 5 F 0.000 0.000 0.000 RAD=1 VAL=1
-M  V30 6 CL 0.000 0.000 0.000 RAD=1 VAL=1
+M  V30 1 C 0.000 0.000 0.000 RAD=1 VAL=4 CFG=1
+M  V30 2 C 1.000 0.000 0.000 RAD=1 VAL=4 CFG=2
+M  V30 3 F 0.000 1.000 0.000 RAD=1 VAL=1
+M  V30 4 CL 0.000 -1.000 +1.000 RAD=1 VAL=1
+M  V30 5 F 1.000 1.000 0.000 RAD=1 VAL=1
+M  V30 6 CL 1.000 -1.000 +1.000 RAD=1 VAL=1
 M  V30 END ATOM
 M  V30 BEGIN BOND
 M  V30 1 1 1 2
 M  V30 2 1 1 3
-M  V30 4 1 2 4 CFG=1
-M  V30 3 1 2 5
-M  V30 5 1 1 6 CFG=3
+M  V30 3 1 1 4
+M  V30 4 1 2 5
+M  V30 5 1 2 6
 M  V30 END BOND
 M  V30 END CTAB
 M  END
@@ -59,6 +59,14 @@ ICH = irdk.to_inchi(RDM)
 print(ICH)
 
 RDM = irdk.from_molfile(MLF2)
+irdk._rd_chem.AssignStereochemistryFrom3D(RDM)
 ICH = irdk.to_inchi(RDM)
 print(ICH)
-print(irdk.to_inchi(RDM, options='-SUU'))
+# MLF = irdk.to_molfile(RDM)
+# print(MLF)
+# ICH = irdk.to_inchi(RDM)
+
+import pybel
+PBM = pybel.readstring('mol', MLF2)
+ICH = PBM.write('inchi').strip()
+print(ICH)

@@ -42,6 +42,7 @@ def invert_atom_stereo(sgr, key):
 def reflect(sgr):
     """ reflect the graph through a mirror plane, inverting all atom stereo
     """
+    raise NotImplementedError(sgr)
 
 
 __all__ = ['connectivity_graph']

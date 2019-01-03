@@ -7,8 +7,6 @@ import rdkit.Chem.AllChem as _rd_all_chem
 _LOGGER = RDLogger.logger()
 _LOGGER.setLevel(RDLogger.ERROR)
 
-InChIError = _rd_chem.inchi.InchiReadWriteError
-
 
 def inchi_to_inchi_key(ich):
     """ InChI-Key from an InChI string

@@ -7,10 +7,14 @@ _LOGGER = RDLogger.logger()
 _LOGGER.setLevel(RDLogger.ERROR)
 
 
-def from_molfile(mfl):
+def from_molfile(mfl, with_stereo=False):
     """ rdkit molecule object from a mol block string
     """
     rdm = _rd_chem.rdmolfiles.MolFromMolBlock(mfl, removeHs=False)
+    if with_stereo:
+        _rd_chem.AssignStereochemistryFrom3D(rdm)
+    else:
+        _rd_chem.RemoveStereochemistry(rdm)
     assert rdm is not None
     return rdm
 

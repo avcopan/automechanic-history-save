@@ -18,3 +18,9 @@ def filter_by_value(dct, func=lambda val: val):
     """ return dictionary for a set of values, defined by a func
     """
     return {key: val for key, val in dct.items() if func(val)}
+
+
+def transform_values(dct, func):
+    """ apply a function to each value
+    """
+    return dict(zip(dct.keys(), map(func, dct.values())))

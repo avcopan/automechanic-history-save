@@ -90,6 +90,27 @@ def test__conn__ring_keys_list():
             ((0, 1, 3, 6, 7), (1, 2, 3, 4, 8, 9)))
 
 
+def test__conn__backbone_keys():
+    """ test graph.conn.backbone_keys()
+    """
+    cgr = ({0: ('H', 0), 1: ('F', 0), 2: ('H', 0), 3: ('C', 0), 4: ('H', 0),
+            5: ('H', 0), 6: ('H', 0)},
+           {frozenset({1, 3}): None, frozenset({2, 3}): None,
+            frozenset({0, 3}): None, frozenset({4, 5}): None})
+    assert graph.conn.backbone_keys(cgr) == (1, 3, 4, 6)
+
+
+def test__conn__atom_explicit_hydrogen_keys():
+    """ test graph.conn.atom_explicit_hydrogen_keys()
+    """
+    cgr = ({0: ('H', 0), 1: ('F', 0), 2: ('H', 0), 3: ('C', 0), 4: ('H', 0),
+            5: ('H', 0), 6: ('H', 0)},
+           {frozenset({1, 3}): None, frozenset({2, 3}): None,
+            frozenset({0, 3}): None, frozenset({4, 5}): None})
+    assert (graph.conn.atom_explicit_hydrogen_keys(cgr) ==
+            {0: (), 1: (), 2: (), 3: (0, 2), 4: (5,), 5: (4,), 6: ()})
+
+
 def test__conn__isomorphism():
     """ test graph.conn.isomorphism
     """
@@ -111,6 +132,16 @@ def test__conn__inchi():
         cgr_pmt = graph.conn.relabel(cgr, pmt_dct)
         assert graph.conn.inchi(cgr_pmt) == C8H13O_ICH_NO_STEREO
         assert graph.conn.atom_inchi_numbers(cgr_pmt) == pmt_dct
+
+    cgr = ({0: ('H', 0), 1: ('F', 0), 2: ('H', 0), 3: ('C', 0), 4: ('H', 0),
+            5: ('H', 0), 6: ('H', 0)},
+           {frozenset({1, 3}): None, frozenset({2, 3}): None,
+            frozenset({0, 3}): None, frozenset({4, 5}): None})
+
+    ich = graph.conn.inchi(cgr)
+    atm_ich_num_dct = graph.conn.atom_inchi_numbers(cgr)
+    assert ich == 'InChI=1S/CH2F.H2.H/c1-2;;/h1H2;1H;'
+    assert atm_ich_num_dct == {1: 3, 3: 1, 4: 4, 6: 6, 0: 7, 2: 8, 5: 9}
 
 
 def test__res__atom_bond_valences():
@@ -172,12 +203,6 @@ def test__stereo__is_chiral():
     assert graph.stereo.is_chiral(C2H2CL2F2_MP_SGR) is True
 
 
-def test__stereo__inchi():
-    """ test graph.stereo.inchi
-    """
-    graph.stereo.inchi(C8H13O_CGR)
-
-
 if __name__ == '__main__':
     test__conn__from_data()
     test__conn__atom_neighbor_keys()
@@ -185,10 +210,11 @@ if __name__ == '__main__':
     test__conn__ring_keys_list()
     test__conn__isomorphism()
     test__conn__inchi()
+    test__conn__backbone_keys()
+    test__conn__atom_explicit_hydrogen_keys()
     test__res__from_data()
     test__res__atom_bond_valences()
     test__res__atom_radical_valences()
     test__stereo__from_data()
     test__stereo__reflection()
     test__stereo__is_chiral()
-    test__stereo__inchi()

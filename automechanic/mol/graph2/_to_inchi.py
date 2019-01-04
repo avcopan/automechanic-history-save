@@ -5,7 +5,9 @@ from .res import atom_radical_valences
 from .res import bond_orders
 from ._shared import atom_keys
 from ._shared import bond_keys
+from ._shared import backbone_keys
 from ._shared import atom_symbols
+from ._shared import atom_explicit_hydrogen_keys
 from ._shared import highspin_resonance_graph
 from ._molfile import from_data as _mlf_from_data
 from ._irdkit import from_molfile as _rdm_from_molfile
@@ -42,7 +44,29 @@ def _inchi_with_atom_priorities(xgr):
                          atm_rad_vlcs, bnd_ords)
     rdm = _rdm_from_molfile(mlf, with_stereo=False)
     ich, ich_aux = _rdm_to_inchi(rdm, with_aux_info=True)
+
     nums = _ich_aux_numbering(ich_aux)
-    assert len(atm_keys) == len(nums)
-    atm_ich_num_dct = dict(zip(atm_keys, nums))
+    atm_ich_num_dct = _inchi_numbering(nums, xgr)
+
     return ich, atm_ich_num_dct
+
+
+def _inchi_numbering(nums, xgr):
+    """ inchi numbering, augmented to account for explicit hydrogens
+
+    explicit hydrogens are added at the end, grouped and sorted by their
+    associated backbone atom
+    """
+    atm_exp_hyd_keys_dct = atom_explicit_hydrogen_keys(xgr)
+    bbn_keys = backbone_keys(xgr)
+
+    assert len(bbn_keys) == len(nums)
+    atm_ich_num_dct = dict(zip(bbn_keys, nums))
+
+    last_num = max(nums)
+    for bbn_key in backbone_keys(xgr):
+        for exp_hyd_key in atm_exp_hyd_keys_dct[bbn_key]:
+            last_num += 1
+            atm_ich_num_dct[exp_hyd_key] = last_num
+
+    return atm_ich_num_dct

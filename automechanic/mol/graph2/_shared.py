@@ -6,6 +6,7 @@ from ._inetworkx import ring_keys_list as _nxg_ring_keys_list
 from ._inetworkx import isomorphism as _nxg_isomorphism
 from ._dict import by_key as _by_key
 from ._dict import values_by_key as _values_by_key
+from ._dict import transform_values as _transform_values
 from ..atom import valence as _atom_valence
 from ..atom import nuclear_charge as _atom_nuclear_charge
 
@@ -48,6 +49,18 @@ def _atom_values_at_position(xgr, pos):
     return dict(zip(atm_keys, pos_atm_vals))
 
 
+def _change_atom_values_at_position(xgr, pos, val_dct):
+    atm_dct = atoms(xgr)
+    bnd_dct = bonds(xgr)
+    atm_dct = _transform_values(atm_dct, func=list)
+    assert set(val_dct.keys()) <= set(atm_dct.keys())
+    for key, val in val_dct.items():
+        atm_dct[key][pos] = val
+    atm_dct = _transform_values(atm_dct, func=tuple)
+    xgr = (atm_dct, bnd_dct)
+    return xgr
+
+
 def atom_symbols(xgr):
     """ atom symbols, as a dictionary
     """
@@ -55,9 +68,15 @@ def atom_symbols(xgr):
 
 
 def atom_hydrogen_counts(xgr):
-    """ atom symbols, as a dictionary
+    """ atom hydrogen counts, as a dictionary
     """
     return _atom_values_at_position(xgr, HCOUNT_POS)
+
+
+def change_atom_hydrogen_counts(xgr, atm_hyd_cnt_dct):
+    """ set the atom hydrogen counts of this molecular graph
+    """
+    return _change_atom_values_at_position(xgr, HCOUNT_POS, atm_hyd_cnt_dct)
 
 
 def _atom_stereo_parities(xgr):
@@ -183,6 +202,43 @@ def ring_keys_list(xgr):
     nxg = _nxg_from_graph(xgr)
     rng_keys_lst = _nxg_ring_keys_list(nxg)
     return rng_keys_lst
+
+
+def backbone_keys(xgr):
+    """ backbone keys of this molecular graph
+
+    (backbone = heavy atoms and hydrogens that cannot be made implicit)
+    """
+    atm_keys = atom_keys(xgr)
+    atm_sym_dct = atom_symbols(xgr)
+    atm_ngb_keys_dct = atom_neighbor_keys(xgr)
+
+    bbn_keys = []
+    for atm_key in atm_keys:
+        if atm_sym_dct[atm_key] != 'H':
+            bbn_keys.append(atm_key)
+        else:
+            atm_ngb_keys = atm_ngb_keys_dct[atm_key]
+            atm_ngb_syms = _values_by_key(atm_sym_dct, atm_ngb_keys)
+            if all(sym == 'H' and atm_key < key
+                   for key, sym in zip(atm_ngb_keys, atm_ngb_syms)):
+                bbn_keys.append(atm_key)
+
+    return tuple(bbn_keys)
+
+
+def atom_explicit_hydrogen_keys(xgr):
+    """ the number of explicit hydrogens, by atom
+    """
+    atm_sym_dct = atom_symbols(xgr)
+
+    def _select_hydrogens(keys):
+        return tuple(filter(lambda key: atm_sym_dct[key] == 'H', keys))
+
+    atm_exp_hyd_keys = _transform_values(atom_neighbor_keys(xgr),
+                                         func=_select_hydrogens)
+
+    return atm_exp_hyd_keys
 
 
 def connectivity_graph(xgr):

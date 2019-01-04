@@ -128,3 +128,6 @@ ATM_XYZ_DCT[ATM_KEY] = (0, 0, 0)
 ATM_XYZ_DCT[ATM_NGB_KEY] = (1, 0, 0)
 _assign_neighbor_coordinates(ATM_NGB_KEY, atm_ref_key=ATM_KEY)
 print(ATM_XYZ_DCT)
+
+import automechanic.mol.graph2._shared as graph
+print(graph.change_atom_hydrogen_counts(SGR, {0: 5, 1: 7}))

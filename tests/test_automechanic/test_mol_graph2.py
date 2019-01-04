@@ -111,6 +111,18 @@ def test__conn__atom_explicit_hydrogen_keys():
             {0: (), 1: (), 2: (), 3: (0, 2), 4: (5,), 5: (4,), 6: ()})
 
 
+def test__conn__hide_explicit_hydrogens():
+    """ test graph.conn.hide_explicit_hydrogens()
+    """
+    cgr = ({0: ('H', 0), 1: ('F', 0), 2: ('H', 0), 3: ('C', 0), 4: ('H', 0),
+            5: ('H', 0), 6: ('H', 0)},
+           {frozenset({1, 3}): None, frozenset({2, 3}): None,
+            frozenset({0, 3}): None, frozenset({4, 5}): None})
+    assert (graph.conn.hide_explicit_hydrogens(cgr) ==
+            ({1: ('F', 0), 3: ('C', 2), 4: ('H', 1), 6: ('H', 0)},
+             {frozenset({1, 3}): None}))
+
+
 def test__conn__isomorphism():
     """ test graph.conn.isomorphism
     """
@@ -212,6 +224,7 @@ if __name__ == '__main__':
     test__conn__inchi()
     test__conn__backbone_keys()
     test__conn__atom_explicit_hydrogen_keys()
+    test__conn__hide_explicit_hydrogens()
     test__res__from_data()
     test__res__atom_bond_valences()
     test__res__atom_radical_valences()

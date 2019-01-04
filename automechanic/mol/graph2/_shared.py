@@ -1,6 +1,7 @@
 """ shared molecular graph functions
 """
 from itertools import chain as _chain
+import numpy
 from ._inetworkx import from_graph as _nxg_from_graph
 from ._inetworkx import ring_keys_list as _nxg_ring_keys_list
 from ._inetworkx import isomorphism as _nxg_isomorphism
@@ -188,12 +189,23 @@ def relabel(xgr, atm_key_dct):
 def subgraph(xgr, atm_keys):
     """ return the subgraph induced by a subset of the atoms
     """
+    assert set(atm_keys) <= set(atom_keys(xgr))
     bnd_keys = [bnd_key for bnd_key in bond_keys(xgr)
                 if set(bnd_key) <= set(atm_keys)]
     atm_dct = _by_key(atoms(xgr), atm_keys)
     bnd_dct = _by_key(bonds(xgr), bnd_keys)
     sub_xgr = (atm_dct, bnd_dct)
     return sub_xgr
+
+
+def delete_atoms(xgr, atm_keys):
+    """ delete atoms from the molecular graph
+    """
+    all_atm_keys = set(atom_keys(xgr))
+    atm_keys = set(atm_keys)
+    assert atm_keys <= all_atm_keys
+    atm_keys_left = all_atm_keys - atm_keys
+    return subgraph(xgr, atm_keys_left)
 
 
 def ring_keys_list(xgr):
@@ -239,6 +251,26 @@ def atom_explicit_hydrogen_keys(xgr):
                                          func=_select_hydrogens)
 
     return atm_exp_hyd_keys
+
+
+def hide_explicit_hydrogens(xgr, atm_keys=None):
+    """ hide explicit hydrogens at these atoms (must be backbone atoms)
+    """
+    atm_keys = atm_keys if atm_keys is not None else backbone_keys(xgr)
+    assert set(atm_keys) <= set(backbone_keys(xgr))
+
+    atm_exp_hyd_keys_lst = _values_by_key(
+        atom_explicit_hydrogen_keys(xgr), atm_keys)
+
+    atm_imp_hyd_cnts = _values_by_key(atom_hydrogen_counts(xgr), atm_keys)
+    atm_exp_hyd_cnts = tuple(map(len, atm_exp_hyd_keys_lst))
+    atm_tot_hyd_cnt_dct = dict(
+        zip(atm_keys, numpy.add(atm_imp_hyd_cnts, atm_exp_hyd_cnts)))
+    xgr = change_atom_hydrogen_counts(xgr, atm_tot_hyd_cnt_dct)
+
+    exp_hyd_keys = tuple(_chain(*atm_exp_hyd_keys_lst))
+    xgr = delete_atoms(xgr, exp_hyd_keys)
+    return xgr
 
 
 def connectivity_graph(xgr):

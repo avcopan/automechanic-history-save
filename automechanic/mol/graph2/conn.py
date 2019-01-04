@@ -23,6 +23,7 @@ from ._shared import isomorphic
 from ._shared import highspin_resonance_graph
 from ._shared import backbone_keys
 from ._shared import atom_explicit_hydrogen_keys
+from ._shared import hide_explicit_hydrogens
 from ._shared import _from_data
 from ._to_inchi import inchi
 from ._to_inchi import atom_inchi_numbers
@@ -43,7 +44,7 @@ def from_data(atm_keys, bnd_keys, atm_sym_dct, atm_hyd_cnt_dct):
 __all__ = ['atoms', 'bonds', 'atom_keys', 'bond_keys', 'atom_symbols',
            'atom_hydrogen_counts', 'atom_nuclear_charges',
            'atom_total_valences', 'atom_bonds', 'atom_neighbor_keys',
-           'atom_explicit_hydrogen_keys',
+           'atom_explicit_hydrogen_keys', 'hide_explicit_hydrogens',
            'branch', 'relabel', 'subgraph', 'ring_keys_list', 'backbone_keys',
            'isomorphism', 'isomorphic', 'highspin_resonance_graph', 'inchi',
            'atom_inchi_numbers']

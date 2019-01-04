@@ -82,29 +82,6 @@ def atom_total_valences(xgr):
     return dict(zip(atm_keys, atm_vlcs))
 
 
-def connectivity_graph(xgr):
-    """ connectivity graph of this molecular graph
-    """
-    return _from_data(
-        atm_keys=atom_keys(xgr),
-        bnd_keys=bond_keys(xgr),
-        atm_dcts=[atom_symbols(xgr), atom_hydrogen_counts(xgr)],
-        bnd_dct={}
-    )
-
-
-def highspin_resonance_graph(xgr):
-    """ high-spin (all sigma bond) resonance graph of this molecular graph
-    """
-    bnd_keys = bond_keys(xgr)
-    return _from_data(
-        atm_keys=atom_keys(xgr),
-        bnd_keys=bnd_keys,
-        atm_dcts=[atom_symbols(xgr), atom_hydrogen_counts(xgr)],
-        bnd_dct=_by_key({}, bnd_keys, fill=1)
-    )
-
-
 def atom_bonds(xgr):
     """ bonds, by atom
     """
@@ -206,6 +183,29 @@ def ring_keys_list(xgr):
     nxg = _nxg_from_graph(xgr)
     rng_keys_lst = _nxg_ring_keys_list(nxg)
     return rng_keys_lst
+
+
+def connectivity_graph(xgr):
+    """ connectivity graph of this molecular graph
+    """
+    return _from_data(
+        atm_keys=atom_keys(xgr),
+        bnd_keys=bond_keys(xgr),
+        atm_dcts=[atom_symbols(xgr), atom_hydrogen_counts(xgr)],
+        bnd_dct={}
+    )
+
+
+def highspin_resonance_graph(xgr):
+    """ high-spin (all sigma bond) resonance graph of this molecular graph
+    """
+    bnd_keys = bond_keys(xgr)
+    return _from_data(
+        atm_keys=atom_keys(xgr),
+        bnd_keys=bnd_keys,
+        atm_dcts=[atom_symbols(xgr), atom_hydrogen_counts(xgr)],
+        bnd_dct=_by_key({}, bnd_keys, fill=1)
+    )
 
 
 def isomorphic(xgr1, xgr2):

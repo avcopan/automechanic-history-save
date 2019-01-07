@@ -18,3 +18,21 @@ def transform_values(dct, func):
     """ apply a function to each value
     """
     return dict(zip(dct.keys(), map(func, dct.values())))
+
+
+def transform_values_with_key(dct, func):
+    """ replace values with `func(key, val)`
+    """
+    return {key: func(key, val) for key, val in dct.items()}
+
+
+def filter_by_key(dct, func):
+    """ filter dictionary entries by their keys
+    """
+    return {key: val for key, val in dct.items() if func(key)}
+
+
+def filter_by_value(dct, func=lambda val: val):
+    """ filter dictionary entries by their values
+    """
+    return {key: val for key, val in dct.items() if func(val)}

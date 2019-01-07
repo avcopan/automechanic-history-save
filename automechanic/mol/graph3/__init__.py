@@ -15,8 +15,13 @@ from ._base import bond_keys
 from ._base import atom_symbols
 from ._base import atom_implicit_hydrogen_valences
 from ._base import set_atom_implicit_hydrogen_valences
+from ._base import atom_nuclear_charges
+from ._base import atom_total_valences
+from ._base import atom_bonds
+from ._base import atom_neighbor_keys
 
 __all__ = ['res', 'stereo',
            'from_data', 'atoms', 'bonds', 'atom_keys', 'bond_keys',
            'atom_symbols', 'atom_implicit_hydrogen_valences',
-           'set_atom_implicit_hydrogen_valences']
+           'set_atom_implicit_hydrogen_valences', 'atom_nuclear_charges',
+           'atom_total_valences', 'atom_bonds', 'atom_neighbor_keys']

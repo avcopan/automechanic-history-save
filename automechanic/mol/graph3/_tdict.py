@@ -6,12 +6,19 @@ import numpy
 from ._dict import transform_values as _transform_values
 
 
+def position_count(dct):
+    """ the number of positions in this tuple dictionary
+    """
+    pos_cnt = numpy.shape(list(dct.values()))[1] if dct else None
+    return pos_cnt
+
+
 def by_key_by_position(dct, keys, pos):
     """ position values, as a dictionary with these keys
     """
     assert set(keys) <= set(dct.keys())
+    assert pos <= position_count(dct)
     vals = tuple(map(dct.__getitem__, keys))
-    assert pos <= numpy.shape(vals)[1]
     pos_vals = list(zip(*vals))[pos]
     return dict(zip(keys, pos_vals))
 

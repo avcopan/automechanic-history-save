@@ -115,6 +115,47 @@ def test__atom_neighbor_keys():
              6: (4, 7), 7: (5, 6, 8), 8: (7,)})
 
 
+def test__explicit_hydrogen_keys():
+    """ test graph.explicit_hydrogen_keys
+    """
+    assert graph.explicit_hydrogen_keys(CH2FH2H_CGR_EXP) == (0, 2, 5)
+
+
+def test__backbone_keys():
+    """ test graph.backbone_keys
+    """
+    assert graph.backbone_keys(CH2FH2H_CGR_EXP) == (1, 3, 4, 6)
+
+
+def test__atom_explicit_hydrogen_keys():
+    """ test graph.atom_explicit_hydrogen_keys
+    """
+    assert (graph.atom_explicit_hydrogen_keys(CH2FH2H_CGR_EXP) ==
+            {0: (), 1: (), 2: (), 3: (0, 2), 4: (5,), 5: (), 6: ()})
+
+
+def test__delete_atoms():
+    """ test graph.delete_atoms
+    """
+    assert (graph.delete_atoms(CH2FH2H_CGR_EXP, (0, 2, 5)) ==
+            ({1: ('F', 0), 3: ('C', 0), 4: ('H', 0), 6: ('H', 0)},
+             {frozenset({1, 3}): (1,)}))
+
+
+def test__implicit():
+    """ test graph.implicit
+    """
+    assert graph.implicit(CH2FH2H_CGR_EXP, (1, 3, 4, 6)) == CH2FH2H_CGR_IMP
+
+
+def test__subgraph():
+    """ test graph.subgraph
+    """
+    assert (graph.subgraph(CH2FH2H_CGR_EXP, (1, 3, 4, 6)) ==
+            ({1: ('F', 0), 3: ('C', 0), 4: ('H', 0), 6: ('H', 0)},
+             {frozenset({1, 3}): (1,)}))
+
+
 # change this to `atom_explicit_hydrogen_valences`
 # with separate `backbone_keys` and `explicit_hydrogen_keys` functions
 # def test__atom_explicit_hydrogen_keys():
@@ -148,5 +189,14 @@ if __name__ == '__main__':
     test__atom_total_valences()
     test__atom_bonds()
     test__atom_neighbor_keys()
+    test__explicit_hydrogen_keys()
+    test__backbone_keys()
+    test__atom_explicit_hydrogen_keys()
+    test__delete_atoms()
+    test__implicit()
+    test__subgraph()
     test__res__no_pi()
     test__stereo__no_centers()
+
+    CGR = ({}, {})
+    graph.add_atom(C8H13O_CGR, 0, 'H')

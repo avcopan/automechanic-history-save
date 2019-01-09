@@ -1,22 +1,25 @@
 """ test the automechanc.mol.graph module
 """
+import numpy
 from automechanic.mol import graph3 as graph
 
 
 C8H13O_CGR = (
-    {0: ('C', 3), 1: ('C', 3), 2: ('C', 1), 3: ('C', 1), 4: ('C', 1),
-     5: ('C', 1), 6: ('C', 2), 7: ('C', 1), 8: ('O', 0)},
-    {frozenset({0, 2}): (1,), frozenset({1, 3}): (1,),
-     frozenset({2, 4}): (1,), frozenset({3, 5}): (1,),
-     frozenset({4, 6}): (1,), frozenset({5, 7}): (1,),
-     frozenset({6, 7}): (1,), frozenset({8, 7}): (1,)})
+    {0: ('C', 3, None), 1: ('C', 3, None), 2: ('C', 1, None),
+     3: ('C', 1, None), 4: ('C', 1, None), 5: ('C', 1, None),
+     6: ('C', 2, None), 7: ('C', 1, None), 8: ('O', 0, None)},
+    {frozenset({0, 2}): (1, None), frozenset({1, 3}): (1, None),
+     frozenset({2, 4}): (1, None), frozenset({3, 5}): (1, None),
+     frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
+     frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None)})
 C8H13O_RGR = (
-    {0: ('C', 3), 1: ('C', 3), 2: ('C', 1), 3: ('C', 1), 4: ('C', 1),
-     5: ('C', 1), 6: ('C', 2), 7: ('C', 1), 8: ('O', 0)},
-    {frozenset({0, 2}): (1,), frozenset({1, 3}): (1,),
-     frozenset({2, 4}): (2,), frozenset({3, 5}): (2,),
-     frozenset({4, 6}): (1,), frozenset({5, 7}): (1,),
-     frozenset({6, 7}): (1,), frozenset({8, 7}): (1,)})
+    {0: ('C', 3, None), 1: ('C', 3, None), 2: ('C', 1, None),
+     3: ('C', 1, None), 4: ('C', 1, None), 5: ('C', 1, None),
+     6: ('C', 2, None), 7: ('C', 1, None), 8: ('O', 0, None)},
+    {frozenset({0, 2}): (1, None), frozenset({1, 3}): (1, None),
+     frozenset({2, 4}): (2, None), frozenset({3, 5}): (2, None),
+     frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
+     frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None)})
 C8H13O_SGR = (
     {0: ('C', 3, None), 1: ('C', 3, None), 2: ('C', 1, None),
      3: ('C', 1, None), 4: ('C', 1, None), 5: ('C', 1, None),
@@ -26,57 +29,85 @@ C8H13O_SGR = (
      frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
      frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None)})
 CH2FH2H_CGR_IMP = (
-    {1: ('F', 0), 3: ('C', 2), 4: ('H', 1), 6: ('H', 0)},
-    {frozenset({1, 3}): (1,)})
+    {1: ('F', 0, None), 3: ('C', 2, None), 4: ('H', 1, None),
+     6: ('H', 0, None)},
+    {frozenset({1, 3}): (1, None)})
 CH2FH2H_CGR_EXP = (
-    {0: ('H', 0), 1: ('F', 0), 2: ('H', 0), 3: ('C', 0),
-     4: ('H', 0), 5: ('H', 0), 6: ('H', 0)},
-    {frozenset({1, 3}): (1,), frozenset({2, 3}): (1,),
-     frozenset({0, 3}): (1,), frozenset({4, 5}): (1,)})
+    {0: ('H', 0, None), 1: ('F', 0, None), 2: ('H', 0, None),
+     3: ('C', 0, None), 4: ('H', 0, None), 5: ('H', 0, None),
+     6: ('H', 0, None)},
+    {frozenset({1, 3}): (1, None), frozenset({2, 3}): (1, None),
+     frozenset({0, 3}): (1, None), frozenset({4, 5}): (1, None)})
 
 
+# test constructors and value getters
 def test__from_data():
     """ test graph.from_data
 
     also tests a bunch of accessors
     """
     assert graph.from_data(
-        graph.atom_keys(CH2FH2H_CGR_EXP),
-        graph.bond_keys(CH2FH2H_CGR_EXP),
-        graph.atom_symbols(CH2FH2H_CGR_EXP)
+        graph.atom_symbols(CH2FH2H_CGR_EXP),
+        graph.bond_keys(CH2FH2H_CGR_EXP)
     ) == CH2FH2H_CGR_EXP
     assert graph.from_data(
-        graph.atom_keys(C8H13O_CGR),
-        graph.bond_keys(C8H13O_CGR),
         graph.atom_symbols(C8H13O_CGR),
+        graph.bond_keys(C8H13O_CGR),
         atm_imp_hyd_vlc_dct=graph.atom_implicit_hydrogen_valences(C8H13O_CGR)
     ) == C8H13O_CGR
     assert graph.from_data(
-        graph.atom_keys(C8H13O_RGR),
-        graph.bond_keys(C8H13O_RGR),
         graph.atom_symbols(C8H13O_RGR),
+        graph.bond_keys(C8H13O_RGR),
         atm_imp_hyd_vlc_dct=graph.atom_implicit_hydrogen_valences(C8H13O_CGR),
-        bnd_ord_dct=graph.res.bond_orders(C8H13O_RGR)
+        bnd_ord_dct=graph.bond_orders(C8H13O_RGR)
     ) == C8H13O_RGR
     assert graph.from_data(
-        graph.atom_keys(C8H13O_SGR),
-        graph.bond_keys(C8H13O_SGR),
         graph.atom_symbols(C8H13O_SGR),
+        graph.bond_keys(C8H13O_SGR),
         atm_imp_hyd_vlc_dct=graph.atom_implicit_hydrogen_valences(C8H13O_SGR),
-        atm_par_dct=graph.stereo.atom_parities(C8H13O_SGR),
-        bnd_par_dct=graph.stereo.bond_parities(C8H13O_SGR)
+        atm_ste_par_dct=graph.atom_stereo_parities(C8H13O_SGR),
+        bnd_ste_par_dct=graph.bond_stereo_parities(C8H13O_SGR)
     ) == C8H13O_SGR
 
 
+# test value setters
 def test__set_atom_implicit_hydrogen_valences():
     """ test graph.set_atom_implicit_hydrogen_valences
     """
     assert graph.set_atom_implicit_hydrogen_valences(
-        CH2FH2H_CGR_IMP, {3: 1, 6: 1}
-    ) == ({1: ('F', 0), 3: ('C', 1), 4: ('H', 1), 6: ('H', 1)},
-          {frozenset({1, 3}): (1,)})
+        CH2FH2H_CGR_IMP, {3: 1, 4: 0, 6: 1}
+    ) == ({1: ('F', 0, None), 3: ('C', 1, None), 4: ('H', 0, None),
+           6: ('H', 1, None)},
+          {frozenset({1, 3}): (1, None)})
 
 
+def test__set_atom_stereo_parities():
+    """ test graph.set_atom_stereo_parities
+    """
+    assert graph.atom_stereo_parities(
+        graph.set_atom_stereo_parities(C8H13O_CGR, {7: False})
+    ) == graph.atom_stereo_parities(C8H13O_SGR)
+
+
+def test__set_bond_orders():
+    """ test graph.set_bond_orders
+    """
+    assert graph.set_bond_orders(
+        C8H13O_CGR, {frozenset({2, 4}): 2, frozenset({3, 5}): 2},
+    ) == C8H13O_RGR
+
+
+def test__set_bond_stereo_parities():
+    """ test graph.set_bond_stereo_parities
+    """
+    assert graph.bond_stereo_parities(
+        graph.set_bond_stereo_parities(
+            C8H13O_CGR, {frozenset({2, 4}): False, frozenset({3, 5}): False},
+        )
+    ) == graph.bond_stereo_parities(C8H13O_SGR)
+
+
+# test derived values
 def test__atom_nuclear_charges():
     """ test graph.atom_nuclear_charges
     """
@@ -95,16 +126,16 @@ def test__atom_bonds():
     """ test graph.atom_bonds
     """
     assert (graph.atom_bonds(C8H13O_CGR) ==
-            {0: {frozenset({0, 2}): (1,)},
-             1: {frozenset({1, 3}): (1,)},
-             2: {frozenset({0, 2}): (1,), frozenset({2, 4}): (1,)},
-             3: {frozenset({1, 3}): (1,), frozenset({3, 5}): (1,)},
-             4: {frozenset({2, 4}): (1,), frozenset({4, 6}): (1,)},
-             5: {frozenset({3, 5}): (1,), frozenset({5, 7}): (1,)},
-             6: {frozenset({4, 6}): (1,), frozenset({6, 7}): (1,)},
-             7: {frozenset({5, 7}): (1,), frozenset({6, 7}): (1,),
-                 frozenset({8, 7}): (1,)},
-             8: {frozenset({8, 7}): (1,)}})
+            {0: {frozenset({0, 2}): (1, None)},
+             1: {frozenset({1, 3}): (1, None)},
+             2: {frozenset({0, 2}): (1, None), frozenset({2, 4}): (1, None)},
+             3: {frozenset({1, 3}): (1, None), frozenset({3, 5}): (1, None)},
+             4: {frozenset({2, 4}): (1, None), frozenset({4, 6}): (1, None)},
+             5: {frozenset({3, 5}): (1, None), frozenset({5, 7}): (1, None)},
+             6: {frozenset({4, 6}): (1, None), frozenset({6, 7}): (1, None)},
+             7: {frozenset({5, 7}): (1, None), frozenset({6, 7}): (1, None),
+                 frozenset({8, 7}): (1, None)},
+             8: {frozenset({8, 7}): (1, None)}})
 
 
 def test__atom_neighbor_keys():
@@ -134,57 +165,98 @@ def test__atom_explicit_hydrogen_keys():
             {0: (), 1: (), 2: (), 3: (0, 2), 4: (5,), 5: (), 6: ()})
 
 
+# test transformations
+def test__implicit():
+    """ test graph.implicit
+    """
+    assert graph.implicit(CH2FH2H_CGR_EXP) == CH2FH2H_CGR_IMP
+    assert graph.implicit(CH2FH2H_CGR_EXP, (1, 3, 4, 6)) == CH2FH2H_CGR_IMP
+
+
+def test__explicit():
+    """ test graph.explicit
+    """
+    ch2fh2h_cgr_exp = graph.explicit(CH2FH2H_CGR_IMP)
+    assert graph.backbone_isomorphic(ch2fh2h_cgr_exp, CH2FH2H_CGR_EXP)
+    assert (graph.atom_explicit_hydrogen_keys(ch2fh2h_cgr_exp) ==
+            {1: (), 3: (7, 8), 4: (9,), 6: (), 7: (), 8: (), 9: ()})
+
+
 def test__delete_atoms():
     """ test graph.delete_atoms
     """
     assert (graph.delete_atoms(CH2FH2H_CGR_EXP, (0, 2, 5)) ==
-            ({1: ('F', 0), 3: ('C', 0), 4: ('H', 0), 6: ('H', 0)},
-             {frozenset({1, 3}): (1,)}))
+            ({1: ('F', 0, None), 3: ('C', 0, None), 4: ('H', 0, None),
+              6: ('H', 0, None)},
+             {frozenset({1, 3}): (1, None)}))
 
 
-def test__implicit():
-    """ test graph.implicit
+def test__add_explicit_hydrogens():
+    """ test graph.add_explicit_hydrogens
     """
-    assert graph.implicit(CH2FH2H_CGR_EXP, (1, 3, 4, 6)) == CH2FH2H_CGR_IMP
+    assert graph.add_explicit_hydrogens(
+        CH2FH2H_CGR_IMP, {3: 2, 4: 1}
+    ) == ({1: ('F', 0, None), 3: ('C', 2, None), 4: ('H', 1, None),
+           6: ('H', 0, None), 7: ('H', 0, None), 8: ('H', 0, None),
+           9: ('H', 0, None)},
+          {frozenset({1, 3}): (1, None), frozenset({3, 7}): (1, None),
+           frozenset({8, 3}): (1, None), frozenset({9, 4}): (1, None)})
 
 
 def test__subgraph():
     """ test graph.subgraph
     """
     assert (graph.subgraph(CH2FH2H_CGR_EXP, (1, 3, 4, 6)) ==
-            ({1: ('F', 0), 3: ('C', 0), 4: ('H', 0), 6: ('H', 0)},
-             {frozenset({1, 3}): (1,)}))
+            ({1: ('F', 0, None), 3: ('C', 0, None), 4: ('H', 0, None),
+              6: ('H', 0, None)},
+             {frozenset({1, 3}): (1, None)}))
 
 
-# change this to `atom_explicit_hydrogen_valences`
-# with separate `backbone_keys` and `explicit_hydrogen_keys` functions
-# def test__atom_explicit_hydrogen_keys():
-#     """ test graph.atom_explicit_hydrogen_keys
-#     """
-#     assert (graph.atom_explicit_hydrogen_keys(CH2FH2H_CGR_EXP) ==
-#             {3: (0, 2), 4: (5,), 5: (4,)})
-
-
-def test__res__no_pi():
-    """ test graph.res.no_pi
+def test__relabel():
+    """ test graph.relabel
     """
-    no_pi_rgr = graph.res.set_bond_orders(
-        C8H13O_RGR, {frozenset({2, 4}): 1, frozenset({3, 5}): 1})
-    assert graph.res.no_pi(C8H13O_RGR) == C8H13O_CGR == no_pi_rgr
+    assert graph.relabel(
+        CH2FH2H_CGR_IMP, {1: 0, 3: 1, 4: 2, 6: 3}
+    ) == ({0: ('F', 0, None), 1: ('C', 2, None), 2: ('H', 1, None),
+           3: ('H', 0, None)},
+          {frozenset({0, 1}): (1, None)})
 
 
-def test__stereo__no_centers():
-    """ test graph.stereo.no_centers
+# test comparisons
+def test__backbone_isomorphic():
+    """ test graph.backbone_isomorphic
     """
-    no_ctr_sgr = graph.stereo.set_bond_parities(
-        graph.stereo.set_atom_parities(C8H13O_SGR, {7: None}),
-        {frozenset({2, 4}): None, frozenset({3, 5}): None})
-    assert graph.stereo.no_centers(C8H13O_SGR) == no_ctr_sgr
+    assert graph.backbone_isomorphic(CH2FH2H_CGR_EXP, CH2FH2H_CGR_IMP)
+    cgr = C8H13O_CGR
+    natms = len(graph.atoms(cgr))
+    for _ in range(10):
+        pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
+        cgr_pmt = graph.relabel(cgr, pmt_dct)
+        assert graph.backbone_isomorphic(cgr, cgr_pmt)
+
+
+def test__backbone_isomorphism():
+    """ test graph.backbone_isomorphism
+    """
+    assert (graph.backbone_isomorphism(CH2FH2H_CGR_EXP, CH2FH2H_CGR_IMP) ==
+            {1: 1, 3: 3, 4: 4, 6: 6})
+    cgr = C8H13O_CGR
+    natms = len(graph.atoms(cgr))
+    for _ in range(10):
+        pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
+        cgr_pmt = graph.relabel(cgr, pmt_dct)
+        assert graph.backbone_isomorphism(cgr, cgr_pmt) == pmt_dct
 
 
 if __name__ == '__main__':
+    # test constructors and value getters
     test__from_data()
+    # test value setters
     test__set_atom_implicit_hydrogen_valences()
+    test__set_atom_stereo_parities()
+    test__set_bond_orders()
+    test__set_bond_stereo_parities()
+    # test derived values
     test__atom_nuclear_charges()
     test__atom_total_valences()
     test__atom_bonds()
@@ -192,11 +264,13 @@ if __name__ == '__main__':
     test__explicit_hydrogen_keys()
     test__backbone_keys()
     test__atom_explicit_hydrogen_keys()
-    test__delete_atoms()
+    # test transformations
     test__implicit()
+    test__explicit()
+    test__delete_atoms()
+    test__add_explicit_hydrogens()
     test__subgraph()
-    test__res__no_pi()
-    test__stereo__no_centers()
-
-    CGR = ({}, {})
-    graph.add_atom(C8H13O_CGR, 0, 'H')
+    test__relabel()
+    # test comparisons
+    test__backbone_isomorphic()
+    test__backbone_isomorphism()

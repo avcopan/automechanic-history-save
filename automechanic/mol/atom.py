@@ -1,6 +1,13 @@
 """ functions operating on atomic symbols
 """
 
+SYMBOLS = ['H', 'HE',
+           'C',
+           'N',
+           'O', 'S',
+           'F', 'CL',
+           'NE', 'AR']
+
 
 def valence(sym):
     """ bonding valence

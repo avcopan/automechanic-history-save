@@ -27,6 +27,7 @@ def set_by_key_by_position(dct, pos_dct, pos):
     """ set values by position and key
     """
     assert set(pos_dct.keys()) <= set(dct.keys())
+    assert pos <= position_count(dct)
     dct = _transform_values(dct, func=list)
     for key, pos_val in pos_dct.items():
         dct[key][pos] = pos_val

@@ -33,6 +33,7 @@ from ._base import atom_neighbor_keys
 from ._base import explicit_hydrogen_keys
 from ._base import backbone_keys
 from ._base import atom_explicit_hydrogen_keys
+from ._base import ring_keys_list
 # transformations
 from ._base import implicit
 from ._base import explicit
@@ -57,7 +58,7 @@ __all__ = [
     # derived values
     'atom_nuclear_charges', 'atom_total_valences', 'atom_bonds',
     'atom_neighbor_keys', 'explicit_hydrogen_keys', 'backbone_keys',
-    'atom_explicit_hydrogen_keys',
+    'atom_explicit_hydrogen_keys', 'ring_keys_list',
     # transformations
     'implicit', 'explicit', 'delete_atoms', 'add_explicit_hydrogens',
     'subgraph', 'relabel',

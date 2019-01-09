@@ -15,11 +15,11 @@ def from_graph(xgr):
     return nxg
 
 
-# def ring_keys_list(nxg):
-#     """ minimum cycle basis for the graph
-#     """
-#     rng_keys_lst = networkx.algorithms.cycles.minimum_cycle_basis(nxg)
-#     return tuple(map(tuple, rng_keys_lst))
+def ring_keys_list(nxg):
+    """ minimum cycle basis for the graph
+    """
+    rng_keys_lst = networkx.algorithms.cycles.minimum_cycle_basis(nxg)
+    return tuple(map(tuple, rng_keys_lst))
 
 
 def isomorphism(nxg1, nxg2):

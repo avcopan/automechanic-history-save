@@ -165,6 +165,22 @@ def test__atom_explicit_hydrogen_keys():
             {0: (), 1: (), 2: (), 3: (0, 2), 4: (5,), 5: (), 6: ()})
 
 
+def test__ring_keys_list():
+    """ test graph.ring_keys_list
+    """
+    cgr = ({0: ('C', 1, None), 1: ('C', 0, None), 2: ('C', 0, None),
+            3: ('C', 0, None), 4: ('C', 0, None), 5: ('N', 2, None),
+            6: ('N', 0, None), 7: ('N', 0, None), 8: ('N', 0, None),
+            9: ('N', 1, None), 10: ('O', 1, None)},
+           {frozenset({10, 4}): (1, None), frozenset({8, 2}): (1, None),
+            frozenset({0, 6}): (1, None), frozenset({9, 3}): (1, None),
+            frozenset({1, 2}): (1, None), frozenset({3, 7}): (1, None),
+            frozenset({2, 5}): (1, None), frozenset({1, 6}): (1, None),
+            frozenset({0, 7}): (1, None), frozenset({9, 4}): (1, None),
+            frozenset({1, 3}): (1, None), frozenset({8, 4}): (1, None)})
+    assert graph.ring_keys_list(cgr) == ((0, 1, 3, 6, 7), (1, 2, 3, 4, 8, 9))
+
+
 # test transformations
 def test__implicit():
     """ test graph.implicit
@@ -264,6 +280,7 @@ if __name__ == '__main__':
     test__explicit_hydrogen_keys()
     test__backbone_keys()
     test__atom_explicit_hydrogen_keys()
+    test__ring_keys_list()
     # test transformations
     test__implicit()
     test__explicit()

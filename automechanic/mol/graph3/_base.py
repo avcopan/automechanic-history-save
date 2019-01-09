@@ -18,6 +18,7 @@ from ._dict import filter_by_key as _filter_by_key
 from ._tdict import by_key_by_position as _by_key_by_position
 from ._tdict import set_by_key_by_position as _set_by_key_by_position
 from ._inetworkx import from_graph as _nxg_from_graph
+from ._inetworkx import ring_keys_list as _nxg_ring_keys_list
 from ._inetworkx import isomorphism as _nxg_isomorphism
 from ..atom import nuclear_charge as _atom_nuclear_charge
 from ..atom import valence as _atom_valence
@@ -308,6 +309,14 @@ def atom_explicit_hydrogen_keys(xgr):
     atm_exp_hyd_keys_dct = _transform_values(atom_neighbor_keys(xgr),
                                              _explicit_hydrogen_keys)
     return atm_exp_hyd_keys_dct
+
+
+def ring_keys_list(xgr):
+    """ a series of key-sets for each ring in the graph
+    """
+    nxg = _nxg_from_graph(xgr)
+    rng_keys_lst = _nxg_ring_keys_list(nxg)
+    return rng_keys_lst
 
 
 # transformations

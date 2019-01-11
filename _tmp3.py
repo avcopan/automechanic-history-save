@@ -2,8 +2,9 @@
 """
 from __future__ import division
 from numbers import Integral as _Integer
-import numpy
+import itertools
 from itertools import chain as _chain
+import numpy
 from automechanic.mol import graph3 as graph
 from automechanic.mol.graph3 import _dict
 from automechanic.mol.graph2 import stereo
@@ -27,11 +28,37 @@ def integer_rotation_matrix(int_xyz_dir, clicks):
     uint_xyz_dir = unit_integer_triple_forward(int_xyz_dir)
     udx, udy, udz = uint_xyz_dir
     id3 = numpy.eye(3, dtype=int)
-    u_cross = [[0, -udz, udy], [udz, 0, -udz], [-udy, udx, 0]]
+    u_cross = numpy.array([[0, -udz, udy],
+                           [udz, 0, -udx],
+                           [-udy, udx, 0]], dtype=int)
     u_prod_u = numpy.outer(uint_xyz_dir, uint_xyz_dir)
     rot = cos * id3 + sin * u_cross + (1 - cos) * u_prod_u
+    # assert that this is actually a rotation matrix
+    assert numpy.all(numpy.dot(rot, rot.T) == id3)
+    assert numpy.all(numpy.dot(rot.T, rot) == id3)
     assert numpy.linalg.det(rot) == 1
     return rot
+
+
+def orienter(int_xyz_dir_local, int_xyz_dir):
+    """ orienter that takes `int_xyz_dir_local` into `int_xyz_dir_abs`
+    """
+    uint_xyz_dir_local = unit_integer_triple_forward(int_xyz_dir_local)
+    uint_xyz_dir = unit_integer_triple_forward(int_xyz_dir)
+    dot = numpy.vdot(uint_xyz_dir_local, uint_xyz_dir)
+    cross = numpy.cross(uint_xyz_dir_local, uint_xyz_dir)
+    if numpy.any(cross):
+        rot = integer_rotation_matrix(cross, clicks=1)
+    else:
+        uint_xyz_dir_perp = unit_integer_triple_left(uint_xyz_dir_local)
+        clicks = 2 if dot < 0 else 0
+        rot = integer_rotation_matrix(uint_xyz_dir_perp, clicks=clicks)
+
+    def _orient(int_xyz_dir_other_local):
+        int_xyz_dir_other = numpy.dot(rot, int_xyz_dir_other_local)
+        return tuple(int_xyz_dir_other)
+
+    return _orient
 
 
 def unit_integer_triple_forward(int_xyz_dir):
@@ -199,8 +226,19 @@ ATM_XYZ_DCT[ATM_NGB_KEY] = (1, 0, 0)
 _assign_neighbor_coordinates(ATM_NGB_KEY, atm_ref_key=ATM_KEY)
 print(ATM_XYZ_DCT)
 
-INT_DIR1 = [1, 0, 0]
-INT_DIR2 = [0, 0, -1]
-INT_DIR3 = numpy.cross(INT_DIR1, INT_DIR2)
-ROT = integer_rotation_matrix(INT_DIR3, clicks=1)
-print(ROT)
+INT_DIRS = [[1, 0, 0],
+            [0, 1, 0],
+            [0, -1, 0],
+            [0, 0, 1]]
+
+for i, j in itertools.product(range(3), range(3)):
+    for si, sj in itertools.product([-1, +1], [-1, +1]):
+        int_xyz_dir1 = [0] * 3
+        int_xyz_dir2 = [0] * 3
+        int_xyz_dir1[i] = si
+        int_xyz_dir2[j] = sj
+        int_xyz_dir1 = tuple(int_xyz_dir1)
+        int_xyz_dir2 = tuple(int_xyz_dir2)
+        _orient = orienter(int_xyz_dir1, int_xyz_dir2)
+        print(int_xyz_dir1, int_xyz_dir2)
+        assert _orient(int_xyz_dir1) == int_xyz_dir2

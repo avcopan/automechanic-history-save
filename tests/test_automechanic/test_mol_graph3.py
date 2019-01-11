@@ -1,7 +1,9 @@
 """ test the automechanc.mol.graph module
 """
+import itertools
 import numpy
 from automechanic.mol import graph3 as graph
+import automechanic.mol.graph3.int_xyz_rot as int_xyz_rot
 
 
 C8H13O_CGR = (
@@ -264,6 +266,23 @@ def test__backbone_isomorphism():
         assert graph.backbone_isomorphism(cgr, cgr_pmt) == pmt_dct
 
 
+# test submodules
+def test__int_xyz_rot__aligning_rotator():
+    """ test int_xyz_rot.aligning_rotator
+    """
+    for cmp1, cmp2 in itertools.product(range(3), range(3)):
+        for val1, val2 in itertools.product([-1, +1], [-1, +1]):
+            uint_xyz1 = [0] * 3
+            uint_xyz2 = [0] * 3
+            uint_xyz1[cmp1] = val1
+            uint_xyz2[cmp2] = val2
+            uint_xyz1 = tuple(uint_xyz1)
+            uint_xyz2 = tuple(uint_xyz2)
+            rot_func = int_xyz_rot.aligning_rotator(uint_xyz1, uint_xyz2)
+            print(uint_xyz1, uint_xyz2)
+            assert rot_func(uint_xyz1) == uint_xyz2
+
+
 if __name__ == '__main__':
     # test constructors and value getters
     test__from_data()
@@ -291,3 +310,5 @@ if __name__ == '__main__':
     # test comparisons
     test__backbone_isomorphic()
     test__backbone_isomorphism()
+    # test submodules
+    test__int_xyz_rot__aligning_rotator()

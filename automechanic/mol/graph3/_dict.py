@@ -38,7 +38,7 @@ def filter_by_key(dct, func):
     return {key: val for key, val in dct.items() if func(key)}
 
 
-# def filter_by_value(dct, func=lambda val: val):
-#     """ filter dictionary entries by their values
-#     """
-#     return {key: val for key, val in dct.items() if func(val)}
+def filter_by_value(dct, func=lambda val: val):
+    """ filter dictionary entries by their values
+    """
+    return {key: val for key, val in dct.items() if func(val)}

@@ -1,5 +1,6 @@
 """ temporary script
 """
+from functools import partial as _partial
 from itertools import chain as _chain
 from automechanic.mol import graph3 as graph
 from automechanic.mol.graph3._dict import filter_by_value as _filter_by_value
@@ -29,7 +30,6 @@ SGR = graph.explicit(SGR, STE_ATM_KEYS)
 
 ATM_ICH_NUM_DCT = atom_inchi_numbers(SGR)
 ATM_NGB_KEYS_DCT = graph.atom_neighbor_keys(SGR)
-print(ATM_NGB_KEYS_DCT)
 # XYZ_DCT = coord.assign_nonstereo_atom_neighbors(
 print(coord.nonstereo_coordinates(
     atm_xyz=(0, 0, 9),
@@ -37,42 +37,51 @@ print(coord.nonstereo_coordinates(
     anchor_key=5,
     sorted_keys=sorted(ATM_NGB_KEYS_DCT[7], key=ATM_ICH_NUM_DCT.__getitem__)
 ))
-print(coord.atom_stereo_coordinates(
-    atm_xyz=(0, 0, 9),
-    anchor_xyz=(0, -1, 9),
-    anchor_key=5,
-    sorted_keys=sorted(ATM_NGB_KEYS_DCT[7], key=ATM_ICH_NUM_DCT.__getitem__),
-    parity=False
+# print(coord.atom_stereo_coordinates(
+#     atm_xyz=(0, 0, 9),
+#     anchor_xyz=(0, -1, 9),
+#     anchor_key=5,
+#     sorted_keys=sorted(ATM_NGB_KEYS_DCT[7], key=ATM_ICH_NUM_DCT.__getitem__),
+#     parity=False
+# ))
+# print(coord.atom_stereo_coordinates(
+#     atm_xyz=(0, 0, 9),
+#     anchor_xyz=(0, -1, 9),
+#     anchor_key=5,
+#     sorted_keys=sorted(ATM_NGB_KEYS_DCT[7], key=ATM_ICH_NUM_DCT.__getitem__),
+#     parity=True
+# ))
+
+BND_KEY = next(iter(BND_STE_PAR_DCT))
+ATM_KEY = next(iter(BND_KEY))
+ANCHOR_KEY = next(iter(ATM_NGB_KEYS_DCT[ATM_KEY]))
+KEY_SORTER = _partial(sorted, key=ATM_ICH_NUM_DCT.__getitem__)
+
+print(coord.bond_stereo_coordinates(
+    anchor_key=ANCHOR_KEY,
+    bnd_key=BND_KEY,
+    atm_ngb_keys_dct=ATM_NGB_KEYS_DCT,
+    xyz_dct={ANCHOR_KEY: (0, -1, 9), ATM_KEY: (0, 0, 9)},
+    key_sorter=KEY_SORTER,
+    parity=BND_STE_PAR_DCT[BND_KEY]
 ))
-print(coord.atom_stereo_coordinates(
-    atm_xyz=(0, 0, 9),
-    anchor_xyz=(0, -1, 9),
-    anchor_key=5,
-    sorted_keys=sorted(ATM_NGB_KEYS_DCT[7], key=ATM_ICH_NUM_DCT.__getitem__),
+
+print(coord.bond_stereo_coordinates(
+    anchor_key=ANCHOR_KEY,
+    bnd_key=BND_KEY,
+    atm_ngb_keys_dct=ATM_NGB_KEYS_DCT,
+    xyz_dct={ANCHOR_KEY: (0, -1, 9), ATM_KEY: (0, 0, 9)},
+    key_sorter=KEY_SORTER,
     parity=True
 ))
 
-ATM1_KEY, ATM2_KEY = next(iter(BND_STE_PAR_DCT))
-ATM1_NGB_KEYS = set(ATM_NGB_KEYS_DCT[ATM1_KEY]) - {ATM2_KEY}
-ATM2_NGB_KEYS = set(ATM_NGB_KEYS_DCT[ATM2_KEY]) - {ATM1_KEY}
-ATM1_NGB_KEYS = sorted(ATM1_NGB_KEYS, key=ATM_ICH_NUM_DCT.__getitem__)
-ATM2_NGB_KEYS = sorted(ATM2_NGB_KEYS, key=ATM_ICH_NUM_DCT.__getitem__)
-ATM_KEYS = ATM1_NGB_KEYS + [ATM2_KEY] + ATM2_NGB_KEYS
-
-print(coord.bond_stereo_coordinates(
-    atm_xyz=(0, 0, 9),
-    anchor_xyz=(0, -1, 9),
-    anchor_key=0,
-    sorted_keys=ATM_KEYS,
-    parity=False
+ATM_KEY = next(iter(ATM_STE_PAR_DCT))
+ANCHOR_KEY = next(iter(ATM_NGB_KEYS_DCT[ATM_KEY]))
+print(coord.atom_stereo_coordinates(
+    anchor_key=ANCHOR_KEY,
+    atm_key=ATM_KEY,
+    atm_ngb_keys_dct=ATM_NGB_KEYS_DCT,
+    xyz_dct={ANCHOR_KEY: (0, -1, 9), ATM_KEY: (0, 0, 9)},
+    key_sorter=KEY_SORTER,
+    parity=ATM_STE_PAR_DCT[ATM_KEY]
 ))
-
-print(coord.bond_stereo_coordinates(
-    atm_xyz=(0, 0, 9),
-    anchor_xyz=(0, -1, 9),
-    anchor_key=0,
-    sorted_keys=ATM_KEYS,
-    parity=True
-))
-print(ATM1_NGB_KEYS)
-print(ATM2_NGB_KEYS)

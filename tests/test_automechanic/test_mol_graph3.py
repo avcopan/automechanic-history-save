@@ -267,8 +267,8 @@ def test__backbone_isomorphism():
 
 
 # test submodules
-def test__graph_coord__aligning_rotator():
-    """ test graph_coord.aligning_rotator
+def test__graph_coord__aligning_rotation_matrix():
+    """ test graph_coord.aligning_rotation_matrix
     """
     for cmp1, cmp2 in itertools.product(range(3), range(3)):
         for val1, val2 in itertools.product([-1, +1], [-1, +1]):
@@ -278,8 +278,9 @@ def test__graph_coord__aligning_rotator():
             uint_xyz2[cmp2] = val2
             uint_xyz1 = tuple(uint_xyz1)
             uint_xyz2 = tuple(uint_xyz2)
-            rot_func = graph_coord.rot.aligning_rotator(uint_xyz1, uint_xyz2)
-            assert rot_func(uint_xyz1) == uint_xyz2
+            rot_mat = graph_coord.rot.aligning_rotation_matrix(
+                uint_xyz1, uint_xyz2)
+            assert tuple(numpy.dot(rot_mat, uint_xyz1)) == uint_xyz2
 
 
 if __name__ == '__main__':
@@ -310,4 +311,4 @@ if __name__ == '__main__':
     test__backbone_isomorphic()
     test__backbone_isomorphism()
     # test submodules
-    test__graph_coord__aligning_rotator()
+    test__graph_coord__aligning_rotation_matrix()

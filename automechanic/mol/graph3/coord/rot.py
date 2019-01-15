@@ -5,8 +5,35 @@ from numbers import Integral as _Integer
 import numpy
 
 
-def aligning_rotator(uint_xyz, uint_xyz_target):
-    """ rotator that takes `uint_xyz` into `uint_xyz_target`
+def unit_direction(int_xyz1, int_xyz2):
+    """ unit direction vector pointing from `int_xyz1` to `int_xyz2`
+    """
+    int_xyz = numpy.subtract(int_xyz2, int_xyz1)
+    uint_xyz = numpy.divide(int_xyz, numpy.linalg.norm(int_xyz))
+    assert is_unit_integer_triple(uint_xyz)
+    return tuple(numpy.array(uint_xyz, dtype=int))
+
+
+def local_coordinate_interpreter(trans, rot):
+    """ interpret local coordinates with a given origin and rotation matrix
+
+    :param trans: translation vector
+    :type trans: (int, int, int)
+    :param rot: rotation matrix
+    :type rot: ((int, int, int), (int, int, int), (int, int, int))
+
+    :returns: integer triple local-> global coordinate transformation
+    :rtype: callable
+    """
+
+    def _global_coordinates(loc_xyz):
+        return tuple(numpy.add(trans, numpy.dot(rot, loc_xyz)))
+
+    return _global_coordinates
+
+
+def aligning_rotation_matrix(uint_xyz, uint_xyz_target):
+    """ rotation matrix to align `uint_xyz` with `uint_xyz_target`
 
     :param uint_xyz: unit integer vector (+/- a standard basis vector)
     :type uint_xyz: (int, int, int)
@@ -27,11 +54,7 @@ def aligning_rotator(uint_xyz, uint_xyz_target):
         clicks = 0 if dot == 1 else 2
         perp = unit_perpendicular(uint_xyz)
         rot = rotation_matrix(perp, clicks=clicks)
-
-    def _rotator(int_xyz):
-        return tuple(numpy.dot(rot, int_xyz))
-
-    return _rotator
+    return rot
 
 
 def rotation_matrix(uint_xyz, clicks):

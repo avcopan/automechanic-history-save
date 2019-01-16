@@ -39,6 +39,9 @@ from ._base import atom_total_valences
 from ._base import atom_bond_valences
 from ._base import atom_radical_valences
 from ._base import is_chiral
+from ._inchi.conn import atom_inchi_numbers
+from ._inchi.conn import inchi
+from ._inchi.stereo import inchi as stereo_inchi
 # transformations
 from ._base import implicit
 from ._base import explicit
@@ -68,7 +71,8 @@ __all__ = [
     'atom_nuclear_charges', 'atom_bonds', 'atom_neighbor_keys',
     'explicit_hydrogen_keys', 'backbone_keys', 'atom_explicit_hydrogen_keys',
     'ring_keys_list', 'atom_total_valences', 'atom_bond_valences',
-    'atom_radical_valences', 'is_chiral',
+    'atom_radical_valences', 'is_chiral', 'atom_inchi_numbers', 'inchi',
+    'stereo_inchi',
     # transformations
     'implicit', 'explicit', 'explicit_stereo_sites', 'delete_atoms',
     'add_explicit_hydrogens', 'subgraph', 'relabel', 'reflection',

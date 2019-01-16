@@ -230,6 +230,28 @@ def test__is_chiral():
     assert graph.is_chiral(C2H2CL2F2_MP_SGR) is False
 
 
+def test__atom_inchi_numbers():
+    """ test graph.atom_inchi_numbers
+    """
+    print(graph.atom_inchi_numbers(C8H13O_SGR))
+
+
+def test__inchi():
+    """ test graph.inchi
+    """
+    print(graph.inchi(C8H13O_SGR))
+    print(graph.inchi(C2H2CL2F2_MM_SGR))
+    print(graph.inchi(C2H2CL2F2_MP_SGR))
+
+
+def test__stereo_inchi():
+    """ test graph.stereo_inchi
+    """
+    print(graph.stereo_inchi(C8H13O_SGR))
+    print(graph.stereo_inchi(C2H2CL2F2_MM_SGR))
+    print(graph.stereo_inchi(C2H2CL2F2_MP_SGR))
+
+
 # test transformations
 def test__implicit():
     """ test graph.implicit
@@ -361,6 +383,9 @@ if __name__ == '__main__':
     test__atom_bond_valences()
     test__atom_radical_valences()
     test__is_chiral()
+    test__atom_inchi_numbers()
+    test__inchi()
+    test__stereo_inchi()
     # test transformations
     test__implicit()
     test__explicit()

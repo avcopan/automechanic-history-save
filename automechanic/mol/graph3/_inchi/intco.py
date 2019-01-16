@@ -1,12 +1,82 @@
 """ coordinate library
 """
 from itertools import chain as _chain
-from .linalg import unit_direction
-from .linalg import aligning_rotation_matrix
-from .linalg import local_coordinate_interpreter
+from functools import partial as _partial
+from .intco_linalg import unit_direction
+from .intco_linalg import aligning_rotation_matrix
+from .intco_linalg import local_coordinate_interpreter
+from .conn import atom_inchi_numbers
+from .._base import atom_keys
+from .._base import atom_stereo_keys
+from .._base import bond_stereo_keys
+from .._base import atom_stereo_parities
+from .._base import bond_stereo_parities
+from .._base import atom_neighbor_keys
+from .._base import explicit_stereo_sites
 
 
-def nonstereo_coordinates(anchor_key, atm_key, atm_ngb_keys_dct, xyz_dct):
+def atom_stereo_coordinates(sgr):
+    """ determine stereo-specific coordinates for this molecular graph
+    """
+    assert sgr == explicit_stereo_sites(sgr)
+
+    atm_ich_num_dct = atom_inchi_numbers(sgr)
+    key_sorter = _partial(sorted, key=atm_ich_num_dct.__getitem__)
+
+    atm_ngb_keys_dct = atom_neighbor_keys(sgr)
+
+    atm_ste_keys = atom_stereo_keys(sgr)
+    bnd_ste_keys = bond_stereo_keys(sgr)
+    atm_par_dct = atom_stereo_parities(sgr)
+    bnd_par_dct = bond_stereo_parities(sgr)
+
+    def _recurse_coordinates(atm_key, anchor_key, xyz_dct):
+        boundary_edges = ()
+        bnd_key = next(
+            filter(lambda bnd_key: atm_key in bnd_key, bnd_ste_keys), None)
+
+        assert bnd_key is None or atm_key not in atm_ste_keys
+
+        if atm_key in atm_ste_keys:
+            atm_par = atm_par_dct[atm_key]
+            xyz_dct, boundary_edges = _atom_stereo_coordinates(
+                anchor_key, atm_key, atm_ngb_keys_dct, xyz_dct, key_sorter,
+                atm_par)
+        elif bnd_key is not None:
+            bnd_par = bnd_par_dct[bnd_key]
+            xyz_dct, boundary_edges = _bond_stereo_coordinates(
+                anchor_key, bnd_key, atm_ngb_keys_dct, xyz_dct, key_sorter,
+                bnd_par)
+        else:
+            xyz_dct, boundary_edges = _nonstereo_coordinates(
+                anchor_key, atm_key, atm_ngb_keys_dct, xyz_dct)
+
+        for anchor_key_, atm_key_ in boundary_edges:
+            xyz_dct = _recurse_coordinates(atm_key_, anchor_key_, xyz_dct)
+
+        return xyz_dct
+
+    xyz_dct = {}
+
+    atm_keys = key_sorter(atom_keys(sgr))
+
+    if atm_keys:
+        atm_key = next(iter(atm_keys))
+        xyz_dct[atm_key] = (0, 0, 0)
+
+        atm_ngb_keys = atm_ngb_keys_dct[atm_key]
+
+        if atm_ngb_keys:
+            atm_ngb_key = next(iter(atm_ngb_keys))
+            xyz_dct[atm_ngb_key] = (1, 0, 0)
+
+            xyz_dct = _recurse_coordinates(atm_ngb_key, atm_key, xyz_dct)
+            xyz_dct = _recurse_coordinates(atm_key, atm_ngb_key, xyz_dct)
+
+    return xyz_dct
+
+
+def _nonstereo_coordinates(anchor_key, atm_key, atm_ngb_keys_dct, xyz_dct):
     """ assign non-stereo coordinates from a stencil
     """
     stencil_xyzs = ((0, 0, 0),    # atm 1
@@ -30,8 +100,8 @@ def nonstereo_coordinates(anchor_key, atm_key, atm_ngb_keys_dct, xyz_dct):
     return xyz_dct, boundary_edges
 
 
-def atom_stereo_coordinates(anchor_key, atm_key, atm_ngb_keys_dct, xyz_dct,
-                            key_sorter, parity):
+def _atom_stereo_coordinates(anchor_key, atm_key, atm_ngb_keys_dct, xyz_dct,
+                             key_sorter, parity):
     """ assign atom-stereo coordinates from a stencil
     """
     stencil_xyzs = ((0, 0, 0),                     # atm 1
@@ -56,8 +126,8 @@ def atom_stereo_coordinates(anchor_key, atm_key, atm_ngb_keys_dct, xyz_dct,
     return xyz_dct, boundary_edges
 
 
-def bond_stereo_coordinates(anchor_key, bnd_key, atm_ngb_keys_dct, xyz_dct,
-                            key_sorter, parity):
+def _bond_stereo_coordinates(anchor_key, bnd_key, atm_ngb_keys_dct, xyz_dct,
+                             key_sorter, parity):
     """ assign bond-stereo coordinates from a stencil
     """
     stencil_xyzs = ((0, 0, 0),                     # atm 1

@@ -1,9 +1,7 @@
 """ test the automechanc.mol.graph module
 """
-import itertools
 import numpy
 from automechanic.mol import graph3 as graph
-from automechanic.mol.graph3 import coord as graph_coord
 
 
 C8H13O_CGR = (
@@ -40,6 +38,20 @@ CH2FH2H_CGR_EXP = (
      6: ('H', 0, None)},
     {frozenset({1, 3}): (1, None), frozenset({2, 3}): (1, None),
      frozenset({0, 3}): (1, None), frozenset({4, 5}): (1, None)})
+C2H2CL2F2_MM_SGR = (
+    {0: ('C', 1, False), 1: ('C', 1, False),
+     2: ('F', 0, None), 3: ('Cl', 0, None),
+     4: ('F', 0, None), 5: ('Cl', 0, None)},
+    {frozenset({0, 1}): (1, None), frozenset({0, 2}): (1, None),
+     frozenset({0, 3}): (1, None), frozenset({1, 4}): (1, None),
+     frozenset({1, 5}): (1, None)})
+C2H2CL2F2_MP_SGR = (
+    {0: ('C', 1, False), 1: ('C', 1, True),
+     2: ('F', 0, None), 3: ('Cl', 0, None),
+     4: ('F', 0, None), 5: ('Cl', 0, None)},
+    {frozenset({0, 1}): (1, None), frozenset({0, 2}): (1, None),
+     frozenset({0, 3}): (1, None), frozenset({1, 4}): (1, None),
+     frozenset({1, 5}): (1, None)})
 
 
 # test constructors and value getters
@@ -70,6 +82,19 @@ def test__from_data():
         atm_ste_par_dct=graph.atom_stereo_parities(C8H13O_SGR),
         bnd_ste_par_dct=graph.bond_stereo_parities(C8H13O_SGR)
     ) == C8H13O_SGR
+
+
+def test__atom_stereo_keys():
+    """ test graph.atom_stereo_keys
+    """
+    assert graph.atom_stereo_keys(C8H13O_SGR) == (7,)
+
+
+def test__bond_stereo_keys():
+    """ test graph.bond_stereo_keys
+    """
+    assert (graph.bond_stereo_keys(C8H13O_SGR)
+            == (frozenset({2, 4}), frozenset({3, 5})))
 
 
 # test value setters
@@ -115,13 +140,6 @@ def test__atom_nuclear_charges():
     """
     assert (graph.atom_nuclear_charges(C8H13O_CGR) ==
             {0: 6, 1: 6, 2: 6, 3: 6, 4: 6, 5: 6, 6: 6, 7: 6, 8: 8})
-
-
-def test__atom_total_valences():
-    """ test graph.atom_total_valences
-    """
-    assert (graph.atom_total_valences(C8H13O_CGR) ==
-            {0: 4, 1: 4, 2: 4, 3: 4, 4: 4, 5: 4, 6: 4, 7: 4, 8: 2})
 
 
 def test__atom_bonds():
@@ -183,6 +201,35 @@ def test__ring_keys_list():
     assert graph.ring_keys_list(cgr) == ((0, 1, 3, 6, 7), (1, 2, 3, 4, 8, 9))
 
 
+def test__atom_total_valences():
+    """ test graph.atom_total_valences
+    """
+    assert (graph.atom_total_valences(C8H13O_CGR) ==
+            {0: 4, 1: 4, 2: 4, 3: 4, 4: 4, 5: 4, 6: 4, 7: 4, 8: 2})
+
+
+def test__atom_bond_valences():
+    """ test graph.atom_bond_valences
+    """
+    assert (graph.atom_bond_valences(C8H13O_CGR) ==
+            {0: 4, 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 4, 7: 4, 8: 1})
+
+
+def test__atom_radical_valences():
+    """ test graph.atom_radical_valences
+    """
+    assert (graph.atom_radical_valences(C8H13O_CGR) ==
+            {0: 0, 1: 0, 2: 1, 3: 1, 4: 1, 5: 1, 6: 0, 7: 0, 8: 1})
+
+
+def test__is_chiral():
+    """ test graph.is_chiral
+    """
+    assert graph.is_chiral(C8H13O_SGR) is True
+    assert graph.is_chiral(C2H2CL2F2_MM_SGR) is True
+    assert graph.is_chiral(C2H2CL2F2_MP_SGR) is False
+
+
 # test transformations
 def test__implicit():
     """ test graph.implicit
@@ -198,6 +245,25 @@ def test__explicit():
     assert graph.backbone_isomorphic(ch2fh2h_cgr_exp, CH2FH2H_CGR_EXP)
     assert (graph.atom_explicit_hydrogen_keys(ch2fh2h_cgr_exp) ==
             {1: (), 3: (7, 8), 4: (9,), 6: (), 7: (), 8: (), 9: ()})
+
+
+def test__explicit_stereo_sites():
+    """ test graph.explicit_stereo_sites
+    """
+    assert graph.explicit_stereo_sites(C8H13O_CGR) == C8H13O_CGR
+    assert (graph.explicit_stereo_sites(C8H13O_SGR)
+            == ({0: ('C', 3, None), 1: ('C', 3, None), 2: ('C', 0, None),
+                 3: ('C', 0, None), 4: ('C', 0, None), 5: ('C', 0, None),
+                 6: ('C', 2, None), 7: ('C', 0, False), 8: ('O', 0, None),
+                 9: ('H', 0, None), 10: ('H', 0, None), 11: ('H', 0, None),
+                 12: ('H', 0, None), 13: ('H', 0, None)},
+                {frozenset({0, 2}): (1, None), frozenset({1, 3}): (1, None),
+                 frozenset({2, 4}): (1, False), frozenset({3, 5}): (1, False),
+                 frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
+                 frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None),
+                 frozenset({9, 7}): (1, None), frozenset({2, 10}): (1, None),
+                 frozenset({3, 11}): (1, None), frozenset({4, 12}): (1, None),
+                 frozenset({5, 13}): (1, None)}))
 
 
 def test__delete_atoms():
@@ -240,6 +306,13 @@ def test__relabel():
           {frozenset({0, 1}): (1, None)})
 
 
+def test__graph__reflection():
+    """ test graph.reflection
+    """
+    assert (graph.reflection(C8H13O_SGR) ==
+            graph.set_atom_stereo_parities(C8H13O_SGR, {7: True}))
+
+
 # test comparisons
 def test__backbone_isomorphic():
     """ test graph.backbone_isomorphic
@@ -266,26 +339,11 @@ def test__backbone_isomorphism():
         assert graph.backbone_isomorphism(cgr, cgr_pmt) == pmt_dct
 
 
-# test submodules
-def test__graph_coord__aligning_rotation_matrix():
-    """ test graph_coord.aligning_rotation_matrix
-    """
-    for cmp1, cmp2 in itertools.product(range(3), range(3)):
-        for val1, val2 in itertools.product([-1, +1], [-1, +1]):
-            uint_xyz1 = [0] * 3
-            uint_xyz2 = [0] * 3
-            uint_xyz1[cmp1] = val1
-            uint_xyz2[cmp2] = val2
-            uint_xyz1 = tuple(uint_xyz1)
-            uint_xyz2 = tuple(uint_xyz2)
-            rot_mat = graph_coord.rot.aligning_rotation_matrix(
-                uint_xyz1, uint_xyz2)
-            assert tuple(numpy.dot(rot_mat, uint_xyz1)) == uint_xyz2
-
-
 if __name__ == '__main__':
     # test constructors and value getters
     test__from_data()
+    test__atom_stereo_keys()
+    test__bond_stereo_keys()
     # test value setters
     test__set_atom_implicit_hydrogen_valences()
     test__set_atom_stereo_parities()
@@ -293,22 +351,25 @@ if __name__ == '__main__':
     test__set_bond_stereo_parities()
     # test derived values
     test__atom_nuclear_charges()
-    test__atom_total_valences()
     test__atom_bonds()
     test__atom_neighbor_keys()
     test__explicit_hydrogen_keys()
     test__backbone_keys()
     test__atom_explicit_hydrogen_keys()
     test__ring_keys_list()
+    test__atom_total_valences()
+    test__atom_bond_valences()
+    test__atom_radical_valences()
+    test__is_chiral()
     # test transformations
     test__implicit()
     test__explicit()
+    test__explicit_stereo_sites()
     test__delete_atoms()
     test__add_explicit_hydrogens()
     test__subgraph()
     test__relabel()
+    test__graph__reflection()
     # test comparisons
     test__backbone_isomorphic()
     test__backbone_isomorphism()
-    # test submodules
-    test__graph_coord__aligning_rotation_matrix()

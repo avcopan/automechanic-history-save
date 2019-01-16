@@ -15,6 +15,7 @@ from ._dict import transform_keys as _transform_keys
 from ._dict import transform_values as _transform_values
 from ._dict import transform_values_with_key as _transform_values_with_key
 from ._dict import filter_by_key as _filter_by_key
+from ._dict import filter_by_value as _filter_by_value
 from ._tdict import by_key_by_position as _by_key_by_position
 from ._tdict import set_by_key_by_position as _set_by_key_by_position
 from ._inetworkx import from_graph as _nxg_from_graph
@@ -168,6 +169,15 @@ def atom_implicit_hydrogen_valences(xgr):
                                ATM_IMP_HYD_VLC_POS)
 
 
+def atom_stereo_keys(sgr):
+    """ keys to atom stereo-centers
+    """
+    atm_ste_par_dct = _filter_by_value(atom_stereo_parities(sgr),
+                                       lambda val: val is not None)
+    atm_ste_keys = tuple(atm_ste_par_dct.keys())
+    return atm_ste_keys
+
+
 def atom_stereo_parities(sgr):
     """ atom parities, as a dictionary
     """
@@ -178,6 +188,15 @@ def bond_orders(rgr):
     """ bond orders, as a dictionary
     """
     return _by_key_by_position(bonds(rgr), bond_keys(rgr), BND_ORD_POS)
+
+
+def bond_stereo_keys(sgr):
+    """ keys to bond stereo-centers
+    """
+    bnd_ste_par_dct = _filter_by_value(bond_stereo_parities(sgr),
+                                       lambda val: val is not None)
+    bnd_ste_keys = tuple(bnd_ste_par_dct.keys())
+    return bnd_ste_keys
 
 
 def bond_stereo_parities(sgr):
@@ -228,14 +247,6 @@ def atom_nuclear_charges(xgr):
     atm_sym_dct = atom_symbols(xgr)
     atm_nuc_chg_dct = _transform_values(atm_sym_dct, func=_atom_nuclear_charge)
     return atm_nuc_chg_dct
-
-
-def atom_total_valences(xgr):
-    """ total valence electron counts, by atom (connectivity-independent)
-    """
-    atm_sym_dct = atom_symbols(xgr)
-    atm_tot_vlc_dct = _transform_values(atm_sym_dct, func=_atom_valence)
-    return atm_tot_vlc_dct
 
 
 def atom_bonds(xgr):
@@ -319,6 +330,50 @@ def ring_keys_list(xgr):
     return rng_keys_lst
 
 
+def atom_total_valences(xgr):
+    """ total valence electron counts, by atom (connectivity-independent)
+    """
+    atm_sym_dct = atom_symbols(xgr)
+    atm_tot_vlc_dct = _transform_values(atm_sym_dct, func=_atom_valence)
+    return atm_tot_vlc_dct
+
+
+def atom_bond_valences(xgr):
+    """ bond valences, by atom
+    """
+    bnd_ord_dct = bond_orders(xgr)
+
+    def _explicit_bond_valence(bnd_dct):
+        bnd_keys = bnd_dct.keys()
+        return sum(map(bnd_ord_dct.__getitem__, bnd_keys))
+
+    atm_keys = atom_keys(xgr)
+    atm_exp_bnd_vlcs = _values_by_key(
+        _transform_values(atom_bonds(xgr), _explicit_bond_valence), atm_keys)
+    atm_imp_hyd_vlcs = _values_by_key(
+        atom_implicit_hydrogen_valences(xgr), atm_keys)
+
+    atm_bnd_vlcs = numpy.add(atm_imp_hyd_vlcs, atm_exp_bnd_vlcs)
+    atm_bnd_vlc_dct = dict(zip(atm_keys, atm_bnd_vlcs))
+    return atm_bnd_vlc_dct
+
+
+def atom_radical_valences(rgr):
+    """ radical valences, by atom
+    """
+    atm_keys = atom_keys(rgr)
+    atm_bnd_vlcs = _values_by_key(atom_bond_valences(rgr), atm_keys)
+    atm_tot_vlcs = _values_by_key(atom_total_valences(rgr), atm_keys)
+    atm_rad_vlcs = numpy.subtract(atm_tot_vlcs, atm_bnd_vlcs)
+    return dict(zip(atm_keys, atm_rad_vlcs))
+
+
+def is_chiral(sgr):
+    """ is this stereo graph chiral?
+    """
+    return not backbone_isomorphic(sgr, reflection(sgr))
+
+
 # transformations
 def implicit(xgr, atm_keys=None):
     """ make the hydrogens at these atoms implicit
@@ -358,6 +413,16 @@ def explicit(xgr, atm_keys=None):
     xgr = add_explicit_hydrogens(
         xgr, dict(zip(atm_keys, atm_imp_hyd_vlcs)))
     return xgr
+
+
+def explicit_stereo_sites(sgr):
+    """ make the hydrogens at atom and bond stereo sites explicit
+    """
+    atm_ste_keys = atom_stereo_keys(sgr)
+    bnd_ste_keys = bond_stereo_keys(sgr)
+    bnd_ste_atm_keys = tuple(set(_chain(*bnd_ste_keys)))
+    ste_atm_keys = atm_ste_keys + bnd_ste_atm_keys
+    return explicit(sgr, atm_keys=ste_atm_keys)
 
 
 def delete_atoms(xgr, atm_keys):
@@ -412,6 +477,15 @@ def relabel(xgr, atm_key_dct):
     bnd_dct = _transform_keys(bonds(xgr), _relabel_bond_key)
     xgr = (atm_dct, bnd_dct)
     return xgr
+
+
+def reflection(sgr):
+    """ stereo graph reflection (inverts atom parities)
+    """
+    atm_pars = _filter_by_value(atom_stereo_parities(sgr),
+                                lambda val: val is not None)
+    refl_atm_pars = _transform_values(atm_pars, lambda val: not val)
+    return set_atom_stereo_parities(sgr, refl_atm_pars)
 
 
 # comparisons

@@ -49,6 +49,7 @@ from ._base import explicit_stereo_sites
 from ._base import delete_atoms
 from ._base import add_explicit_hydrogens
 from ._base import subgraph
+from ._base import subgraph_by_bonds
 from ._base import relabel
 from ._base import reflection
 # comparisons
@@ -75,7 +76,8 @@ __all__ = [
     'stereo_inchi',
     # transformations
     'implicit', 'explicit', 'explicit_stereo_sites', 'delete_atoms',
-    'add_explicit_hydrogens', 'subgraph', 'relabel', 'reflection',
+    'add_explicit_hydrogens', 'subgraph', 'subgraph_by_bonds', 'relabel',
+    'reflection',
     # comparisons
     'backbone_isomorphic', 'backbone_isomorphism',
 ]

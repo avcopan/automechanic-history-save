@@ -327,6 +327,18 @@ def test__subgraph():
              {frozenset({1, 3}): (1, None)}))
 
 
+def test__subgraph_by_bonds():
+    """ test graph.subgraph_by_bonds
+    """
+    assert (graph.subgraph_by_bonds(C8H13O_CGR,
+                                    {frozenset({1, 3}), frozenset({3, 5}),
+                                     frozenset({5, 7}), frozenset({8, 7})}) ==
+            ({1: ('C', 3, None), 3: ('C', 1, None), 5: ('C', 1, None),
+              7: ('C', 1, None), 8: ('O', 0, None)},
+             {frozenset({1, 3}): (1, None), frozenset({3, 5}): (1, None),
+              frozenset({5, 7}): (1, None), frozenset({8, 7}): (1, None)}))
+
+
 def test__relabel():
     """ test graph.relabel
     """
@@ -402,6 +414,7 @@ if __name__ == '__main__':
     test__delete_atoms()
     test__add_explicit_hydrogens()
     test__subgraph()
+    test__subgraph_by_bonds()
     test__relabel()
     test__graph__reflection()
     # test comparisons

@@ -452,11 +452,21 @@ def add_explicit_hydrogens(xgr, atm_exp_hyd_vlc_dct):
 
 
 def subgraph(xgr, atm_keys):
-    """ return the subgraph induced by a subset of the atoms
+    """ the subgraph induced by a subset of the atoms
     """
     assert set(atm_keys) <= set(atom_keys(xgr))
     bnd_keys = [bnd_key for bnd_key in bond_keys(xgr)
                 if set(bnd_key) <= set(atm_keys)]
+    atm_dct = _by_key(atoms(xgr), atm_keys)
+    bnd_dct = _by_key(bonds(xgr), bnd_keys)
+    sub_xgr = (atm_dct, bnd_dct)
+    return sub_xgr
+
+
+def subgraph_by_bonds(xgr, bnd_keys):
+    """ the subgraph induced by a subset of the bonds
+    """
+    atm_keys = set(_chain(*bnd_keys))
     atm_dct = _by_key(atoms(xgr), atm_keys)
     bnd_dct = _by_key(bonds(xgr), bnd_keys)
     sub_xgr = (atm_dct, bnd_dct)

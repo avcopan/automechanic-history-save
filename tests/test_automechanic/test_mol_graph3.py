@@ -233,23 +233,32 @@ def test__is_chiral():
 def test__atom_inchi_numbers():
     """ test graph.atom_inchi_numbers
     """
-    print(graph.atom_inchi_numbers(C8H13O_SGR))
+    cgr = C8H13O_CGR
+    natms = len(graph.atoms(cgr))
+    for _ in range(10):
+        pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
+        cgr_pmt = graph.relabel(cgr, pmt_dct)
+        inv_pmt_dct = dict(map(reversed, pmt_dct.items()))
+        assert graph.atom_inchi_numbers(cgr_pmt) == inv_pmt_dct
 
 
 def test__inchi():
     """ test graph.inchi
     """
-    print(graph.inchi(C8H13O_SGR))
-    print(graph.inchi(C2H2CL2F2_MM_SGR))
-    print(graph.inchi(C2H2CL2F2_MP_SGR))
+    assert graph.inchi(C8H13O_SGR) == (
+        'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3')
 
 
 def test__stereo_inchi():
     """ test graph.stereo_inchi
     """
-    print(graph.stereo_inchi(C8H13O_SGR))
-    print(graph.stereo_inchi(C2H2CL2F2_MM_SGR))
-    print(graph.stereo_inchi(C2H2CL2F2_MP_SGR))
+    assert graph.stereo_inchi(C8H13O_SGR) == (
+        'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3/b5-3-,6-4-/t8-'
+        '/m1/s1')
+    assert graph.stereo_inchi(C2H2CL2F2_MM_SGR) == (
+        'InChI=1S/C2H2Cl2F2/c3-1(5)2(4)6/h1-2H/t1-,2-/m1/s1')
+    assert graph.stereo_inchi(C2H2CL2F2_MP_SGR) == (
+        'InChI=1S/C2H2Cl2F2/c3-1(5)2(4)6/h1-2H/t1-,2+')
 
 
 # test transformations

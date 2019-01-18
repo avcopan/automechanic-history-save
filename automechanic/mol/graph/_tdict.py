@@ -16,20 +16,24 @@ def position_count(dct):
 def by_key_by_position(dct, keys, pos):
     """ position values, as a dictionary with these keys
     """
-    assert set(keys) <= set(dct.keys())
-    assert pos <= position_count(dct)
-    vals = tuple(map(dct.__getitem__, keys))
-    pos_vals = list(zip(*vals))[pos]
-    return dict(zip(keys, pos_vals))
+    pos_dct = {}
+    if keys:
+        assert set(keys) <= set(dct.keys())
+        assert pos <= position_count(dct)
+        vals = tuple(map(dct.__getitem__, keys))
+        pos_vals = list(zip(*vals))[pos]
+        pos_dct = dict(zip(keys, pos_vals))
+    return pos_dct
 
 
 def set_by_key_by_position(dct, pos_dct, pos):
     """ set values by position and key
     """
-    assert set(pos_dct.keys()) <= set(dct.keys())
-    assert pos <= position_count(dct)
-    dct = _transform_values(dct, func=list)
-    for key, pos_val in pos_dct.items():
-        dct[key][pos] = pos_val
-    dct = _transform_values(dct, func=tuple)
+    if pos_dct:
+        assert set(pos_dct.keys()) <= set(dct.keys())
+        assert pos <= position_count(dct)
+        dct = _transform_values(dct, func=list)
+        for key, pos_val in pos_dct.items():
+            dct[key][pos] = pos_val
+        dct = _transform_values(dct, func=tuple)
     return dct

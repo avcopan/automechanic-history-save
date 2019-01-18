@@ -142,20 +142,30 @@ def test__atom_nuclear_charges():
             {0: 6, 1: 6, 2: 6, 3: 6, 4: 6, 5: 6, 6: 6, 7: 6, 8: 8})
 
 
-def test__atom_bonds():
-    """ test graph.atom_bonds
+def test__atom_neighborhoods():
+    """ test graph.atom_neighborhoods
     """
-    assert (graph.atom_bonds(C8H13O_CGR) ==
-            {0: {frozenset({0, 2}): (1, None)},
-             1: {frozenset({1, 3}): (1, None)},
-             2: {frozenset({0, 2}): (1, None), frozenset({2, 4}): (1, None)},
-             3: {frozenset({1, 3}): (1, None), frozenset({3, 5}): (1, None)},
-             4: {frozenset({2, 4}): (1, None), frozenset({4, 6}): (1, None)},
-             5: {frozenset({3, 5}): (1, None), frozenset({5, 7}): (1, None)},
-             6: {frozenset({4, 6}): (1, None), frozenset({6, 7}): (1, None)},
-             7: {frozenset({5, 7}): (1, None), frozenset({6, 7}): (1, None),
-                 frozenset({8, 7}): (1, None)},
-             8: {frozenset({8, 7}): (1, None)}})
+    assert (graph.atom_neighborhoods(C8H13O_CGR) == {
+        0: ({0: ('C', 3, None), 2: ('C', 1, None)},
+            {frozenset({0, 2}): (1, None)}),
+        1: ({1: ('C', 3, None), 3: ('C', 1, None)},
+            {frozenset({1, 3}): (1, None)}),
+        2: ({0: ('C', 3, None), 2: ('C', 1, None), 4: ('C', 1, None)},
+            {frozenset({0, 2}): (1, None), frozenset({2, 4}): (1, None)}),
+        3: ({1: ('C', 3, None), 3: ('C', 1, None), 5: ('C', 1, None)},
+            {frozenset({1, 3}): (1, None), frozenset({3, 5}): (1, None)}),
+        4: ({2: ('C', 1, None), 4: ('C', 1, None), 6: ('C', 2, None)},
+            {frozenset({2, 4}): (1, None), frozenset({4, 6}): (1, None)}),
+        5: ({3: ('C', 1, None), 5: ('C', 1, None), 7: ('C', 1, None)},
+            {frozenset({3, 5}): (1, None), frozenset({5, 7}): (1, None)}),
+        6: ({4: ('C', 1, None), 6: ('C', 2, None), 7: ('C', 1, None)},
+            {frozenset({4, 6}): (1, None), frozenset({6, 7}): (1, None)}),
+        7: ({8: ('O', 0, None), 5: ('C', 1, None), 6: ('C', 2, None),
+             7: ('C', 1, None)},
+            {frozenset({5, 7}): (1, None), frozenset({6, 7}): (1, None),
+             frozenset({8, 7}): (1, None)}),
+        8: ({8: ('O', 0, None), 7: ('C', 1, None)},
+            {frozenset({8, 7}): (1, None)})})
 
 
 def test__atom_neighbor_keys():
@@ -164,25 +174,6 @@ def test__atom_neighbor_keys():
     assert (graph.atom_neighbor_keys(C8H13O_CGR) ==
             {0: (2,), 1: (3,), 2: (0, 4), 3: (1, 5), 4: (2, 6), 5: (3, 7),
              6: (4, 7), 7: (5, 6, 8), 8: (7,)})
-
-
-def test__explicit_hydrogen_keys():
-    """ test graph.explicit_hydrogen_keys
-    """
-    assert graph.explicit_hydrogen_keys(CH2FH2H_CGR_EXP) == (0, 2, 5)
-
-
-def test__backbone_keys():
-    """ test graph.backbone_keys
-    """
-    assert graph.backbone_keys(CH2FH2H_CGR_EXP) == (1, 3, 4, 6)
-
-
-def test__atom_explicit_hydrogen_keys():
-    """ test graph.atom_explicit_hydrogen_keys
-    """
-    assert (graph.atom_explicit_hydrogen_keys(CH2FH2H_CGR_EXP) ==
-            {0: (), 1: (), 2: (), 3: (0, 2), 4: (5,), 5: (), 6: ()})
 
 
 def test__ring_keys_list():
@@ -228,6 +219,25 @@ def test__is_chiral():
     assert graph.is_chiral(C8H13O_SGR) is True
     assert graph.is_chiral(C2H2CL2F2_MM_SGR) is True
     assert graph.is_chiral(C2H2CL2F2_MP_SGR) is False
+
+
+def test__explicit_hydrogen_keys():
+    """ test graph.explicit_hydrogen_keys
+    """
+    assert graph.explicit_hydrogen_keys(CH2FH2H_CGR_EXP) == (0, 2, 5)
+
+
+def test__backbone_keys():
+    """ test graph.backbone_keys
+    """
+    assert graph.backbone_keys(CH2FH2H_CGR_EXP) == (1, 3, 4, 6)
+
+
+def test__atom_explicit_hydrogen_keys():
+    """ test graph.atom_explicit_hydrogen_keys
+    """
+    assert (graph.atom_explicit_hydrogen_keys(CH2FH2H_CGR_EXP) ==
+            {0: (), 1: (), 2: (), 3: (0, 2), 4: (5,), 5: (), 6: ()})
 
 
 def test__atom_inchi_numbers():
@@ -394,16 +404,16 @@ if __name__ == '__main__':
     test__set_bond_stereo_parities()
     # test derived values
     test__atom_nuclear_charges()
-    test__atom_bonds()
+    test__atom_neighborhoods()
     test__atom_neighbor_keys()
-    test__explicit_hydrogen_keys()
-    test__backbone_keys()
-    test__atom_explicit_hydrogen_keys()
-    test__ring_keys_list()
     test__atom_total_valences()
     test__atom_bond_valences()
     test__atom_radical_valences()
+    test__ring_keys_list()
     test__is_chiral()
+    test__explicit_hydrogen_keys()
+    test__backbone_keys()
+    test__atom_explicit_hydrogen_keys()
     test__atom_inchi_numbers()
     test__inchi()
     test__stereo_inchi()

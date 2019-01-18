@@ -14,6 +14,12 @@ def values_by_key(dct, keys, fill_val=None):
     return tuple(dct[key] if key in dct else fill_val for key in keys)
 
 
+def keys_by_value(dct, vals):
+    """ return dictionary keys for specific values
+    """
+    return tuple(key for key, val in dct.items() if val in vals)
+
+
 def transform_keys(dct, func):
     """ apply a function to each key
     """
@@ -26,16 +32,10 @@ def transform_values(dct, func):
     return dict(zip(dct.keys(), map(func, dct.values())))
 
 
-def transform_values_with_key(dct, func):
-    """ replace values with `func(key, val)`
-    """
-    return {key: func(key, val) for key, val in dct.items()}
-
-
-def filter_by_key(dct, func):
-    """ filter dictionary entries by their keys
-    """
-    return {key: val for key, val in dct.items() if func(key)}
+# def filter_by_key(dct, func):
+#     """ filter dictionary entries by their keys
+#     """
+#     return {key: val for key, val in dct.items() if func(key)}
 
 
 def filter_by_value(dct, func=lambda val: val):

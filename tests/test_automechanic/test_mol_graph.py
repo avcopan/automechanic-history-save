@@ -1,373 +1,422 @@
-""" test the automechanic.mol.graph module
+""" test the automechanc.mol.graph module
 """
 import numpy
 from automechanic.mol import graph
 
 
-def test__freeze():
-    """ test graph.freeze
+C8H13O_CGR = (
+    {0: ('C', 3, None), 1: ('C', 3, None), 2: ('C', 1, None),
+     3: ('C', 1, None), 4: ('C', 1, None), 5: ('C', 1, None),
+     6: ('C', 2, None), 7: ('C', 1, None), 8: ('O', 0, None)},
+    {frozenset({0, 2}): (1, None), frozenset({1, 3}): (1, None),
+     frozenset({2, 4}): (1, None), frozenset({3, 5}): (1, None),
+     frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
+     frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None)})
+C8H13O_RGR = (
+    {0: ('C', 3, None), 1: ('C', 3, None), 2: ('C', 1, None),
+     3: ('C', 1, None), 4: ('C', 1, None), 5: ('C', 1, None),
+     6: ('C', 2, None), 7: ('C', 1, None), 8: ('O', 0, None)},
+    {frozenset({0, 2}): (1, None), frozenset({1, 3}): (1, None),
+     frozenset({2, 4}): (2, None), frozenset({3, 5}): (2, None),
+     frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
+     frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None)})
+C8H13O_SGR = (
+    {0: ('C', 3, None), 1: ('C', 3, None), 2: ('C', 1, None),
+     3: ('C', 1, None), 4: ('C', 1, None), 5: ('C', 1, None),
+     6: ('C', 2, None), 7: ('C', 1, False), 8: ('O', 0, None)},
+    {frozenset({0, 2}): (1, None), frozenset({1, 3}): (1, None),
+     frozenset({2, 4}): (1, False), frozenset({3, 5}): (1, False),
+     frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
+     frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None)})
+CH2FH2H_CGR_IMP = (
+    {1: ('F', 0, None), 3: ('C', 2, None), 4: ('H', 1, None),
+     6: ('H', 0, None)},
+    {frozenset({1, 3}): (1, None)})
+CH2FH2H_CGR_EXP = (
+    {0: ('H', 0, None), 1: ('F', 0, None), 2: ('H', 0, None),
+     3: ('C', 0, None), 4: ('H', 0, None), 5: ('H', 0, None),
+     6: ('H', 0, None)},
+    {frozenset({1, 3}): (1, None), frozenset({2, 3}): (1, None),
+     frozenset({0, 3}): (1, None), frozenset({4, 5}): (1, None)})
+C2H2CL2F2_MM_SGR = (
+    {0: ('C', 1, False), 1: ('C', 1, False),
+     2: ('F', 0, None), 3: ('Cl', 0, None),
+     4: ('F', 0, None), 5: ('Cl', 0, None)},
+    {frozenset({0, 1}): (1, None), frozenset({0, 2}): (1, None),
+     frozenset({0, 3}): (1, None), frozenset({1, 4}): (1, None),
+     frozenset({1, 5}): (1, None)})
+C2H2CL2F2_MP_SGR = (
+    {0: ('C', 1, False), 1: ('C', 1, True),
+     2: ('F', 0, None), 3: ('Cl', 0, None),
+     4: ('F', 0, None), 5: ('Cl', 0, None)},
+    {frozenset({0, 1}): (1, None), frozenset({0, 2}): (1, None),
+     frozenset({0, 3}): (1, None), frozenset({1, 4}): (1, None),
+     frozenset({1, 5}): (1, None)})
+
+
+# test constructors and value getters
+def test__from_data():
+    """ test graph.from_data
+
+    also tests a bunch of accessors
     """
-    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0)),
-           {frozenset({1, 3}): None, frozenset({2, 3}): None,
-            frozenset({0, 3}): None})
-    frz_gra = graph.freeze(gra)
-    assert hash(frz_gra)
-    assert gra == graph.unfreeze(frz_gra)
+    assert graph.from_data(
+        graph.atom_symbols(CH2FH2H_CGR_EXP),
+        graph.bond_keys(CH2FH2H_CGR_EXP)
+    ) == CH2FH2H_CGR_EXP
+    assert graph.from_data(
+        graph.atom_symbols(C8H13O_CGR),
+        graph.bond_keys(C8H13O_CGR),
+        atm_imp_hyd_vlc_dct=graph.atom_implicit_hydrogen_valences(C8H13O_CGR)
+    ) == C8H13O_CGR
+    assert graph.from_data(
+        graph.atom_symbols(C8H13O_RGR),
+        graph.bond_keys(C8H13O_RGR),
+        atm_imp_hyd_vlc_dct=graph.atom_implicit_hydrogen_valences(C8H13O_CGR),
+        bnd_ord_dct=graph.bond_orders(C8H13O_RGR)
+    ) == C8H13O_RGR
+    assert graph.from_data(
+        graph.atom_symbols(C8H13O_SGR),
+        graph.bond_keys(C8H13O_SGR),
+        atm_imp_hyd_vlc_dct=graph.atom_implicit_hydrogen_valences(C8H13O_SGR),
+        atm_ste_par_dct=graph.atom_stereo_parities(C8H13O_SGR),
+        bnd_ste_par_dct=graph.bond_stereo_parities(C8H13O_SGR)
+    ) == C8H13O_SGR
 
 
-def test__vertex_neighbor_keys():
-    """ test graph.vertex_neighbor_keys
+def test__atom_stereo_keys():
+    """ test graph.atom_stereo_keys
     """
-    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0)),
-           {frozenset({1, 3}): None, frozenset({2, 3}): None,
-            frozenset({0, 3}): None})
-    assert graph.vertex_neighbor_keys(gra, 3) == (0, 1, 2)
+    assert graph.atom_stereo_keys(C8H13O_SGR) == (7,)
 
 
-def test__isomorphic():
-    """ test graph.isomorphic
+def test__bond_stereo_keys():
+    """ test graph.bond_stereo_keys
     """
-    catm_cgr = ((('C', 0),), {})
-    oatm_cgr = ((('O', 0),), {})
-    assert graph.isomorphic(catm_cgr, catm_cgr)
-    assert graph.isomorphic(catm_cgr, oatm_cgr) is False
-
-
-def test__isomorphism():
-    """ test graph.isomorphism
-    """
-    gra = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
-            ('C', 2), ('C', 1), ('O', 0)),
-           {frozenset({4, 6}): None, frozenset({6, 7}): None,
-            frozenset({0, 2}): None, frozenset({8, 7}): None,
-            frozenset({2, 4}): None, frozenset({3, 5}): None,
-            frozenset({1, 3}): None, frozenset({5, 7}): None})
-    nvtcs = len(graph.vertices(gra))
-    for _ in range(10):
-        pmt = tuple(numpy.random.permutation(nvtcs))
-        gra_pmt = graph.permute_vertices(gra, pmt)
-        iso = graph.isomorphism(gra, gra_pmt)
-        assert graph.permute_vertices(gra, iso) == gra_pmt
-
-
-def test__induced_subgraph():
-    """ test graph.induced_subgraph
-    """
-    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0), ('H', 0), ('H', 0)),
-           {frozenset({1, 3}): None, frozenset({2, 3}): None,
-            frozenset({0, 3}): None, frozenset({4, 5}): None})
-    assert (graph.induced_subgraph(gra, (1, 3, 4, 5))
-            == ((('F', 0), ('C', 0), ('H', 0), ('H', 0)),
-                {frozenset({2, 3}): None, frozenset({0, 1}): None}))
-
-
-def test__delete_vertices():
-    """ test graph.delete_vertices
-    """
-    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0), ('H', 0), ('H', 0)),
-           {frozenset({1, 3}): None, frozenset({2, 3}): None,
-            frozenset({0, 3}): None, frozenset({4, 5}): None})
-    assert (graph.delete_vertices(gra, (3,))
-            == ((('H', 0), ('F', 0), ('H', 0), ('H', 0), ('H', 0)),
-                {frozenset({3, 4}): None}))
-
-
-def test__branch():
-    """ test graph.branch
-    """
-    gra = ((('C', 1), ('C', 1), ('C', 2), ('C', 1), ('F', 0)),
-           {frozenset({3, 4}): None, frozenset({2, 3}): None,
-            frozenset({0, 1}): None, frozenset({0, 2}): None,
-            frozenset({1, 3}): None})
-    assert (graph.branch(gra, 3, 1) ==
-            ((('C', 1), ('C', 1), ('C', 2), ('C', 1)),
-             {frozenset({2, 3}): None, frozenset({0, 1}): None,
-              frozenset({0, 2}): None, frozenset({1, 3}): None}))
-    assert (graph.branch(gra, 3, 2) ==
-            ((('C', 1), ('C', 1), ('C', 2), ('C', 1)),
-             {frozenset({2, 3}): None, frozenset({0, 1}): None,
-              frozenset({0, 2}): None, frozenset({1, 3}): None}))
-    assert (graph.branch(gra, 3, 4) ==
-            ((('C', 1), ('F', 0)), {frozenset({0, 1}): None}))
-
-
-def test__cycle_keys_list():
-    """ test graph.cycle_keys_list
-    """
-    gra = ((('C', 1), ('C', 0), ('C', 0), ('C', 0), ('C', 0), ('N', 2),
-            ('N', 0), ('N', 0), ('N', 0), ('N', 1), ('O', 1)),
-           {frozenset({10, 4}): None, frozenset({8, 2}): None,
-            frozenset({0, 6}): None, frozenset({9, 3}): None,
-            frozenset({1, 2}): None, frozenset({3, 7}): None,
-            frozenset({2, 5}): None, frozenset({1, 6}): None,
-            frozenset({0, 7}): None, frozenset({9, 4}): None,
-            frozenset({1, 3}): None, frozenset({8, 4}): None})
-    assert graph.cycle_keys_list(gra) == ((0, 1, 3, 6, 7), (1, 2, 3, 4, 8, 9))
-
-
-def test__permute_vertices():
-    """ test graph.permute_vertices
-    """
-    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0)),
-           {frozenset({1, 3}): None, frozenset({2, 3}): None,
-            frozenset({0, 3}): None})
-    assert (graph.permute_vertices(gra, (3, 1, 2, 0))
-            == ((('C', 0), ('F', 0), ('H', 0), ('H', 0)),
-                {frozenset({0, 1}): None, frozenset({0, 2}): None,
-                 frozenset({0, 3}): None}))
-
-
-def test__conn__make_hydrogens_implicit():
-    """ test graph.conn.make_hydrogens_implicit
-    """
-    gra = ((('H', 0), ('F', 0), ('H', 0), ('C', 0), ('H', 0), ('H', 0)),
-           {frozenset({1, 3}): None, frozenset({2, 3}): None,
-            frozenset({0, 3}): None, frozenset({4, 5}): None})
-    assert (graph.conn.make_hydrogens_implicit(gra)
-            == ((('F', 0), ('C', 2), ('H', 1)), {frozenset({0, 1}): None}))
-
-
-def test__conn__potential_pi_bond_keys():
-    """ test graph.conn.potential_pi_bond_keys
-    """
-    cgr = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
-            ('C', 2), ('C', 1), ('O', 0)),
-           {frozenset({4, 6}): 1, frozenset({6, 7}): 1,
-            frozenset({0, 2}): 1, frozenset({8, 7}): 1,
-            frozenset({2, 4}): 1, frozenset({3, 5}): 1,
-            frozenset({1, 3}): 1, frozenset({5, 7}): 1})
-    assert (graph.conn.potential_pi_bond_keys(cgr)
+    assert (graph.bond_stereo_keys(C8H13O_SGR)
             == (frozenset({2, 4}), frozenset({3, 5})))
 
 
-def test__conn__lowspin_resonance_graphs():
-    """ test graph.conn.resonance_graphs
+# test value setters
+def test__set_atom_implicit_hydrogen_valences():
+    """ test graph.set_atom_implicit_hydrogen_valences
     """
-    c4_cgr = ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
-              {frozenset({0, 2}): None, frozenset({1, 3}): None,
-               frozenset({2, 3}): None})
-    c3h6_cgr = ((('C', 2), ('C', 1), ('C', 2)),
-                {frozenset({0, 1}): None, frozenset({1, 2}): None})
-    assert (
-        graph.conn.lowspin_resonance_graphs(c4_cgr) ==
-        (
-            ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
-             {frozenset({0, 2}): 3, frozenset({1, 3}): 3,
-              frozenset({2, 3}): 1}),
+    assert graph.set_atom_implicit_hydrogen_valences(
+        CH2FH2H_CGR_IMP, {3: 1, 4: 0, 6: 1}
+    ) == ({1: ('F', 0, None), 3: ('C', 1, None), 4: ('H', 0, None),
+           6: ('H', 1, None)},
+          {frozenset({1, 3}): (1, None)})
+
+
+def test__set_atom_stereo_parities():
+    """ test graph.set_atom_stereo_parities
+    """
+    assert graph.atom_stereo_parities(
+        graph.set_atom_stereo_parities(C8H13O_CGR, {7: False})
+    ) == graph.atom_stereo_parities(C8H13O_SGR)
+
+
+def test__set_bond_orders():
+    """ test graph.set_bond_orders
+    """
+    assert graph.set_bond_orders(
+        C8H13O_CGR, {frozenset({2, 4}): 2, frozenset({3, 5}): 2},
+    ) == C8H13O_RGR
+
+
+def test__set_bond_stereo_parities():
+    """ test graph.set_bond_stereo_parities
+    """
+    assert graph.bond_stereo_parities(
+        graph.set_bond_stereo_parities(
+            C8H13O_CGR, {frozenset({2, 4}): False, frozenset({3, 5}): False},
         )
-    )
-    assert (
-        graph.conn.lowspin_resonance_graphs(c3h6_cgr) ==
-        (
-            ((('C', 2), ('C', 1), ('C', 2)),
-             {frozenset({0, 1}): 1, frozenset({1, 2}): 2}),
-            ((('C', 2), ('C', 1), ('C', 2)),
-             {frozenset({0, 1}): 2, frozenset({1, 2}): 1}),
-        )
-    )
+    ) == graph.bond_stereo_parities(C8H13O_SGR)
 
 
-def test__conn__stereogenic_atoms():
-    """ test graph.conn.stereogenic_atoms
+# test derived values
+def test__atom_nuclear_charges():
+    """ test graph.atom_nuclear_charges
     """
-    cgr = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
-            ('C', 2), ('C', 1), ('O', 0)),
-           {frozenset({4, 6}): None, frozenset({6, 7}): None,
-            frozenset({0, 2}): None, frozenset({8, 7}): None,
-            frozenset({2, 4}): None, frozenset({3, 5}): None,
-            frozenset({1, 3}): None, frozenset({5, 7}): None})
-    assert graph.conn.stereogenic_atoms(cgr) == (7,)
-
-    cgr = ((('C', 3), ('C', 1), ('C', 0), ('C', 1), ('F', 0)),
-           {frozenset({3, 4}): None, frozenset({2, 3}): None,
-            frozenset({1, 2}): None, frozenset({0, 2}): None,
-            frozenset({1, 3}): None})
-    assert graph.conn.stereogenic_atoms(cgr) == (3,)
-
-    cgr = ((('C', 3), ('C', 1), ('C', 0), ('C', 2)),
-           {frozenset({2, 3}): None, frozenset({1, 2}): None,
-            frozenset({0, 2}): None, frozenset({1, 3}): None})
-    assert graph.conn.stereogenic_atoms(cgr) == ()
+    assert (graph.atom_nuclear_charges(C8H13O_CGR) ==
+            {0: 6, 1: 6, 2: 6, 3: 6, 4: 6, 5: 6, 6: 6, 7: 6, 8: 8})
 
 
-def test__conn__stereogenic_bonds():
-    """ test graph.conn.stereogenic_bonds
+def test__atom_bonds():
+    """ test graph.atom_bonds
     """
-    cgr0 = ((('C', 2), ('C', 0), ('Cl', 0), ('F', 0)),
-            {frozenset({0, 1}): None, frozenset({1, 3}): None,
-             frozenset({1, 2}): None})
-    cgr1 = ((('C', 1), ('C', 0), ('Cl', 0), ('F', 0), ('F', 0)),
-            {frozenset({0, 1}): None, frozenset({1, 4}): None,
-             frozenset({1, 2}): None, frozenset({0, 3}): None})
-    cgr2 = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
-             ('C', 2), ('C', 1), ('O', 0)),
-            {frozenset({4, 6}): None, frozenset({6, 7}): None,
-             frozenset({0, 2}): None, frozenset({8, 7}): None,
-             frozenset({2, 4}): None, frozenset({3, 5}): None,
-             frozenset({1, 3}): None, frozenset({5, 7}): None})
-    # small-ring double bond (not treated as stereogenic)
-    cgr4 = ((('C', 3), ('C', 1), ('C', 0), ('C', 1), ('F', 0)),
-            {frozenset({3, 4}): None, frozenset({2, 3}): None,
-             frozenset({1, 2}): None, frozenset({0, 2}): None,
-             frozenset({1, 3}): None})
-    assert graph.conn.stereogenic_bonds(cgr0) == ()
-    assert graph.conn.stereogenic_bonds(cgr1) == (frozenset({0, 1}),)
-    assert graph.conn.stereogenic_bonds(cgr2) == (frozenset({2, 4}),
-                                                  frozenset({3, 5}))
-    assert graph.conn.stereogenic_bonds(cgr4) == ()
+    assert (graph.atom_bonds(C8H13O_CGR) ==
+            {0: {frozenset({0, 2}): (1, None)},
+             1: {frozenset({1, 3}): (1, None)},
+             2: {frozenset({0, 2}): (1, None), frozenset({2, 4}): (1, None)},
+             3: {frozenset({1, 3}): (1, None), frozenset({3, 5}): (1, None)},
+             4: {frozenset({2, 4}): (1, None), frozenset({4, 6}): (1, None)},
+             5: {frozenset({3, 5}): (1, None), frozenset({5, 7}): (1, None)},
+             6: {frozenset({4, 6}): (1, None), frozenset({6, 7}): (1, None)},
+             7: {frozenset({5, 7}): (1, None), frozenset({6, 7}): (1, None),
+                 frozenset({8, 7}): (1, None)},
+             8: {frozenset({8, 7}): (1, None)}})
 
 
-def test__conn__possible_spin_multiplicities():
-    """ test graph.conn.possible_spin_multiplicities
+def test__atom_neighbor_keys():
+    """ test graph.atom_neighbor_keys
     """
-    catm_cgr = ((('C', 0),), {})
-    ch0f1_cgr = ((('C', 0), ('F', 0)), {frozenset([0, 1]): None})
-    ch1f1_cgr = ((('C', 1), ('F', 0)), {frozenset([0, 1]): None})
-    ch2f1_cgr = ((('C', 2), ('F', 0)), {frozenset([0, 1]): None})
-    ch2f2_cgr = ((('C', 2), ('F', 0), ('F', 0)),
-                 {frozenset([0, 1]): None, frozenset([0, 2]): None})
-    o2_cgr = ((('O', 0), ('O', 0)), {frozenset([0, 1]): None})
-    assert graph.conn.possible_spin_multiplicities(catm_cgr) == (1, 3, 5)
-    assert graph.conn.possible_spin_multiplicities(ch0f1_cgr) == (2, 4)
-    assert graph.conn.possible_spin_multiplicities(ch1f1_cgr) == (1, 3)
-    assert graph.conn.possible_spin_multiplicities(ch2f1_cgr) == (2,)
-    assert graph.conn.possible_spin_multiplicities(ch2f2_cgr) == (1,)
-    assert graph.conn.possible_spin_multiplicities(o2_cgr) == (1, 3)
+    assert (graph.atom_neighbor_keys(C8H13O_CGR) ==
+            {0: (2,), 1: (3,), 2: (0, 4), 3: (1, 5), 4: (2, 6), 5: (3, 7),
+             6: (4, 7), 7: (5, 6, 8), 8: (7,)})
 
 
-def test__conn__inchi():
-    """ test graph.conn.inchi
+def test__explicit_hydrogen_keys():
+    """ test graph.explicit_hydrogen_keys
     """
-    catm_cgr = ((('C', 0),), {})
-    natm_cgr = ((('N', 0),), {})
-    oatm_cgr = ((('O', 0),), {})
-    ch1_cgr = ((('C', 1),), {})
-    ch2_cgr = ((('C', 2),), {})
-    ch3_cgr = ((('C', 3),), {})
-    ch2f1_cgr = ((('C', 2), ('F', 0)), {frozenset([0, 1]): None})
-    c2h2f2_cgr = ((('C', 1), ('C', 1), ('F', 0), ('F', 0)),
-                  {frozenset({0, 1}): None, frozenset({0, 2}): None,
-                   frozenset({1, 3}): None})
-    c4_cgr = ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
-              {frozenset({0, 2}): 1, frozenset({1, 3}): 1,
-               frozenset({2, 3}): 1})
-    assert graph.conn.inchi(catm_cgr) == 'InChI=1S/C'
-    assert graph.conn.inchi(natm_cgr) == 'InChI=1S/N'
-    assert graph.conn.inchi(oatm_cgr) == 'InChI=1S/O'
-    assert graph.conn.inchi(ch1_cgr) == 'InChI=1S/CH/h1H'
-    assert graph.conn.inchi(ch2_cgr) == 'InChI=1S/CH2/h1H2'
-    assert graph.conn.inchi(ch3_cgr) == 'InChI=1S/CH3/h1H3'
-    assert graph.conn.inchi(ch2f1_cgr) == 'InChI=1S/CH2F/c1-2/h1H2'
-    assert graph.conn.inchi(c2h2f2_cgr) == 'InChI=1S/C2H2F2/c3-1-2-4/h1-2H'
-    assert graph.conn.inchi(c4_cgr) == 'InChI=1S/C4/c1-3-4-2'
+    assert graph.explicit_hydrogen_keys(CH2FH2H_CGR_EXP) == (0, 2, 5)
 
 
-def test__conn__inchi_numbering():
-    """ test graph.conn.inchi_numbering
+def test__backbone_keys():
+    """ test graph.backbone_keys
     """
-    ch3_cgr = ((('H', 0), ('H', 0), ('H', 0), ('C', 0)),
-               {frozenset({0, 3}): None, frozenset({1, 3}): None,
-                frozenset({2, 3}): None})
-    c2h2f2_cgr = ((('F', 0), ('F', 0), ('C', 1), ('C', 1)),
-                  {frozenset({2, 3}): None, frozenset({1, 2}): None,
-                   frozenset({0, 3}): None})
-    assert graph.conn.inchi_numbering(ch3_cgr) == (3,)
-    assert graph.conn.inchi_numbering(c2h2f2_cgr) == (2, 3, 1, 0)
-    assert graph.conn.inchi_numbering(
-        graph.permute_vertices(c2h2f2_cgr, (2, 3, 1, 0))) == (0, 1, 2, 3)
+    assert graph.backbone_keys(CH2FH2H_CGR_EXP) == (1, 3, 4, 6)
 
 
-def test__res__radical_atom_keys():
-    """ test graph.res.radical_atom_keys()
+def test__atom_explicit_hydrogen_keys():
+    """ test graph.atom_explicit_hydrogen_keys
     """
-    hatm_rgr = ((('H', 0),), {})
-    c2h2_rgr = ((('C', 2), ('C', 2)),
-                {frozenset({0, 1}): 2})
-    c3h6_rgr = ((('C', 2), ('C', 2), ('C', 2)),
-                {frozenset({0, 1}): 1, frozenset({1, 2}): 1})
-    assert graph.res.radical_atom_keys(hatm_rgr) == (0,)
-    assert graph.res.radical_atom_keys(c2h2_rgr) == ()
-    assert graph.res.radical_atom_keys(c3h6_rgr) == (0, 2)
+    assert (graph.atom_explicit_hydrogen_keys(CH2FH2H_CGR_EXP) ==
+            {0: (), 1: (), 2: (), 3: (0, 2), 4: (5,), 5: (), 6: ()})
 
 
-def test__res__pi_bond_forming_resonances():
-    """ test graph.res.pi_bond_forming_resonances
+def test__ring_keys_list():
+    """ test graph.ring_keys_list
     """
-    c4_cgr = ((('C', 0), ('C', 0), ('C', 0), ('C', 0)),
-              {frozenset({0, 2}): 1, frozenset({1, 3}): 1,
-               frozenset({2, 3}): 1})
-    assert len(graph.res.pi_bond_forming_resonances(c4_cgr)) == 14
+    cgr = ({0: ('C', 1, None), 1: ('C', 0, None), 2: ('C', 0, None),
+            3: ('C', 0, None), 4: ('C', 0, None), 5: ('N', 2, None),
+            6: ('N', 0, None), 7: ('N', 0, None), 8: ('N', 0, None),
+            9: ('N', 1, None), 10: ('O', 1, None)},
+           {frozenset({10, 4}): (1, None), frozenset({8, 2}): (1, None),
+            frozenset({0, 6}): (1, None), frozenset({9, 3}): (1, None),
+            frozenset({1, 2}): (1, None), frozenset({3, 7}): (1, None),
+            frozenset({2, 5}): (1, None), frozenset({1, 6}): (1, None),
+            frozenset({0, 7}): (1, None), frozenset({9, 4}): (1, None),
+            frozenset({1, 3}): (1, None), frozenset({8, 4}): (1, None)})
+    assert graph.ring_keys_list(cgr) == ((0, 1, 3, 6, 7), (1, 2, 3, 4, 8, 9))
 
 
-def test__res__connectivity_graph():
-    """ test graph.res.connectivity_graph
+def test__atom_total_valences():
+    """ test graph.atom_total_valences
     """
-    rgr = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
-            ('C', 2), ('C', 1), ('O', 0)),
-           {frozenset({4, 6}): 1, frozenset({6, 7}): 1, frozenset({0, 2}): 1,
-            frozenset({8, 7}): 1, frozenset({2, 4}): 2, frozenset({3, 5}): 2,
-            frozenset({1, 3}): 1, frozenset({5, 7}): 1})
-    cgr = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
-            ('C', 2), ('C', 1), ('O', 0)),
-           {frozenset({4, 6}): None, frozenset({6, 7}): None,
-            frozenset({0, 2}): None, frozenset({8, 7}): None,
-            frozenset({2, 4}): None, frozenset({3, 5}): None,
-            frozenset({1, 3}): None, frozenset({5, 7}): None})
-    assert graph.res.connectivity_graph(rgr) == cgr
+    assert (graph.atom_total_valences(C8H13O_CGR) ==
+            {0: 4, 1: 4, 2: 4, 3: 4, 4: 4, 5: 4, 6: 4, 7: 4, 8: 2})
 
 
-def test__stereo__connectivity_graph():
-    """ test graph.stereo.connectivity_graph
+def test__atom_bond_valences():
+    """ test graph.atom_bond_valences
     """
-    sgr = ((('C', 3, None), ('C', 3, None), ('C', 1, None),
-            ('C', 1, None), ('C', 1, None), ('C', 1, None),
-            ('C', 2, None), ('C', 1, False), ('O', 0, None)),
-           {frozenset({4, 6}): None, frozenset({6, 7}): None,
-            frozenset({0, 2}): None, frozenset({8, 7}): None,
-            frozenset({2, 4}): False, frozenset({3, 5}): False,
-            frozenset({1, 3}): None, frozenset({5, 7}): None})
-    cgr = ((('C', 3), ('C', 3), ('C', 1), ('C', 1), ('C', 1), ('C', 1),
-            ('C', 2), ('C', 1), ('O', 0)),
-           {frozenset({4, 6}): None, frozenset({6, 7}): None,
-            frozenset({0, 2}): None, frozenset({8, 7}): None,
-            frozenset({2, 4}): None, frozenset({3, 5}): None,
-            frozenset({1, 3}): None, frozenset({5, 7}): None})
-    assert graph.stereo.connectivity_graph(sgr) == cgr
+    assert (graph.atom_bond_valences(C8H13O_CGR) ==
+            {0: 4, 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 4, 7: 4, 8: 1})
 
 
-def test__stereo__inchi():
-    """ test graph.stereo.inchi
+def test__atom_radical_valences():
+    """ test graph.atom_radical_valences
     """
-    import automechanic.mol.graph._molfile as _molfile
-    sgr = ((('C', 3, None), ('C', 3, None), ('C', 1, None),
-            ('C', 1, None), ('C', 1, None), ('C', 1, None),
-            ('C', 2, None), ('C', 1, False), ('O', 0, None)),
-           {frozenset({4, 6}): None, frozenset({6, 7}): None,
-            frozenset({0, 2}): None, frozenset({8, 7}): None,
-            frozenset({2, 4}): False, frozenset({3, 5}): False,
-            frozenset({1, 3}): None, frozenset({5, 7}): None})
-    print(_molfile.from_stereo_graph(sgr))
+    assert (graph.atom_radical_valences(C8H13O_CGR) ==
+            {0: 0, 1: 0, 2: 1, 3: 1, 4: 1, 5: 1, 6: 0, 7: 0, 8: 1})
+
+
+def test__is_chiral():
+    """ test graph.is_chiral
+    """
+    assert graph.is_chiral(C8H13O_SGR) is True
+    assert graph.is_chiral(C2H2CL2F2_MM_SGR) is True
+    assert graph.is_chiral(C2H2CL2F2_MP_SGR) is False
+
+
+def test__atom_inchi_numbers():
+    """ test graph.atom_inchi_numbers
+    """
+    cgr = C8H13O_CGR
+    natms = len(graph.atoms(cgr))
+    for _ in range(10):
+        pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
+        cgr_pmt = graph.relabel(cgr, pmt_dct)
+        inv_pmt_dct = dict(map(reversed, pmt_dct.items()))
+        assert graph.atom_inchi_numbers(cgr_pmt) == inv_pmt_dct
+
+
+def test__inchi():
+    """ test graph.inchi
+    """
+    assert graph.inchi(C8H13O_SGR) == (
+        'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3')
+
+
+def test__stereo_inchi():
+    """ test graph.stereo_inchi
+    """
+    assert graph.stereo_inchi(C8H13O_SGR) == (
+        'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3/b5-3-,6-4-/t8-'
+        '/m1/s1')
+    assert graph.stereo_inchi(C2H2CL2F2_MM_SGR) == (
+        'InChI=1S/C2H2Cl2F2/c3-1(5)2(4)6/h1-2H/t1-,2-/m1/s1')
+    assert graph.stereo_inchi(C2H2CL2F2_MP_SGR) == (
+        'InChI=1S/C2H2Cl2F2/c3-1(5)2(4)6/h1-2H/t1-,2+')
+
+
+# test transformations
+def test__implicit():
+    """ test graph.implicit
+    """
+    assert graph.implicit(CH2FH2H_CGR_EXP) == CH2FH2H_CGR_IMP
+    assert graph.implicit(CH2FH2H_CGR_EXP, (1, 3, 4, 6)) == CH2FH2H_CGR_IMP
+
+
+def test__explicit():
+    """ test graph.explicit
+    """
+    ch2fh2h_cgr_exp = graph.explicit(CH2FH2H_CGR_IMP)
+    assert graph.backbone_isomorphic(ch2fh2h_cgr_exp, CH2FH2H_CGR_EXP)
+    assert (graph.atom_explicit_hydrogen_keys(ch2fh2h_cgr_exp) ==
+            {1: (), 3: (7, 8), 4: (9,), 6: (), 7: (), 8: (), 9: ()})
+
+
+def test__explicit_stereo_sites():
+    """ test graph.explicit_stereo_sites
+    """
+    assert graph.explicit_stereo_sites(C8H13O_CGR) == C8H13O_CGR
+    assert (graph.explicit_stereo_sites(C8H13O_SGR)
+            == ({0: ('C', 3, None), 1: ('C', 3, None), 2: ('C', 0, None),
+                 3: ('C', 0, None), 4: ('C', 0, None), 5: ('C', 0, None),
+                 6: ('C', 2, None), 7: ('C', 0, False), 8: ('O', 0, None),
+                 9: ('H', 0, None), 10: ('H', 0, None), 11: ('H', 0, None),
+                 12: ('H', 0, None), 13: ('H', 0, None)},
+                {frozenset({0, 2}): (1, None), frozenset({1, 3}): (1, None),
+                 frozenset({2, 4}): (1, False), frozenset({3, 5}): (1, False),
+                 frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
+                 frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None),
+                 frozenset({9, 7}): (1, None), frozenset({2, 10}): (1, None),
+                 frozenset({3, 11}): (1, None), frozenset({4, 12}): (1, None),
+                 frozenset({5, 13}): (1, None)}))
+
+
+def test__delete_atoms():
+    """ test graph.delete_atoms
+    """
+    assert (graph.delete_atoms(CH2FH2H_CGR_EXP, (0, 2, 5)) ==
+            ({1: ('F', 0, None), 3: ('C', 0, None), 4: ('H', 0, None),
+              6: ('H', 0, None)},
+             {frozenset({1, 3}): (1, None)}))
+
+
+def test__add_explicit_hydrogens():
+    """ test graph.add_explicit_hydrogens
+    """
+    assert graph.add_explicit_hydrogens(
+        CH2FH2H_CGR_IMP, {3: 2, 4: 1}
+    ) == ({1: ('F', 0, None), 3: ('C', 2, None), 4: ('H', 1, None),
+           6: ('H', 0, None), 7: ('H', 0, None), 8: ('H', 0, None),
+           9: ('H', 0, None)},
+          {frozenset({1, 3}): (1, None), frozenset({3, 7}): (1, None),
+           frozenset({8, 3}): (1, None), frozenset({9, 4}): (1, None)})
+
+
+def test__subgraph():
+    """ test graph.subgraph
+    """
+    assert (graph.subgraph(CH2FH2H_CGR_EXP, (1, 3, 4, 6)) ==
+            ({1: ('F', 0, None), 3: ('C', 0, None), 4: ('H', 0, None),
+              6: ('H', 0, None)},
+             {frozenset({1, 3}): (1, None)}))
+
+
+def test__subgraph_by_bonds():
+    """ test graph.subgraph_by_bonds
+    """
+    assert (graph.subgraph_by_bonds(C8H13O_CGR,
+                                    {frozenset({1, 3}), frozenset({3, 5}),
+                                     frozenset({5, 7}), frozenset({8, 7})}) ==
+            ({1: ('C', 3, None), 3: ('C', 1, None), 5: ('C', 1, None),
+              7: ('C', 1, None), 8: ('O', 0, None)},
+             {frozenset({1, 3}): (1, None), frozenset({3, 5}): (1, None),
+              frozenset({5, 7}): (1, None), frozenset({8, 7}): (1, None)}))
+
+
+def test__relabel():
+    """ test graph.relabel
+    """
+    assert graph.relabel(
+        CH2FH2H_CGR_IMP, {1: 0, 3: 1, 4: 2, 6: 3}
+    ) == ({0: ('F', 0, None), 1: ('C', 2, None), 2: ('H', 1, None),
+           3: ('H', 0, None)},
+          {frozenset({0, 1}): (1, None)})
+
+
+def test__graph__reflection():
+    """ test graph.reflection
+    """
+    assert (graph.reflection(C8H13O_SGR) ==
+            graph.set_atom_stereo_parities(C8H13O_SGR, {7: True}))
+
+
+# test comparisons
+def test__backbone_isomorphic():
+    """ test graph.backbone_isomorphic
+    """
+    assert graph.backbone_isomorphic(CH2FH2H_CGR_EXP, CH2FH2H_CGR_IMP)
+    cgr = C8H13O_CGR
+    natms = len(graph.atoms(cgr))
+    for _ in range(10):
+        pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
+        cgr_pmt = graph.relabel(cgr, pmt_dct)
+        assert graph.backbone_isomorphic(cgr, cgr_pmt)
+
+
+def test__backbone_isomorphism():
+    """ test graph.backbone_isomorphism
+    """
+    assert (graph.backbone_isomorphism(CH2FH2H_CGR_EXP, CH2FH2H_CGR_IMP) ==
+            {1: 1, 3: 3, 4: 4, 6: 6})
+    cgr = C8H13O_CGR
+    natms = len(graph.atoms(cgr))
+    for _ in range(10):
+        pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
+        cgr_pmt = graph.relabel(cgr, pmt_dct)
+        assert graph.backbone_isomorphism(cgr, cgr_pmt) == pmt_dct
 
 
 if __name__ == '__main__':
-    test__freeze()
-    test__vertex_neighbor_keys()
-    test__isomorphism()
-    test__induced_subgraph()
-    test__delete_vertices()
-    test__branch()
-    test__cycle_keys_list()
-    test__permute_vertices()
-    test__conn__possible_spin_multiplicities()
-    test__conn__make_hydrogens_implicit()
-    test__conn__potential_pi_bond_keys()
-    test__conn__lowspin_resonance_graphs()
-    test__conn__stereogenic_atoms()
-    test__conn__stereogenic_bonds()
-    test__conn__inchi()
-    test__conn__inchi_numbering()
-    test__res__radical_atom_keys()
-    test__res__pi_bond_forming_resonances()
-    test__res__connectivity_graph()
-    test__stereo__connectivity_graph()
-    test__stereo__inchi()
+    # test constructors and value getters
+    test__from_data()
+    test__atom_stereo_keys()
+    test__bond_stereo_keys()
+    # test value setters
+    test__set_atom_implicit_hydrogen_valences()
+    test__set_atom_stereo_parities()
+    test__set_bond_orders()
+    test__set_bond_stereo_parities()
+    # test derived values
+    test__atom_nuclear_charges()
+    test__atom_bonds()
+    test__atom_neighbor_keys()
+    test__explicit_hydrogen_keys()
+    test__backbone_keys()
+    test__atom_explicit_hydrogen_keys()
+    test__ring_keys_list()
+    test__atom_total_valences()
+    test__atom_bond_valences()
+    test__atom_radical_valences()
+    test__is_chiral()
+    test__atom_inchi_numbers()
+    test__inchi()
+    test__stereo_inchi()
+    # test transformations
+    test__implicit()
+    test__explicit()
+    test__explicit_stereo_sites()
+    test__delete_atoms()
+    test__add_explicit_hydrogens()
+    test__subgraph()
+    test__subgraph_by_bonds()
+    test__relabel()
+    test__graph__reflection()
+    # test comparisons
+    test__backbone_isomorphic()
+    test__backbone_isomorphism()

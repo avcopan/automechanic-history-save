@@ -13,8 +13,6 @@ from ._ipybel import from_inchi as _pbm_from_inchi
 from ._ipybel import geometry as _pbm_to_geometry
 from ._inchi_aux import numbering as _ich_aux_numbering
 from .geom import inchi as _inchi_from_geometry
-from .graph.conn import (make_hydrogens_implicit as
-                         _graph_conn_make_hydrogens_implicit)
 from ..rere.pattern import escape as _escape
 from ..rere.pattern import named_capturing as _named_capturing
 from ..rere.pattern import one_or_more as _one_or_more
@@ -295,7 +293,6 @@ def connectivity_graph(ich):
     assert core_parent(ich) == core_parent(ich_)
 
     cgr = _rdm_to_connectivity_graph(rdm)
-    cgr = _graph_conn_make_hydrogens_implicit(cgr)
     return cgr
 
 
@@ -319,12 +316,13 @@ def stereo_graph(ich):
     assert not has_unknown_stereo_elements(ich)
     atm_ste_dct = {_atom_key(key): _value(val)
                    for key, val in atom_stereo_elements(ich)}
-    bnd_ste_dct = {_bond_key(key): _value(val)
+    bnd_ste_dct = {_bond_key(key): (1, _value(val))
                    for key, val in bond_stereo_elements(ich)}
     assert set(atm_ste_dct.keys()) <= set(range(len(atms)))
     assert set(bnd_ste_dct.keys()) <= set(cnns.keys())
-    atms = tuple((sym, hcnt, atm_ste_dct[key]) if key in atm_ste_dct else
-                 (sym, hcnt, None) for key, (sym, hcnt) in enumerate(atms))
+    atms = {atm_key: ((sym, hcnt, atm_ste_dct[atm_key])
+                      if atm_key in atm_ste_dct else (sym, hcnt, None))
+            for atm_key, (sym, hcnt, _) in atms.items()}
     bnds = cnns.copy()
     bnds.update(bnd_ste_dct)
     return (atms, bnds)

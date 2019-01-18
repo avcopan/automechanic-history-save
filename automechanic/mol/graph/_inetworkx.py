@@ -1,28 +1,25 @@
 """ networkx interface
 """
 import networkx
-from ._perm import inverse as _inverse_permutation
 
 
-def from_automechanic_graph(gra):
-    """ newtorkx graph object from an automechanic graph object
+def from_graph(xgr):
+    """ networkx graph object from a molecular graph
     """
-    vtcs, edgs = gra
-    vtcs = dict(enumerate(vtcs))
-
+    atms, bnds = xgr
     nxg = networkx.Graph()
-    for vkey, vprops in vtcs.items():
-        nxg.add_node(vkey, props=vprops)
-    for ekey, eprops in edgs.items():
-        nxg.add_edge(*ekey, props=eprops)
+    for atm_key, atm_vals in atms.items():
+        nxg.add_node(atm_key, props=atm_vals)
+    for bnd_key, bnd_val in bnds.items():
+        nxg.add_edge(*bnd_key, props=bnd_val)
     return nxg
 
 
-def cycle_keys_list(nxg):
+def ring_keys_list(nxg):
     """ minimum cycle basis for the graph
     """
-    cyc_keys_lst = networkx.algorithms.cycles.minimum_cycle_basis(nxg)
-    return tuple(map(tuple, cyc_keys_lst))
+    rng_keys_lst = networkx.algorithms.cycles.minimum_cycle_basis(nxg)
+    return tuple(map(tuple, rng_keys_lst))
 
 
 def isomorphism(nxg1, nxg2):
@@ -35,10 +32,8 @@ def isomorphism(nxg1, nxg2):
     matcher = networkx.algorithms.isomorphism.GraphMatcher(
         nxg1, nxg2, node_match=_same_props, edge_match=_same_props)
 
-    iso = None
+    iso_dct = None
     if matcher.is_isomorphic():
-        iso_dct = matcher.mapping
-        iso_inv = tuple(map(iso_dct.__getitem__, range(len(iso_dct))))
-        iso = _inverse_permutation(iso_inv)
+        iso_dct = dict(matcher.mapping)
 
-    return iso
+    return iso_dct

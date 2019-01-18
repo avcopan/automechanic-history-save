@@ -487,31 +487,47 @@ def test__inchi__connectivity_graph():
     """ test mol.inchi.connectivity_graph
     """
     assert (mol.inchi.connectivity_graph(C2H2F2_ICH)
-            == ((('C', 1), ('C', 1), ('F', 0), ('F', 0)),
-                {frozenset({0, 1}): None, frozenset({0, 2}): None,
-                 frozenset({1, 3}): None}))
+            == ({0: ('C', 0, None), 1: ('C', 0, None), 2: ('F', 0, None),
+                 3: ('F', 0, None), 4: ('H', 0, None), 5: ('H', 0, None)},
+                {frozenset({0, 1}): (1, None), frozenset({0, 2}): (1, None),
+                 frozenset({1, 3}): (1, None), frozenset({0, 4}): (1, None),
+                 frozenset({1, 5}): (1, None)}))
 
 
 def test__inchi__stereo_graph():
     """ test mol.inchi.stereo_graph
     """
     assert (mol.inchi.stereo_graph(C8H13O_ICH)
-            == ((('C', 3, None), ('C', 3, None), ('C', 1, None),
-                 ('C', 1, None), ('C', 1, None), ('C', 1, None),
-                 ('C', 2, None), ('C', 1, False), ('O', 0, None)),
-                {frozenset({4, 6}): None, frozenset({6, 7}): None,
-                 frozenset({0, 2}): None, frozenset({8, 7}): None,
-                 frozenset({2, 4}): False, frozenset({3, 5}): False,
-                 frozenset({1, 3}): None, frozenset({5, 7}): None}))
+            == ({0: ('C', 0, None), 1: ('C', 0, None), 2: ('C', 0, None),
+                 3: ('C', 0, None), 4: ('C', 0, None), 5: ('C', 0, None),
+                 6: ('C', 0, None), 7: ('C', 0, False), 8: ('O', 0, None),
+                 9: ('H', 0, None), 10: ('H', 0, None), 11: ('H', 0, None),
+                 12: ('H', 0, None), 13: ('H', 0, None), 14: ('H', 0, None),
+                 15: ('H', 0, None), 16: ('H', 0, None), 17: ('H', 0, None),
+                 18: ('H', 0, None), 19: ('H', 0, None), 20: ('H', 0, None),
+                 21: ('H', 0, None)},
+                {frozenset({0, 2}): (1, None), frozenset({1, 3}): (1, None),
+                 frozenset({2, 4}): (1, False), frozenset({3, 5}): (1, False),
+                 frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
+                 frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None),
+                 frozenset({0, 9}): (1, None), frozenset({0, 10}): (1, None),
+                 frozenset({0, 11}): (1, None), frozenset({1, 12}): (1, None),
+                 frozenset({1, 13}): (1, None), frozenset({1, 14}): (1, None),
+                 frozenset({2, 15}): (1, None), frozenset({16, 3}): (1, None),
+                 frozenset({17, 4}): (1, None), frozenset({18, 5}): (1, None),
+                 frozenset({19, 6}): (1, None), frozenset({20, 6}): (1, None),
+                 frozenset({21, 7}): (1, None)}))
 
 
 def test__geom__connectivity_graph():
     """ test mol.geom.connectivity_graph()
     """
     assert (mol.geom.connectivity_graph(C2H2F2_GEO)
-            == ((('F', 0), ('C', 1), ('C', 1), ('F', 0)),
-                {frozenset({0, 1}): None, frozenset({2, 3}): None,
-                 frozenset({1, 2}): None}))
+            == ({0: ('F', 0, None), 1: ('C', 0, None), 2: ('C', 0, None),
+                 3: ('F', 0, None), 4: ('H', 0, None), 5: ('H', 0, None)},
+                {frozenset({0, 1}): (1, None), frozenset({1, 2}): (1, None),
+                 frozenset({1, 4}): (1, None), frozenset({2, 3}): (1, None),
+                 frozenset({2, 5}): (1, None)}))
 
 
 if __name__ == '__main__':

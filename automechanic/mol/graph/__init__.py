@@ -28,17 +28,19 @@ from ._base import set_atom_stereo_parities
 from ._base import set_bond_orders
 from ._base import set_bond_stereo_parities
 # derived values
+from ._base import is_chiral
+from ._base import maximum_spin_multiplicity
+from ._base import possible_spin_multiplicities
+from ._base import ring_keys_list
+from ._base import backbone_keys
+from ._base import explicit_hydrogen_keys
 from ._base import atom_nuclear_charges
-from ._base import atom_neighborhoods
-from ._base import atom_neighbor_keys
 from ._base import atom_total_valences
 from ._base import atom_bond_valences
 from ._base import atom_radical_valences
+from ._base import atom_neighbor_keys
 from ._base import atom_explicit_hydrogen_keys
-from ._base import ring_keys_list
-from ._base import is_chiral
-from ._base import explicit_hydrogen_keys
-from ._base import backbone_keys
+from ._base import atom_neighborhoods
 from ._inchi.conn import atom_inchi_numbers
 from ._inchi.conn import inchi
 from ._inchi.stereo import inchi as stereo_inchi
@@ -69,10 +71,11 @@ __all__ = [
     'set_atom_implicit_hydrogen_valences', 'set_atom_stereo_parities',
     'set_bond_orders', 'set_bond_stereo_parities',
     # derived values
-    'atom_nuclear_charges', 'atom_neighborhoods', 'atom_neighbor_keys',
-    'atom_total_valences', 'atom_bond_valences', 'atom_radical_valences',
-    'atom_explicit_hydrogen_keys', 'ring_keys_list', 'is_chiral',
-    'explicit_hydrogen_keys', 'backbone_keys',
+    'is_chiral', 'maximum_spin_multiplicity', 'possible_spin_multiplicities',
+    'ring_keys_list', 'backbone_keys', 'explicit_hydrogen_keys',
+    'atom_nuclear_charges', 'atom_total_valences', 'atom_bond_valences',
+    'atom_radical_valences', 'atom_neighbor_keys',
+    'atom_explicit_hydrogen_keys', 'atom_neighborhoods',
     'atom_inchi_numbers', 'inchi', 'stereo_inchi',
     # transformations
     'implicit', 'explicit', 'explicit_stereo_sites', 'delete_atoms',

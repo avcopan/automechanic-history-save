@@ -239,36 +239,63 @@ def set_bond_stereo_parities(sgr, bnd_par_dct):
 
 
 # derived values
+def is_chiral(sgr):
+    """ is this stereo graph chiral?
+    """
+    return not backbone_isomorphic(sgr, reflection(sgr))
+
+
+def maximum_spin_multiplicity(xgr):
+    """ the highest possible spin multiplicity for this molecular graph
+    """
+    atm_rad_vlcs = _values_by_key(atom_radical_valences(xgr), atom_keys(xgr))
+    return sum(atm_rad_vlcs) + 1
+
+
+def possible_spin_multiplicities(xgr):
+    """ possible spin multiplicities for this molecular graph
+    """
+    mult_max = maximum_spin_multiplicity(xgr)
+    mult_min = 2 if mult_max % 2 == 0 else 1
+    mults = tuple(range(mult_min, mult_max+1, 2))
+    return mults
+
+
+def ring_keys_list(xgr):
+    """ a series of key-sets for each ring in the graph
+    """
+    nxg = _nxg_from_graph(xgr)
+    rng_keys_lst = _nxg_ring_keys_list(nxg)
+    return rng_keys_lst
+
+
+def backbone_keys(xgr):
+    """ backbone atom keys
+    """
+    bbn_keys = _remove(atom_keys(xgr), explicit_hydrogen_keys(xgr))
+    return bbn_keys
+
+
+def explicit_hydrogen_keys(xgr):
+    """ explicit hydrogen keys (H types: explicit, implicit, backbone)
+    """
+    hyd_keys = _keys_by_value(atom_symbols(xgr), ('H',))
+    atm_ngb_keys_dct = atom_neighbor_keys(xgr)
+
+    def _is_backbone(hyd_key):
+        return all(ngb_key in hyd_keys and hyd_key < ngb_key
+                   for ngb_key in atm_ngb_keys_dct[hyd_key])
+
+    exp_hyd_keys = _filterfalse(_is_backbone, hyd_keys)
+    return exp_hyd_keys
+
+
 def atom_nuclear_charges(xgr):
     """ nuclear charges, by atom (connectivity-independent)
     """
     atm_sym_dct = atom_symbols(xgr)
     atm_nuc_chg_dct = _transform_values(atm_sym_dct, func=_atom_nuclear_charge)
     return atm_nuc_chg_dct
-
-
-def atom_neighborhoods(xgr):
-    """ bonded neighbor subgraphs, by atom
-    """
-    bnd_keys = bond_keys(xgr)
-
-    def _neighborhood(atm_key):
-        atm_bnd_keys = _filter(lambda x: atm_key in x, bnd_keys)
-        return subgraph_by_bonds(xgr, atm_bnd_keys)
-
-    atm_keys = atom_keys(xgr)
-    atm_nbhs = tuple(map(_neighborhood, atm_keys))
-    atm_nbh_dct = dict(zip(atm_keys, atm_nbhs))
-    return atm_nbh_dct
-
-
-def atom_neighbor_keys(xgr):
-    """ keys of neighboring atoms, by atom
-    """
-    atm_ngb_keys_dct = {
-        atm_key: _remove(atom_keys(atm_nbh), [atm_key])
-        for atm_key, atm_nbh in atom_neighborhoods(xgr).items()}
-    return atm_ngb_keys_dct
 
 
 def atom_total_valences(xgr):
@@ -302,39 +329,13 @@ def atom_radical_valences(rgr):
     return dict(zip(atm_keys, atm_rad_vlcs))
 
 
-def ring_keys_list(xgr):
-    """ a series of key-sets for each ring in the graph
+def atom_neighbor_keys(xgr):
+    """ keys of neighboring atoms, by atom
     """
-    nxg = _nxg_from_graph(xgr)
-    rng_keys_lst = _nxg_ring_keys_list(nxg)
-    return rng_keys_lst
-
-
-def is_chiral(sgr):
-    """ is this stereo graph chiral?
-    """
-    return not backbone_isomorphic(sgr, reflection(sgr))
-
-
-def backbone_keys(xgr):
-    """ backbone atom keys
-    """
-    bbn_keys = _remove(atom_keys(xgr), explicit_hydrogen_keys(xgr))
-    return bbn_keys
-
-
-def explicit_hydrogen_keys(xgr):
-    """ explicit hydrogen keys (H types: explicit, implicit, backbone)
-    """
-    hyd_keys = _keys_by_value(atom_symbols(xgr), ('H',))
-    atm_ngb_keys_dct = atom_neighbor_keys(xgr)
-
-    def _is_backbone(hyd_key):
-        return all(ngb_key in hyd_keys and hyd_key < ngb_key
-                   for ngb_key in atm_ngb_keys_dct[hyd_key])
-
-    exp_hyd_keys = _filterfalse(_is_backbone, hyd_keys)
-    return exp_hyd_keys
+    atm_ngb_keys_dct = {
+        atm_key: _remove(atom_keys(atm_nbh), [atm_key])
+        for atm_key, atm_nbh in atom_neighborhoods(xgr).items()}
+    return atm_ngb_keys_dct
 
 
 def atom_explicit_hydrogen_keys(xgr):
@@ -344,6 +345,21 @@ def atom_explicit_hydrogen_keys(xgr):
         atm_key: _remove(explicit_hydrogen_keys(atm_nbh), [atm_key])
         for atm_key, atm_nbh in atom_neighborhoods(xgr).items()}
     return atm_exp_hyd_keys_dct
+
+
+def atom_neighborhoods(xgr):
+    """ bonded neighbor subgraphs, by atom
+    """
+    bnd_keys = bond_keys(xgr)
+
+    def _neighborhood(atm_key):
+        atm_bnd_keys = _filter(lambda x: atm_key in x, bnd_keys)
+        return subgraph_by_bonds(xgr, atm_bnd_keys)
+
+    atm_keys = atom_keys(xgr)
+    atm_nbhs = tuple(map(_neighborhood, atm_keys))
+    atm_nbh_dct = dict(zip(atm_keys, atm_nbhs))
+    return atm_nbh_dct
 
 
 # transformations

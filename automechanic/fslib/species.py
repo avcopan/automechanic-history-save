@@ -12,7 +12,7 @@ def assert_complete_species_id(ich, mult):
     assert mol.inchi_key.is_standard_neutral(ick)
     assert mol.inchi.has_unknown_stereo_elements(ich) is False
     assert mol.inchi.is_closed(ich)
-    assert mult in mol.graph.conn.possible_spin_multiplicities(cgr)
+    assert mult in mol.graph.possible_spin_multiplicities(cgr)
 
 
 def branch_segments(ich, mult):

@@ -1,12 +1,12 @@
 """ functions operating on InChIKeys
 """
-from ..rere.pattern_lib import STRING_START as _STRING_START
-from ..rere.pattern_lib import STRING_END as _STRING_END
-from ..rere.pattern_lib import UPPERCASE_LETTER as _UPPERCASE_LETTER
-from ..rere.pattern import escape as _escape
-from ..rere.pattern import named_capturing as _named_capturing
-from ..rere.find import has_match as _has_match
-from ..rere.find import first_named_capture as _first_named_capture
+from ...rere.pattern_lib import STRING_START as _STRING_START
+from ...rere.pattern_lib import STRING_END as _STRING_END
+from ...rere.pattern_lib import UPPERCASE_LETTER as _UPPERCASE_LETTER
+from ...rere.pattern import escape as _escape
+from ...rere.pattern import named_capturing as _named_capturing
+from ...rere.find import has_match as _has_match
+from ...rere.find import first_named_capture as _first_named_capture
 
 
 class PARSE():

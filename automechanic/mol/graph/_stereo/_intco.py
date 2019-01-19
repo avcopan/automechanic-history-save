@@ -2,10 +2,10 @@
 """
 from itertools import chain as _chain
 from functools import partial as _partial
-from .intco_linalg import unit_direction
-from .intco_linalg import aligning_rotation_matrix
-from .intco_linalg import local_coordinate_interpreter
-from .conn import atom_inchi_numbers
+from ._intco_linalg import unit_direction
+from ._intco_linalg import aligning_rotation_matrix
+from ._intco_linalg import local_coordinate_interpreter
+from .._conn import atom_inchi_numbers
 from .._base import atom_keys
 from .._base import atom_stereo_keys
 from .._base import bond_stereo_keys

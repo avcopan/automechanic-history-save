@@ -15,7 +15,6 @@ C2H2F2_GEO = (('F', (1.584822920001, -0.748486564300, -0.4271224303432)),
               ('F', (-1.602333181611, 0.736677675476, -0.02605091648865)),
               ('H', (0.916321356258, 1.229945559249, -0.2271265738271)),
               ('H', (-0.882300328471, -1.224388297273, -0.229635969682)))
-C2H2F2_ICH_ORDER = (1, 2, 0, 3)
 
 C8H13O_ICH = (
     'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3/'
@@ -276,13 +275,6 @@ PYBEL_FAIL_ICHS = (
     'InChI=1S/C7H15O4/c1-2-4-7(11-9)5-3-6-10-8/h7-8H,2-6H2,1H3')
 
 
-def test__geom__inchi_with_order():
-    """ test mol.geom.inchi_with_order
-    """
-    assert (mol.geom.inchi_with_order(C2H2F2_GEO)
-            == (C2H2F2_ICH, C2H2F2_ICH_ORDER))
-
-
 def test__geom__inchi():
     """ test mol.geom.inchi
     """
@@ -437,50 +429,65 @@ def test__inchi__inchi_key():
             == 'WFLOTYSKFUPZQB-UHFFFAOYSA-N')
 
 
-def test__inchi_key__first_hash():
-    """ test mol.inchi_key.first_hash()
+def test__inchi__key__first_hash():
+    """ test mol.inchi.key.first_hash()
     """
-    assert (mol.inchi_key.first_hash(
+    assert (mol.inchi.key.first_hash(
         mol.inchi.inchi_key(C2H2F2_ICH)) == 'WFLOTYSKFUPZQB')
-    assert (mol.inchi_key.first_hash(
+    assert (mol.inchi.key.first_hash(
         mol.inchi.inchi_key(C2H2F2_ICH_NO_STEREO)) == 'WFLOTYSKFUPZQB')
-    assert (mol.inchi_key.first_hash(
+    assert (mol.inchi.key.first_hash(
         mol.inchi.inchi_key(C2H2F2_ICH_STEREO_UNKNOWN)) == 'WFLOTYSKFUPZQB')
 
 
-def test__inchi_key__second_hash():
-    """ test mol.inchi_key.second_hash()
+def test__inchi__key__second_hash():
+    """ test mol.inchi.key.second_hash()
     """
-    assert (mol.inchi_key.second_hash(
+    assert (mol.inchi.key.second_hash(
         mol.inchi.inchi_key(C2H2F2_ICH)) == 'OWOJBTED')
-    assert (mol.inchi_key.second_hash(
+    assert (mol.inchi.key.second_hash(
         mol.inchi.inchi_key(C2H2F2_ICH_NO_STEREO)) == 'UHFFFAOY')
-    assert (mol.inchi_key.second_hash(
+    assert (mol.inchi.key.second_hash(
         mol.inchi.inchi_key(C2H2F2_ICH_STEREO_UNKNOWN)) == 'HXYFBOIP')
 
 
-def test__inchi_key__is_standard_neutral():
-    """ test mol.inchi_key.is_standard_neutral()
+def test__inchi__key__is_standard_neutral():
+    """ test mol.inchi.key.is_standard_neutral()
     """
-    assert (mol.inchi_key.is_standard_neutral(
+    assert (mol.inchi.key.is_standard_neutral(
         mol.inchi.inchi_key(C2H2F2_ICH)) is True)
-    assert (mol.inchi_key.is_standard_neutral(
+    assert (mol.inchi.key.is_standard_neutral(
         mol.inchi.inchi_key(C2H2F2_ICH_NO_STEREO)) is True)
-    assert (mol.inchi_key.is_standard_neutral(
+    assert (mol.inchi.key.is_standard_neutral(
         mol.inchi.inchi_key(C2H2F2_ICH_STEREO_UNKNOWN)) is False)
 
 
 def test__inchi__geometry():
     """ test mol.inchi.geometry
     """
-    # make sure these run
-    mol.inchi.geometry(C2H2F2_ICH)
-    for ich in C8H13O_ICHS:
-        mol.inchi.geometry(ich)
-    for ich in RDKIT_FAIL_ICHS:
-        mol.inchi.geometry(ich)
-    for ich in PYBEL_FAIL_ICHS:
-        mol.inchi.geometry(ich)
+    import sys
+    ich = ('InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3'
+           '/b5-3-,6-4-/t8-/m0/s1')
+    sys.stdout.flush()
+    mol.inchi.geometry(ich)
+    sys.stdout.flush()
+    # # make sure these run
+    # mol.inchi.geometry(C2H2F2_ICH)
+    # for ich in C8H13O_ICHS:
+    #     print(ich)
+    #     sys.stdout.flush()
+    #     mol.inchi.geometry(ich)
+    #     sys.stdout.flush()
+    # for ich in RDKIT_FAIL_ICHS:
+    #     print(ich)
+    #     sys.stdout.flush()
+    #     mol.inchi.geometry(ich)
+    #     sys.stdout.flush()
+    # for ich in PYBEL_FAIL_ICHS:
+    #     print(ich)
+    #     sys.stdout.flush()
+    #     mol.inchi.geometry(ich)
+    #     sys.stdout.flush()
 
 
 def test__inchi__connectivity_graph():
@@ -531,27 +538,29 @@ def test__geom__connectivity_graph():
 
 
 if __name__ == '__main__':
-    # test__smiles__inchi()
-    # test__molfile__inchi()
-    # test__geom__atoms()
-    # test__geom__bonds()
-    # test__geom__graph()
-    test__inchi__smiles()
-    test__inchi__recalculate()
-    test__inchi__is_closed()
-    test__inchi__prefix()
-    test__inchi__version()
-    test__inchi__formula_layer()
-    test__inchi__key_layer()
-    test__inchi__key_layer_content()
-    test__inchi__core_parent()
-    test__inchi__atom_stereo_elements()
-    test__inchi__bond_stereo_elements()
-    test__inchi__has_unknown_stereo_elements()
-    test__inchi__compatible_stereoisomers()
-    test__inchi__connectivity_graph()
-    test__inchi__stereo_graph()
-    test__inchi_key__first_hash()
-    test__inchi_key__second_hash()
-    test__inchi_key__is_standard_neutral()
-    test__geom__connectivity_graph()
+    # # test__smiles__inchi()
+    # # test__molfile__inchi()
+    # # test__geom__atoms()
+    # # test__geom__bonds()
+    # # test__geom__graph()
+    # test__inchi__smiles()
+    # test__inchi__recalculate()
+    # test__inchi__is_closed()
+    # test__inchi__prefix()
+    # test__inchi__version()
+    # test__inchi__formula_layer()
+    # test__inchi__key_layer()
+    # test__inchi__key_layer_content()
+    # test__inchi__core_parent()
+    # test__inchi__atom_stereo_elements()
+    # test__inchi__bond_stereo_elements()
+    # test__inchi__has_unknown_stereo_elements()
+    # test__inchi__compatible_stereoisomers()
+    # test__inchi__connectivity_graph()
+    # test__inchi__stereo_graph()
+    # test__inchi_key__first_hash()
+    # test__inchi_key__second_hash()
+    # test__inchi_key__is_standard_neutral()
+    # test__geom__connectivity_graph()
+    # test__geom__inchi()
+    test__inchi__geometry()

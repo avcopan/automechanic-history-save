@@ -15,14 +15,6 @@ def inchi_to_inchi_key(ich):
     return ick
 
 
-def from_molfile(mfl):
-    """ rdkit molecule object from a mol block string
-    """
-    rdm = _rd_chem.rdmolfiles.MolFromMolBlock(mfl, removeHs=False)
-    assert rdm is not None
-    return rdm
-
-
 def from_smiles(smi):
     """ rdkit molecule object from a SMILES string
     """
@@ -37,14 +29,6 @@ def from_inchi(ich):
     rdm = _rd_chem.inchi.MolFromInchi(ich, treatWarningAsError=False)
     assert rdm is not None
     return rdm
-
-
-def to_molfile(rdm):
-    """ rdkit molecule object from a mol block string
-    """
-    rdm = _rd_chem.AddHs(rdm)
-    mlf = _rd_chem.rdmolfiles.MolToMolBlock(rdm, forceV3000=True)
-    return mlf
 
 
 def to_smiles(rdm):

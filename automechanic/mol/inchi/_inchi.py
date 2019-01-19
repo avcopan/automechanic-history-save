@@ -5,26 +5,24 @@ from string import ascii_lowercase as _ascii_lowercase
 from ._irdkit import from_inchi as _rdm_from_inchi
 from ._irdkit import to_inchi as _rdm_to_inchi
 from ._irdkit import to_smiles as _rdm_to_smiles
-from ._irdkit import to_molfile as _rdm_to_molfile
 from ._irdkit import inchi_to_inchi_key as _inchi_to_inchi_key
 from ._irdkit import geometry as _rdm_to_geometry
 from ._irdkit import connectivity_graph as _rdm_to_connectivity_graph
 from ._ipybel import from_inchi as _pbm_from_inchi
 from ._ipybel import geometry as _pbm_to_geometry
-from ._inchi_aux import numbering as _ich_aux_numbering
-from .geom import inchi as _inchi_from_geometry
-from ..rere.pattern import escape as _escape
-from ..rere.pattern import named_capturing as _named_capturing
-from ..rere.pattern import one_or_more as _one_or_more
-from ..rere.pattern import one_of_these as _one_of_these
-from ..rere.pattern import not_followed_by as _not_followed_by
-from ..rere.pattern_lib import LOWERCASE_LETTER as _LOWERCASE_LETTER
-from ..rere.pattern_lib import UNSIGNED_INTEGER as _UNSIGNED_INTEGER
-from ..rere.pattern_lib import NONWHITESPACE as _NONWHITESPACE
-from ..rere.pattern_lib import STRING_START as _STRING_START
-from ..rere.pattern_lib import STRING_END as _STRING_END
-from ..rere.find import first_named_capture as _first_named_capture
-from ..rere.find import all_captures as _all_captures
+from ..geom import inchi as _inchi_from_geometry
+from ...rere.pattern import escape as _escape
+from ...rere.pattern import named_capturing as _named_capturing
+from ...rere.pattern import one_or_more as _one_or_more
+from ...rere.pattern import one_of_these as _one_of_these
+from ...rere.pattern import not_followed_by as _not_followed_by
+from ...rere.pattern_lib import LOWERCASE_LETTER as _LOWERCASE_LETTER
+from ...rere.pattern_lib import UNSIGNED_INTEGER as _UNSIGNED_INTEGER
+from ...rere.pattern_lib import NONWHITESPACE as _NONWHITESPACE
+from ...rere.pattern_lib import STRING_START as _STRING_START
+from ...rere.pattern_lib import STRING_END as _STRING_END
+from ...rere.find import first_named_capture as _first_named_capture
+from ...rere.find import all_captures as _all_captures
 
 _NONWHITESPACES_NONGREEDY = _one_or_more(_NONWHITESPACE, greedy=False)
 _INCHI_SUBLAYER_END = _one_of_these([_escape('/'), _STRING_END])
@@ -126,14 +124,6 @@ def smiles(ich):
     rdm = _rdm_from_inchi(ich)
     smi = _rdm_to_smiles(rdm)
     return smi
-
-
-def molfile(ich):
-    """ MOLFile string from an InChI string
-    """
-    rdm = _rdm_from_inchi(ich)
-    mfl = _rdm_to_molfile(rdm)
-    return mfl
 
 
 def recalculate(ich, force_stereo=False):
@@ -287,9 +277,7 @@ def connectivity_graph(ich):
 
     # make sure the InChI string was valid and that the graph will be
     # inchi-sorted
-    ich_, ich_aux = _rdm_to_inchi(rdm, with_aux_info=True)
-    nums = _ich_aux_numbering(ich_aux)
-    assert list(nums) == sorted(nums)
+    ich_, _ = _rdm_to_inchi(rdm, with_aux_info=True)
     assert core_parent(ich) == core_parent(ich_)
 
     cgr = _rdm_to_connectivity_graph(rdm)

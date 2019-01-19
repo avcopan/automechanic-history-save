@@ -1,2 +1,0 @@
-""" integer coordinate generators
-"""

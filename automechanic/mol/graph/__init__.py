@@ -41,9 +41,9 @@ from ._base import atom_radical_valences
 from ._base import atom_neighbor_keys
 from ._base import atom_explicit_hydrogen_keys
 from ._base import atom_neighborhoods
-from ._inchi.conn import atom_inchi_numbers
-from ._inchi.conn import inchi
-from ._inchi.stereo import inchi as stereo_inchi
+from ._conn import atom_inchi_numbers
+from ._conn import inchi
+from ._stereo import inchi as stereo_inchi
 # transformations
 from ._base import implicit
 from ._base import explicit
@@ -57,6 +57,8 @@ from ._base import reflection
 # comparisons
 from ._base import backbone_isomorphic
 from ._base import backbone_isomorphism
+# submodules
+from . import to_inchi
 
 
 __all__ = [
@@ -83,4 +85,6 @@ __all__ = [
     'reflection',
     # comparisons
     'backbone_isomorphic', 'backbone_isomorphism',
+    # submodules
+    'to_inchi',
 ]

@@ -2,70 +2,53 @@
 """
 import itertools
 import numpy
-from ._irdkit import from_molfile as _rdm_from_molfile2
-from ._irdkit import to_inchi as _rdm_to_inchi
-from ..rere.pattern import escape as _escape
-from ..rere.pattern import capturing as _capturing
-from ..rere.pattern import zero_or_more as _zero_or_more
-from ..rere.pattern_lib import UNSIGNED_INTEGER as _UNSIGNED_INTEGER
-from ..rere.find import split as _split
-from ..rere.find import first_capture as _first_capture
+from .graph.to_inchi import with_numbering as _graph_to_inchi_with_numbering
 
 
 def inchi(geo):
     """ InChI string of a cartesian geometry
     """
-    ich, _ = inchi_with_order(geo)
+    cgr, atm_xyz_dct = _connectivity_graph_and_atom_coordinates(geo)
+    ich, _ = _graph_to_inchi_with_numbering(cgr, atm_xyz_dct=atm_xyz_dct)
     return ich
-
-
-def _parse_inchi_order_from_auxinfo(ich_aux):
-    _comma = _escape(',')
-    _pattern = _escape('/N:') + _capturing(
-        _zero_or_more(_UNSIGNED_INTEGER + _comma) + _UNSIGNED_INTEGER)
-    one_index_order_str = _first_capture(_pattern, ich_aux)
-    one_index_order = tuple(map(int, _split(_comma, one_index_order_str)))
-    order = tuple(numpy.subtract(one_index_order, 1))
-    return order
-
-
-def inchi_with_order(geo):
-    """ InChI string of a cartesian geometry
-    """
-    mbl = molfile(geo)
-    rdm = _rdm_from_molfile2(mbl)
-    ich, ich_aux = _rdm_to_inchi(rdm, with_aux_info=True)
-    ich_ord = _parse_inchi_order_from_auxinfo(ich_aux)
-    return ich, ich_ord
 
 
 def connectivity_graph(geo):
     """ connectivity graph from a cartesian geometry
     """
-    return _connectivity_graph_with_explicit_hydrogens(geo)
-
-
-def _connectivity_graph_with_explicit_hydrogens(geo):
-    # using the same cut-offs as x2z:
-    xy_bond_max = 3.5 / 1.8897259886
-    xh_bond_max = 2.5 / 1.8897259886
-    syms, xyzs = zip(*geo)
-    xyzs = numpy.array(xyzs)
-    _ = numpy.newaxis
-    dists = numpy.linalg.norm(xyzs[:, _, :] - xyzs[_, :, :], axis=2)
-
-    atms = dict(enumerate((sym, 0, None) for sym in syms))
-    cnns = {frozenset({key1, key2}): (1, None)
-            for ((key1, sym1), (key2, sym2))
-            in itertools.combinations(enumerate(syms), r=2)
-            if 'H' in (sym1, sym2) and dists[key1, key2] < xh_bond_max
-            or dists[key1, key2] < xy_bond_max}
-    cgr = (atms, cnns)
+    cgr, _ = _connectivity_graph_and_atom_coordinates(geo)
     return cgr
 
 
-def molfile(geo):
-    """ MOLFile string of a cartesian geometry
-    """
-    # TODO: implement this
-    raise NotImplementedError
+def _connectivity_graph_and_atom_coordinates(geo):
+    # using the same cut-offs as x2z:
+    xy_bond_max = 3.5 / 1.8897259886
+    xh_bond_max = 2.5 / 1.8897259886
+
+    syms, xyzs = zip(*geo)
+
+    atm_sym_dct = dict(enumerate(syms))
+    atm_xyz_dct = dict(enumerate(xyzs))
+
+    def _are_bonded(atm_key1, atm_key2):
+        atm_sym1 = atm_sym_dct[atm_key1]
+        atm_sym2 = atm_sym_dct[atm_key2]
+        atm_xyz1 = atm_xyz_dct[atm_key1]
+        atm_xyz2 = atm_xyz_dct[atm_key2]
+        dist = numpy.linalg.norm(numpy.subtract(atm_xyz1, atm_xyz2))
+
+        ret = False
+        if 'H' in (atm_sym1, atm_sym2):
+            ret = (dist < xh_bond_max)
+        else:
+            ret = (dist < xy_bond_max)
+
+        return ret
+
+    atm_dct = dict(enumerate((sym, 0, None) for sym in syms))
+    bnd_dct = {frozenset({atm_key1, atm_key2}): (1, None)
+               for (atm_key1, atm_key2)
+               in itertools.combinations(atm_dct.keys(), r=2)
+               if _are_bonded(atm_key1, atm_key2)}
+    cgr = (atm_dct, bnd_dct)
+    return cgr, atm_xyz_dct

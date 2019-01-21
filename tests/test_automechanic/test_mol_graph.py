@@ -134,6 +134,14 @@ def test__set_bond_stereo_parities():
     ) == graph.bond_stereo_parities(C8H13O_SGR)
 
 
+def test__increment_bond_orders():
+    """ test graph.increment_bond_orders
+    """
+    assert graph.increment_bond_orders(
+        C8H13O_CGR, {frozenset({2, 4}): 1, frozenset({3, 5}): 1}
+    ) == C8H13O_RGR
+
+
 # test derived values
 def test__is_chiral():
     """ test graph.is_chiral
@@ -258,6 +266,21 @@ def test__atom_explicit_hydrogen_keys():
             {0: (), 1: (), 2: (), 3: (0, 2), 4: (5,), 5: (), 6: ()})
 
 
+def test__atom_bond_keys():
+    """ test graph.atom_bond_keys
+    """
+    assert (graph.atom_bond_keys(C8H13O_CGR) ==
+            {0: (frozenset({0, 2}),),
+             1: (frozenset({1, 3}),),
+             2: (frozenset({0, 2}), frozenset({2, 4})),
+             3: (frozenset({1, 3}), frozenset({3, 5})),
+             4: (frozenset({2, 4}), frozenset({4, 6})),
+             5: (frozenset({3, 5}), frozenset({5, 7})),
+             6: (frozenset({4, 6}), frozenset({6, 7})),
+             7: (frozenset({5, 7}), frozenset({6, 7}), frozenset({8, 7})),
+             8: (frozenset({8, 7}),)})
+
+
 def test__atom_neighborhoods():
     """ test graph.atom_neighborhoods
     """
@@ -299,6 +322,21 @@ def test__atom_inchi_numbers():
 def test__inchi():
     """ test graph.inchi
     """
+    # catm_cgr = ({0: ('C', 0, None)}, {})
+    # natm_cgr = ({0: ('N', 0, None)}, {})
+    # oatm_cgr = ({0: ('O', 0, None)}, {})
+    # ch1_cgr = ({0: ('C', 1, None)}, {})
+    # ch2_cgr = ({0: ('C', 2, None)}, {})
+    # ch3_cgr = ({0: ('C', 3, None)}, {})
+    # nh1_cgr = ({0: ('N', 1, None)}, {})
+
+    c_cgr = ({0: ('C', 0, None)}, {})
+    print(graph.inchi(c_cgr))
+
+    co_cgr = ({0: ('C', 0, None), 1: ('O', 0, None)},
+              {frozenset({0, 1}): (1, None)})
+    assert graph.inchi(co_cgr) == 'InChI=1S/CO/c1-2'
+
     assert graph.inchi(C8H13O_SGR) == (
         'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3')
 
@@ -403,7 +441,65 @@ def test__relabel():
           {frozenset({0, 1}): (1, None)})
 
 
-def test__graph__reflection():
+def test__subresonances():
+    """ test graph.subresonances
+    """
+    c2_cgr = ({0: ('C', 0, None), 1: ('C', 0, None)},
+              {frozenset({0, 1}): (1, None)})
+    assert graph.subresonances(c2_cgr) == (
+        ({0: ('C', 0, None), 1: ('C', 0, None)},
+         {frozenset({0, 1}): (1, None)}),
+        ({0: ('C', 0, None), 1: ('C', 0, None)},
+         {frozenset({0, 1}): (2, None)}),
+        ({0: ('C', 0, None), 1: ('C', 0, None)},
+         {frozenset({0, 1}): (3, None)}),
+        ({0: ('C', 0, None), 1: ('C', 0, None)},
+         {frozenset({0, 1}): (4, None)}),
+    )
+
+    c3h3_cgr = ({0: ('C', 1, None), 1: ('C', 1, None), 2: ('C', 1, None)},
+                {frozenset({0, 1}): (1, None), frozenset({1, 2}): (1, None),
+                 frozenset({2, 0}): (1, None)})
+
+    assert graph.subresonances(c3h3_cgr) == (
+        ({0: ('C', 1, None), 1: ('C', 1, None), 2: ('C', 1, None)},
+         {frozenset({0, 1}): (1, None), frozenset({1, 2}): (1, None),
+          frozenset({0, 2}): (1, None)}),
+        ({0: ('C', 1, None), 1: ('C', 1, None), 2: ('C', 1, None)},
+         {frozenset({0, 1}): (1, None), frozenset({1, 2}): (2, None),
+          frozenset({0, 2}): (1, None)}),
+        ({0: ('C', 1, None), 1: ('C', 1, None), 2: ('C', 1, None)},
+         {frozenset({0, 1}): (1, None), frozenset({1, 2}): (1, None),
+          frozenset({0, 2}): (2, None)}),
+        ({0: ('C', 1, None), 1: ('C', 1, None), 2: ('C', 1, None)},
+         {frozenset({0, 1}): (2, None), frozenset({1, 2}): (1, None),
+          frozenset({0, 2}): (1, None)}),
+    )
+
+
+def test__lowspin_resonance():
+    """ test graph.lowspin_resonance
+    """
+    c6h6_cgr = ({0: ('C', 1, None), 1: ('C', 1, None), 2: ('C', 1, None),
+                 3: ('C', 1, None), 4: ('C', 1, None), 5: ('C', 1, None)},
+                {frozenset({0, 1}): (1, None), frozenset({1, 2}): (1, None),
+                 frozenset({2, 3}): (1, None), frozenset({3, 4}): (1, None),
+                 frozenset({4, 5}): (1, None), frozenset({5, 0}): (1, None)})
+    assert graph.lowspin_resonance(c6h6_cgr) in [
+        ({0: ('C', 1, None), 1: ('C', 1, None), 2: ('C', 1, None),
+          3: ('C', 1, None), 4: ('C', 1, None), 5: ('C', 1, None)},
+         {frozenset({0, 1}): (2, None), frozenset({1, 2}): (1, None),
+          frozenset({2, 3}): (2, None), frozenset({3, 4}): (1, None),
+          frozenset({4, 5}): (2, None), frozenset({5, 0}): (1, None)}),
+        ({0: ('C', 1, None), 1: ('C', 1, None), 2: ('C', 1, None),
+          3: ('C', 1, None), 4: ('C', 1, None), 5: ('C', 1, None)},
+         {frozenset({0, 1}): (1, None), frozenset({1, 2}): (2, None),
+          frozenset({2, 3}): (1, None), frozenset({3, 4}): (2, None),
+          frozenset({4, 5}): (1, None), frozenset({5, 0}): (2, None)})
+    ]
+
+
+def test__reflection():
     """ test graph.reflection
     """
     assert (graph.reflection(C8H13O_SGR) ==
@@ -446,6 +542,7 @@ if __name__ == '__main__':
     test__set_atom_stereo_parities()
     test__set_bond_orders()
     test__set_bond_stereo_parities()
+    test__increment_bond_orders()
     # test derived values
     test__is_chiral()
     test__maximum_spin_multiplicity()
@@ -459,6 +556,7 @@ if __name__ == '__main__':
     test__atom_radical_valences()
     test__atom_neighbor_keys()
     test__atom_explicit_hydrogen_keys()
+    test__atom_bond_keys()
     test__atom_neighborhoods()
     test__atom_inchi_numbers()
     test__inchi()
@@ -472,7 +570,9 @@ if __name__ == '__main__':
     test__subgraph()
     test__subgraph_by_bonds()
     test__relabel()
-    test__graph__reflection()
+    test__subresonances()
+    test__lowspin_resonance()
+    test__reflection()
     # test comparisons
     test__backbone_isomorphic()
     test__backbone_isomorphism()

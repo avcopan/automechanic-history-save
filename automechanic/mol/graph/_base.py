@@ -20,9 +20,9 @@ from ._dict import transform_values as _transform_values
 from ._dict import filter_by_value as _filter_by_value
 from ._tdict import by_key_by_position as _by_key_by_position
 from ._tdict import set_by_key_by_position as _set_by_key_by_position
-from ._inetworkx import from_graph as _nxg_from_graph
-from ._inetworkx import ring_keys_list as _nxg_ring_keys_list
-from ._inetworkx import isomorphism as _nxg_isomorphism
+from ._networkx import from_graph as _nxg_from_graph
+from ._networkx import ring_keys_list as _nxg_ring_keys_list
+from ._networkx import isomorphism as _nxg_isomorphism
 from ..atom import nuclear_charge as _atom_nuclear_charge
 from ..atom import valence as _atom_valence
 from ..atom import SYMBOLS as _ATM_SYMS
@@ -245,22 +245,6 @@ def is_chiral(sgr):
     return not backbone_isomorphic(sgr, reflection(sgr))
 
 
-def maximum_spin_multiplicity(xgr):
-    """ the highest possible spin multiplicity for this molecular graph
-    """
-    atm_rad_vlcs = _values_by_key(atom_radical_valences(xgr), atom_keys(xgr))
-    return sum(atm_rad_vlcs) + 1
-
-
-def possible_spin_multiplicities(xgr):
-    """ possible spin multiplicities for this molecular graph
-    """
-    mult_max = maximum_spin_multiplicity(xgr)
-    mult_min = 2 if mult_max % 2 == 0 else 1
-    mults = tuple(range(mult_min, mult_max+1, 2))
-    return mults
-
-
 def ring_keys_list(xgr):
     """ a series of key-sets for each ring in the graph
     """
@@ -306,29 +290,6 @@ def atom_total_valences(xgr):
     return atm_tot_vlc_dct
 
 
-def atom_bond_valences(xgr):
-    """ bond valences, by atom
-    """
-    atm_keys = atom_keys(xgr)
-    atm_nbhs = _values_by_key(atom_neighborhoods(xgr), atm_keys)
-    atm_exp_bnd_vlcs = [sum(bond_orders(nbh).values()) for nbh in atm_nbhs]
-    atm_imp_hyd_vlcs = _values_by_key(
-        atom_implicit_hydrogen_valences(xgr), atm_keys)
-    atm_bnd_vlcs = numpy.add(atm_exp_bnd_vlcs, atm_imp_hyd_vlcs)
-    atm_bnd_vlc_dct = dict(zip(atm_keys, atm_bnd_vlcs))
-    return atm_bnd_vlc_dct
-
-
-def atom_radical_valences(rgr):
-    """ radical valences, by atom
-    """
-    atm_keys = atom_keys(rgr)
-    atm_bnd_vlcs = _values_by_key(atom_bond_valences(rgr), atm_keys)
-    atm_tot_vlcs = _values_by_key(atom_total_valences(rgr), atm_keys)
-    atm_rad_vlcs = numpy.subtract(atm_tot_vlcs, atm_bnd_vlcs)
-    return dict(zip(atm_keys, atm_rad_vlcs))
-
-
 def atom_neighbor_keys(xgr):
     """ keys of neighboring atoms, by atom
     """
@@ -345,6 +306,12 @@ def atom_explicit_hydrogen_keys(xgr):
         atm_key: _remove(explicit_hydrogen_keys(atm_nbh), [atm_key])
         for atm_key, atm_nbh in atom_neighborhoods(xgr).items()}
     return atm_exp_hyd_keys_dct
+
+
+def atom_bond_keys(xgr):
+    """ bond keys, by atom
+    """
+    return _transform_values(atom_neighborhoods(xgr), bond_keys)
 
 
 def atom_neighborhoods(xgr):

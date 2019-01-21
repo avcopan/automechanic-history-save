@@ -68,11 +68,13 @@ class FMT():
         ORDER_KEY = 'order'
         I1_KEY = 'i1'
         I2_KEY = 'i2'
+        CFG_KEY = 'configuration'
         LINE = (_V3_PFX +
                 _ENTRY(key=I_KEY, fmt='d') +      # index
                 _SPACE + _ENTRY(key=ORDER_KEY, fmt='d') +  # order
                 _SPACE + _ENTRY(key=I1_KEY, fmt='d') +     # atom1 index
                 _SPACE + _ENTRY(key=I2_KEY, fmt='d') +     # atom2 index
+                _SPACE + 'CFG=' + _ENTRY(key=CFG_KEY, fmt='d') +
                 _NEWLINE).format
 
 
@@ -84,6 +86,7 @@ def from_data(atm_keys, bnd_keys, atm_syms, atm_bnd_vlcs, atm_rad_vlcs,
     nbnds = len(bnd_keys)
 
     key_map = dict(zip(atm_keys, range(1, natms+1)))
+    bnd_cfg = 2 if atm_xyzs is None else 0
     atm_xyzs = numpy.zeros((natms, 3)) if atm_xyzs is None else atm_xyzs
 
     counts_line = FMT.COUNTS.LINE(
@@ -106,7 +109,8 @@ def from_data(atm_keys, bnd_keys, atm_syms, atm_bnd_vlcs, atm_rad_vlcs,
         FMT.BOND.LINE(**{FMT.BOND.I_KEY: i+1,
                          FMT.BOND.ORDER_KEY: ord_,
                          FMT.BOND.I1_KEY: key_map[min(key)],
-                         FMT.BOND.I2_KEY: key_map[max(key)]})
+                         FMT.BOND.I2_KEY: key_map[max(key)],
+                         FMT.BOND.CFG_KEY: bnd_cfg})
         for i, (key, ord_)
         in enumerate(zip(bnd_keys, bnd_ords))))
 

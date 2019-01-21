@@ -27,19 +27,21 @@ from ._base import set_atom_implicit_hydrogen_valences
 from ._base import set_atom_stereo_parities
 from ._base import set_bond_orders
 from ._base import set_bond_stereo_parities
+from ._res import increment_bond_orders
 # derived values
 from ._base import is_chiral
-from ._base import maximum_spin_multiplicity
-from ._base import possible_spin_multiplicities
+from ._res import maximum_spin_multiplicity
+from ._res import possible_spin_multiplicities
 from ._base import ring_keys_list
 from ._base import backbone_keys
 from ._base import explicit_hydrogen_keys
 from ._base import atom_nuclear_charges
 from ._base import atom_total_valences
-from ._base import atom_bond_valences
-from ._base import atom_radical_valences
+from ._res import atom_bond_valences
+from ._res import atom_radical_valences
 from ._base import atom_neighbor_keys
 from ._base import atom_explicit_hydrogen_keys
+from ._base import atom_bond_keys
 from ._base import atom_neighborhoods
 from ._conn import atom_inchi_numbers
 from ._conn import inchi
@@ -54,6 +56,8 @@ from ._base import subgraph
 from ._base import subgraph_by_bonds
 from ._base import relabel
 from ._base import reflection
+from ._res import subresonances
+from ._res import lowspin_resonance
 # comparisons
 from ._base import backbone_isomorphic
 from ._base import backbone_isomorphism
@@ -71,18 +75,18 @@ __all__ = [
     'bond_stereo_parities',
     # value setters
     'set_atom_implicit_hydrogen_valences', 'set_atom_stereo_parities',
-    'set_bond_orders', 'set_bond_stereo_parities',
+    'set_bond_orders', 'set_bond_stereo_parities', 'increment_bond_orders',
     # derived values
     'is_chiral', 'maximum_spin_multiplicity', 'possible_spin_multiplicities',
     'ring_keys_list', 'backbone_keys', 'explicit_hydrogen_keys',
     'atom_nuclear_charges', 'atom_total_valences', 'atom_bond_valences',
     'atom_radical_valences', 'atom_neighbor_keys',
-    'atom_explicit_hydrogen_keys', 'atom_neighborhoods',
+    'atom_explicit_hydrogen_keys', 'atom_bond_keys', 'atom_neighborhoods',
     'atom_inchi_numbers', 'inchi', 'stereo_inchi',
     # transformations
     'implicit', 'explicit', 'explicit_stereo_sites', 'delete_atoms',
     'add_explicit_hydrogens', 'subgraph', 'subgraph_by_bonds', 'relabel',
-    'reflection',
+    'reflection', 'subresonances', 'lowspin_resonance',
     # comparisons
     'backbone_isomorphic', 'backbone_isomorphism',
     # submodules

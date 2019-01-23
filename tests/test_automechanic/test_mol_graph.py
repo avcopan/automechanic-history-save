@@ -310,35 +310,68 @@ def test__atom_neighborhoods():
 def test__atom_inchi_numbers():
     """ test graph.atom_inchi_numbers
     """
-    cgr = C8H13O_CGR
+    cgr = graph.explicit(C8H13O_CGR, atm_keys=(2, 3, 4, 5, 7,))
     natms = len(graph.atoms(cgr))
+    # note that this test only works in the absense of permutational symmetries
+    # (which is why I only made single-implicit-hydrogen atoms explicit)
     for _ in range(10):
         pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
         cgr_pmt = graph.relabel(cgr, pmt_dct)
         inv_pmt_dct = dict(map(reversed, pmt_dct.items()))
         assert graph.atom_inchi_numbers(cgr_pmt) == inv_pmt_dct
 
+    ch_cgr = ({5: ('C', 1, None)}, {})
+    assert graph.atom_inchi_numbers(ch_cgr) == {5: 0}
+
+    ch_cgr = ({5: ('C', 0, None), 2: ('H', 0, None)},
+              {frozenset({5, 2}): (1, None)})
+    assert graph.atom_inchi_numbers(ch_cgr) == {5: 0, 2: 1}
+
+    cf_cgr = ({5: ('C', 0, None), 2: ('F', 0, None)},
+              {frozenset({5, 2}): (1, None)})
+    assert graph.atom_inchi_numbers(cf_cgr) == {5: 0, 2: 1}
+
+    ccl_cgr = ({5: ('C', 0, None), 2: ('F', 0, None)},
+               {frozenset({5, 2}): (1, None)})
+    assert graph.atom_inchi_numbers(ccl_cgr) == {5: 0, 2: 1}
+
 
 def test__inchi():
     """ test graph.inchi
     """
-    # catm_cgr = ({0: ('C', 0, None)}, {})
-    # natm_cgr = ({0: ('N', 0, None)}, {})
-    # oatm_cgr = ({0: ('O', 0, None)}, {})
-    # ch1_cgr = ({0: ('C', 1, None)}, {})
-    # ch2_cgr = ({0: ('C', 2, None)}, {})
-    # ch3_cgr = ({0: ('C', 3, None)}, {})
-    # nh1_cgr = ({0: ('N', 1, None)}, {})
-
-    c_cgr = ({0: ('C', 0, None)}, {})
-    print(graph.inchi(c_cgr))
-
     co_cgr = ({0: ('C', 0, None), 1: ('O', 0, None)},
               {frozenset({0, 1}): (1, None)})
     assert graph.inchi(co_cgr) == 'InChI=1S/CO/c1-2'
 
     assert graph.inchi(C8H13O_SGR) == (
         'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3')
+
+    c_cgr = ({5: ('C', 0, None)}, {})
+    assert graph.inchi(c_cgr) == 'InChI=1S/C'
+
+    n_cgr = ({5: ('N', 0, None)}, {})
+    assert graph.inchi(n_cgr) == 'InChI=1S/N'
+
+    ch_cgr = ({5: ('C', 1, None)}, {})
+    assert graph.inchi(ch_cgr) == 'InChI=1S/CH/h1H'
+
+    ch_cgr = ({5: ('C', 0, None), 2: ('H', 0, None)},
+              {frozenset({5, 2}): (1, None)})
+    assert graph.inchi(ch_cgr) == 'InChI=1S/CH/h1H'
+
+    cf_cgr = ({5: ('C', 0, None), 2: ('F', 0, None)},
+              {frozenset({5, 2}): (1, None)})
+    assert graph.inchi(cf_cgr) == 'InChI=1S/CF/c1-2'
+
+    ccl_cgr = ({5: ('C', 0, None), 2: ('Cl', 0, None)},
+               {frozenset({5, 2}): (1, None)})
+    assert graph.inchi(ccl_cgr) == 'InChI=1S/CCl/c1-2'
+
+    nh_cgr = ({5: ('N', 1, None)}, {})
+    assert graph.inchi(nh_cgr) == 'InChI=1S/HN/h1H'
+
+    ch2_cgr = ({5: ('C', 2, None)}, {})
+    assert graph.inchi(ch2_cgr) == 'InChI=1S/CH2/h1H2'
 
 
 def test__stereo_inchi():
@@ -533,46 +566,49 @@ def test__backbone_isomorphism():
 
 
 if __name__ == '__main__':
-    # test constructors and value getters
-    test__from_data()
-    test__atom_stereo_keys()
-    test__bond_stereo_keys()
-    # test value setters
-    test__set_atom_implicit_hydrogen_valences()
-    test__set_atom_stereo_parities()
-    test__set_bond_orders()
-    test__set_bond_stereo_parities()
-    test__increment_bond_orders()
-    # test derived values
-    test__is_chiral()
-    test__maximum_spin_multiplicity()
-    test__possible_spin_multiplicities()
-    test__ring_keys_list()
-    test__backbone_keys()
-    test__explicit_hydrogen_keys()
-    test__atom_nuclear_charges()
-    test__atom_total_valences()
-    test__atom_bond_valences()
-    test__atom_radical_valences()
-    test__atom_neighbor_keys()
-    test__atom_explicit_hydrogen_keys()
-    test__atom_bond_keys()
-    test__atom_neighborhoods()
+    # # test constructors and value getters
+    # test__from_data()
+    # test__atom_stereo_keys()
+    # test__bond_stereo_keys()
+    # # test value setters
+    # test__set_atom_implicit_hydrogen_valences()
+    # test__set_atom_stereo_parities()
+    # test__set_bond_orders()
+    # test__set_bond_stereo_parities()
+    # test__increment_bond_orders()
+    # # test derived values
+    # test__is_chiral()
+    # test__maximum_spin_multiplicity()
+    # test__possible_spin_multiplicities()
+    # test__ring_keys_list()
+    # test__backbone_keys()
+    # test__explicit_hydrogen_keys()
+    # test__atom_nuclear_charges()
+    # test__atom_total_valences()
+    # test__atom_bond_valences()
+    # test__atom_radical_valences()
+    # test__atom_neighbor_keys()
+    # test__atom_explicit_hydrogen_keys()
+    # test__atom_bond_keys()
+    # test__atom_neighborhoods()
+    # test__atom_inchi_numbers()
+    # test__inchi()
+    # test__stereo_inchi()
+    # # test transformations
+    # test__implicit()
+    # test__explicit()
+    # test__explicit_stereo_sites()
+    # test__delete_atoms()
+    # test__add_explicit_hydrogens()
+    # test__subgraph()
+    # test__subgraph_by_bonds()
+    # test__relabel()
+    # test__subresonances()
+    # test__lowspin_resonance()
+    # test__reflection()
+    # # test comparisons
+    # test__backbone_isomorphic()
+    # test__backbone_isomorphism()
+
     test__atom_inchi_numbers()
     test__inchi()
-    test__stereo_inchi()
-    # test transformations
-    test__implicit()
-    test__explicit()
-    test__explicit_stereo_sites()
-    test__delete_atoms()
-    test__add_explicit_hydrogens()
-    test__subgraph()
-    test__subgraph_by_bonds()
-    test__relabel()
-    test__subresonances()
-    test__lowspin_resonance()
-    test__reflection()
-    # test comparisons
-    test__backbone_isomorphic()
-    test__backbone_isomorphism()

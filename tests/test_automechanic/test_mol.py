@@ -465,29 +465,14 @@ def test__inchi__key__is_standard_neutral():
 def test__inchi__geometry():
     """ test mol.inchi.geometry
     """
-    import sys
-    ich = ('InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3'
-           '/b5-3-,6-4-/t8-/m0/s1')
-    sys.stdout.flush()
-    mol.inchi.geometry(ich)
-    sys.stdout.flush()
-    # # make sure these run
-    # mol.inchi.geometry(C2H2F2_ICH)
-    # for ich in C8H13O_ICHS:
-    #     print(ich)
-    #     sys.stdout.flush()
-    #     mol.inchi.geometry(ich)
-    #     sys.stdout.flush()
-    # for ich in RDKIT_FAIL_ICHS:
-    #     print(ich)
-    #     sys.stdout.flush()
-    #     mol.inchi.geometry(ich)
-    #     sys.stdout.flush()
-    # for ich in PYBEL_FAIL_ICHS:
-    #     print(ich)
-    #     sys.stdout.flush()
-    #     mol.inchi.geometry(ich)
-    #     sys.stdout.flush()
+    # make sure these run
+    mol.inchi.geometry(C2H2F2_ICH)
+    for ich in C8H13O_ICHS:
+        mol.inchi.geometry(ich)
+    for ich in RDKIT_FAIL_ICHS:
+        mol.inchi.geometry(ich)
+    for ich in PYBEL_FAIL_ICHS:
+        mol.inchi.geometry(ich)
 
 
 def test__inchi__connectivity_graph():
@@ -538,29 +523,25 @@ def test__geom__connectivity_graph():
 
 
 if __name__ == '__main__':
-    # # test__smiles__inchi()
-    # # test__molfile__inchi()
-    # # test__geom__atoms()
-    # # test__geom__bonds()
-    # # test__geom__graph()
-    # test__inchi__smiles()
-    # test__inchi__recalculate()
-    # test__inchi__is_closed()
-    # test__inchi__prefix()
-    # test__inchi__version()
-    # test__inchi__formula_layer()
-    # test__inchi__key_layer()
-    # test__inchi__key_layer_content()
-    # test__inchi__core_parent()
-    # test__inchi__atom_stereo_elements()
-    # test__inchi__bond_stereo_elements()
-    # test__inchi__has_unknown_stereo_elements()
-    # test__inchi__compatible_stereoisomers()
-    # test__inchi__connectivity_graph()
-    # test__inchi__stereo_graph()
-    # test__inchi_key__first_hash()
-    # test__inchi_key__second_hash()
-    # test__inchi_key__is_standard_neutral()
-    # test__geom__connectivity_graph()
-    # test__geom__inchi()
+    test__smiles__inchi()
+    test__inchi__smiles()
+    test__inchi__recalculate()
+    test__inchi__is_closed()
+    test__inchi__prefix()
+    test__inchi__version()
+    test__inchi__formula_layer()
+    test__inchi__key_layer()
+    test__inchi__key_layer_content()
+    test__inchi__core_parent()
+    test__inchi__atom_stereo_elements()
+    test__inchi__bond_stereo_elements()
+    test__inchi__has_unknown_stereo_elements()
+    test__inchi__compatible_stereoisomers()
+    test__inchi__connectivity_graph()
+    test__inchi__stereo_graph()
+    test__inchi__key__first_hash()
+    test__inchi__key__second_hash()
+    test__inchi__key__is_standard_neutral()
+    test__geom__connectivity_graph()
+    test__geom__inchi()
     test__inchi__geometry()

@@ -32,6 +32,12 @@ def transform_values(dct, func):
     return dict(zip(dct.keys(), map(func, dct.values())))
 
 
+def keys_sorted_by_value(dct):
+    """ dictionary keys sorted by their associated values
+    """
+    return tuple(key for key, _ in sorted(dct.items(), key=lambda x: x[1]))
+
+
 # def filter_by_key(dct, func):
 #     """ filter dictionary entries by their keys
 #     """

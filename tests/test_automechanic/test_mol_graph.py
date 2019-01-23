@@ -28,6 +28,9 @@ C8H13O_SGR = (
      frozenset({2, 4}): (1, False), frozenset({3, 5}): (1, False),
      frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
      frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None)})
+C8H13O_ICH = ('InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3'
+              '/b5-3-,6-4-/t8-/m0/s1')
+
 CH2FH2H_CGR_IMP = (
     {1: ('F', 0, None), 3: ('C', 2, None), 4: ('H', 1, None),
      6: ('H', 0, None)},
@@ -38,6 +41,7 @@ CH2FH2H_CGR_EXP = (
      6: ('H', 0, None)},
     {frozenset({1, 3}): (1, None), frozenset({2, 3}): (1, None),
      frozenset({0, 3}): (1, None), frozenset({4, 5}): (1, None)})
+C2H2CL2F2_MM_ICH = 'InChI=1S/C2H2Cl2F2/c3-1(5)2(4)6/h1-2H/t1-,2-/m0/s1'
 C2H2CL2F2_MM_SGR = (
     {0: ('C', 1, False), 1: ('C', 1, False),
      2: ('F', 0, None), 3: ('Cl', 0, None),
@@ -45,6 +49,7 @@ C2H2CL2F2_MM_SGR = (
     {frozenset({0, 1}): (1, None), frozenset({0, 2}): (1, None),
      frozenset({0, 3}): (1, None), frozenset({1, 4}): (1, None),
      frozenset({1, 5}): (1, None)})
+C2H2CL2F2_MP_ICH = 'InChI=1S/C2H2Cl2F2/c3-1(5)2(4)6/h1-2H/t1-,2+'
 C2H2CL2F2_MP_SGR = (
     {0: ('C', 1, False), 1: ('C', 1, True),
      2: ('F', 0, None), 3: ('Cl', 0, None),
@@ -52,6 +57,19 @@ C2H2CL2F2_MP_SGR = (
     {frozenset({0, 1}): (1, None), frozenset({0, 2}): (1, None),
      frozenset({0, 3}): (1, None), frozenset({1, 4}): (1, None),
      frozenset({1, 5}): (1, None)})
+
+C2H2F2_P_ICH = 'InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1+'
+C4H8O_M_ICH = 'InChI=1S/C4H8O/c1-3-4(2)5/h3,5H,1-2H3/b4-3-'
+C2H2F2_P_SGR = ({0: ('C', 0, None), 1: ('C', 0, None), 2: ('F', 0, None),
+                 3: ('F', 0, None), 4: ('H', 0, None), 5: ('H', 0, None)},
+                {frozenset({0, 1}): (1, True), frozenset({0, 2}): (1, None),
+                 frozenset({1, 3}): (1, None), frozenset({0, 4}): (1, None),
+                 frozenset({1, 5}): (1, None)})
+C4H8O_M_SGR = ({0: ('C', 3, None), 1: ('C', 3, None), 2: ('C', 0, None),
+                3: ('C', 0, None), 4: ('O', 1, None), 5: ('H', 0, None)},
+               {frozenset({0, 2}): (1, None), frozenset({1, 3}): (1, None),
+                frozenset({2, 3}): (1, False), frozenset({3, 4}): (1, None),
+                frozenset({2, 5}): (1, None)})
 
 
 # test constructors and value getters
@@ -310,10 +328,8 @@ def test__atom_neighborhoods():
 def test__atom_inchi_numbers():
     """ test graph.atom_inchi_numbers
     """
-    cgr = graph.explicit(C8H13O_CGR, atm_keys=(2, 3, 4, 5, 7,))
+    cgr = C8H13O_CGR
     natms = len(graph.atoms(cgr))
-    # note that this test only works in the absense of permutational symmetries
-    # (which is why I only made single-implicit-hydrogen atoms explicit)
     for _ in range(10):
         pmt_dct = dict(enumerate(numpy.random.permutation(natms)))
         cgr_pmt = graph.relabel(cgr, pmt_dct)
@@ -325,7 +341,7 @@ def test__atom_inchi_numbers():
 
     ch_cgr = ({5: ('C', 0, None), 2: ('H', 0, None)},
               {frozenset({5, 2}): (1, None)})
-    assert graph.atom_inchi_numbers(ch_cgr) == {5: 0, 2: 1}
+    assert graph.atom_inchi_numbers(ch_cgr) == {5: 0, 2: -1}
 
     cf_cgr = ({5: ('C', 0, None), 2: ('F', 0, None)},
               {frozenset({5, 2}): (1, None)})
@@ -377,13 +393,11 @@ def test__inchi():
 def test__stereo_inchi():
     """ test graph.stereo_inchi
     """
-    assert graph.stereo_inchi(C8H13O_SGR) == (
-        'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3/b5-3-,6-4-/t8-'
-        '/m1/s1')
-    assert graph.stereo_inchi(C2H2CL2F2_MM_SGR) == (
-        'InChI=1S/C2H2Cl2F2/c3-1(5)2(4)6/h1-2H/t1-,2-/m1/s1')
-    assert graph.stereo_inchi(C2H2CL2F2_MP_SGR) == (
-        'InChI=1S/C2H2Cl2F2/c3-1(5)2(4)6/h1-2H/t1-,2+')
+    assert graph.stereo_inchi(C8H13O_SGR) == C8H13O_ICH
+    assert graph.stereo_inchi(C2H2CL2F2_MM_SGR) == C2H2CL2F2_MM_ICH
+    assert graph.stereo_inchi(C2H2CL2F2_MP_SGR) == C2H2CL2F2_MP_ICH
+    assert graph.stereo_inchi(C2H2F2_P_SGR) == C2H2F2_P_ICH
+    assert graph.stereo_inchi(C4H8O_M_SGR) == C4H8O_M_ICH
 
 
 # test transformations

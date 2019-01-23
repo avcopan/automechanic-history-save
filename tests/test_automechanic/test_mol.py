@@ -1,6 +1,14 @@
 """ test the automechanic.mol module
 """
+import os
+import numpy
 from automechanic import mol
+
+PATH = os.path.dirname(os.path.realpath(__file__))
+DATA_PATH = os.path.join(PATH, 'data')
+
+HEPTANE_ICHS = numpy.loadtxt(os.path.join(DATA_PATH, 'heptane_inchis.txt'),
+                             dtype=str)
 
 AR_ICH = 'InChI=1S/Ar'
 
@@ -485,6 +493,10 @@ def test__inchi__connectivity_graph():
                  frozenset({1, 3}): (1, None), frozenset({0, 4}): (1, None),
                  frozenset({1, 5}): (1, None)}))
 
+    # make sure this runs -- the function is self-testing
+    for ich in HEPTANE_ICHS:
+        mol.inchi.connectivity_graph(ich)
+
 
 def test__inchi__stereo_graph():
     """ test mol.inchi.stereo_graph
@@ -510,6 +522,14 @@ def test__inchi__stereo_graph():
                  frozenset({19, 6}): (1, None), frozenset({20, 6}): (1, None),
                  frozenset({21, 7}): (1, None)}))
 
+    # make sure this runs -- the function is self-testing
+    ichs = numpy.random.choice(HEPTANE_ICHS, 10)
+    for ich in ichs:
+        try:
+            mol.inchi.stereo_graph(ich)
+        except NotImplementedError:
+            pass
+
 
 def test__geom__connectivity_graph():
     """ test mol.geom.connectivity_graph()
@@ -523,25 +543,25 @@ def test__geom__connectivity_graph():
 
 
 if __name__ == '__main__':
-    test__smiles__inchi()
-    test__inchi__smiles()
-    test__inchi__recalculate()
-    test__inchi__is_closed()
-    test__inchi__prefix()
-    test__inchi__version()
-    test__inchi__formula_layer()
-    test__inchi__key_layer()
-    test__inchi__key_layer_content()
-    test__inchi__core_parent()
-    test__inchi__atom_stereo_elements()
-    test__inchi__bond_stereo_elements()
-    test__inchi__has_unknown_stereo_elements()
-    test__inchi__compatible_stereoisomers()
-    test__inchi__connectivity_graph()
+    # test__smiles__inchi()
+    # test__inchi__smiles()
+    # test__inchi__recalculate()
+    # test__inchi__is_closed()
+    # test__inchi__prefix()
+    # test__inchi__version()
+    # test__inchi__formula_layer()
+    # test__inchi__key_layer()
+    # test__inchi__key_layer_content()
+    # test__inchi__core_parent()
+    # test__inchi__atom_stereo_elements()
+    # test__inchi__bond_stereo_elements()
+    # test__inchi__has_unknown_stereo_elements()
+    # test__inchi__compatible_stereoisomers()
+    # test__inchi__key__first_hash()
+    # test__inchi__key__second_hash()
+    # test__inchi__key__is_standard_neutral()
+    # test__geom__connectivity_graph()
+    # test__geom__inchi()
+    # test__inchi__geometry()
+    # test__inchi__connectivity_graph()
     test__inchi__stereo_graph()
-    test__inchi__key__first_hash()
-    test__inchi__key__second_hash()
-    test__inchi__key__is_standard_neutral()
-    test__geom__connectivity_graph()
-    test__geom__inchi()
-    test__inchi__geometry()

@@ -13,11 +13,16 @@ from .._base import atom_stereo_parities
 from .._base import bond_stereo_parities
 from .._base import atom_neighbor_keys
 from .._base import explicit_stereo_sites
+from .._base import ring_keys_list
 
 
 def atom_stereo_coordinates(sgr):
     """ determine stereo-specific coordinates for this molecular graph
     """
+
+    if ring_keys_list(sgr):
+        raise NotImplementedError("Not yet implemented for rings")
+
     assert sgr == explicit_stereo_sites(sgr)
 
     atm_ich_num_dct = atom_inchi_numbers(sgr)

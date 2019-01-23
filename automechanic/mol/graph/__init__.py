@@ -46,6 +46,7 @@ from ._base import atom_neighborhoods
 from ._conn import atom_inchi_numbers
 from ._conn import inchi
 from ._stereo import inchi as stereo_inchi
+from ._stereo import atom_stereo_coordinates
 # transformations
 from ._base import implicit
 from ._base import explicit
@@ -82,7 +83,7 @@ __all__ = [
     'atom_nuclear_charges', 'atom_total_valences', 'atom_bond_valences',
     'atom_radical_valences', 'atom_neighbor_keys',
     'atom_explicit_hydrogen_keys', 'atom_bond_keys', 'atom_neighborhoods',
-    'atom_inchi_numbers', 'inchi', 'stereo_inchi',
+    'atom_inchi_numbers', 'inchi', 'stereo_inchi', 'atom_stereo_coordinates',
     # transformations
     'implicit', 'explicit', 'explicit_stereo_sites', 'delete_atoms',
     'add_explicit_hydrogens', 'subgraph', 'subgraph_by_bonds', 'relabel',

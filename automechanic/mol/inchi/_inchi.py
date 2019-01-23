@@ -2,15 +2,17 @@
 """
 import itertools
 from string import ascii_lowercase as _ascii_lowercase
-from ._irdkit import from_inchi as _rdm_from_inchi
-from ._irdkit import to_inchi as _rdm_to_inchi
-from ._irdkit import to_smiles as _rdm_to_smiles
-from ._irdkit import inchi_to_inchi_key as _inchi_to_inchi_key
-from ._irdkit import geometry as _rdm_to_geometry
-from ._irdkit import connectivity_graph as _rdm_to_connectivity_graph
-from ._ipybel import from_inchi as _pbm_from_inchi
-from ._ipybel import geometry as _pbm_to_geometry
+from ._rdkit import from_inchi as _rdm_from_inchi
+from ._rdkit import to_inchi as _rdm_to_inchi
+from ._rdkit import to_smiles as _rdm_to_smiles
+from ._rdkit import inchi_to_inchi_key as _inchi_to_inchi_key
+from ._rdkit import geometry as _rdm_to_geometry
+from ._rdkit import connectivity_graph as _rdm_to_connectivity_graph
+from ._pybel import from_inchi as _pbm_from_inchi
+from ._pybel import geometry as _pbm_to_geometry
 from ..geom import inchi as _inchi_from_geometry
+from ..graph import inchi as _inchi_from_graph
+from ..graph import stereo_inchi as _inchi_from_stereo_graph
 from ...rere.pattern import escape as _escape
 from ...rere.pattern import named_capturing as _named_capturing
 from ...rere.pattern import one_or_more as _one_or_more
@@ -275,12 +277,13 @@ def connectivity_graph(ich):
     """
     rdm = _rdm_from_inchi(ich)
 
-    # make sure the InChI string was valid and that the graph will be
-    # inchi-sorted
+    # make sure the InChI string was valid
     ich_, _ = _rdm_to_inchi(rdm, with_aux_info=True)
     assert core_parent(ich) == core_parent(ich_)
 
     cgr = _rdm_to_connectivity_graph(rdm)
+    cgr_ich = _inchi_from_graph(cgr)
+    assert _has_same_connectivity(ich, cgr_ich)
     return cgr
 
 
@@ -313,7 +316,11 @@ def stereo_graph(ich):
             for atm_key, (sym, hcnt, _) in atms.items()}
     bnds = cnns.copy()
     bnds.update(bnd_ste_dct)
-    return (atms, bnds)
+    sgr = (atms, bnds)
+    sgr_ich = _inchi_from_stereo_graph(sgr)
+    assert _has_same_connectivity(ich, sgr_ich)
+    assert _has_compatible_stereo(ich, sgr_ich)
+    return sgr
 
 
 def geometry(ich):
@@ -322,24 +329,32 @@ def geometry(ich):
     try:
         rdm = _rdm_from_inchi(ich)
         geo = _rdm_to_geometry(rdm)
-        assert matches_geometry(ich, geo)
+        geo_ich = _inchi_from_geometry(geo)
+        assert _has_same_connectivity(ich, geo_ich)
+        assert _has_compatible_stereo(ich, geo_ich)
     except (AssertionError, RuntimeError):
         pbm = _pbm_from_inchi(ich)
         geo = _pbm_to_geometry(pbm)
-        assert matches_geometry(ich, geo)
+        geo_ich = _inchi_from_geometry(geo)
+        assert _has_same_connectivity(ich, geo_ich)
+        assert _has_compatible_stereo(ich, geo_ich)
     return geo
 
 
-def matches_geometry(ich, geo):
-    """ does this inchi string match this geometry?
+def _has_same_connectivity(ich, other_ich):
+    """ do these InChI strings have the same connectivity?
     """
-    geo_ich = _inchi_from_geometry(geo)
-    assert key_layer(ich, 'c') == key_layer(geo_ich, 'c')
-    assert key_layer(ich, 'h') == key_layer(geo_ich, 'h')
+    return (key_layer(ich, 'c') == key_layer(other_ich, 'c') and
+            key_layer(ich, 'h') == key_layer(other_ich, 'h'))
+
+
+def _has_compatible_stereo(ich, other_ich):
+    """ is `other_ich` compatible with `ich`?
+    """
     return (set(_known_atom_stereo_elements(ich)) <=
-            set(_known_atom_stereo_elements(geo_ich)) and
+            set(_known_atom_stereo_elements(other_ich)) and
             set(_known_bond_stereo_elements(ich)) <=
-            set(_known_bond_stereo_elements(geo_ich)))
+            set(_known_bond_stereo_elements(other_ich)))
 
 
 def _known_atom_stereo_elements(ich):

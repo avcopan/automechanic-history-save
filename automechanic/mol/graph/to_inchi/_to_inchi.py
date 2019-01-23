@@ -90,9 +90,9 @@ def _fill_atom_inchi_numbers(cgr, bbn_ich_num_dct):
     ich_srt_bbn_exp_hyd_keys = _values_by_key(atm_exp_hyd_keys_dct,
                                               ich_srt_bbn_keys)
     ich_srt_exp_hyd_keys = tuple(_chain(*ich_srt_bbn_exp_hyd_keys))
-    first_exp_hyd_ich_num = max(bbn_ich_num_dct.values()) + 1
+    first_exp_hyd_ich_num = min(bbn_ich_num_dct.values()) - 1
     atm_ich_num_dct.update({
-        exp_hyd_key: first_exp_hyd_ich_num + exp_hyd_srt_idx
+        exp_hyd_key: first_exp_hyd_ich_num - exp_hyd_srt_idx
         for exp_hyd_srt_idx, exp_hyd_key in enumerate(ich_srt_exp_hyd_keys)
     })
     assert set(atm_ich_num_dct.keys()) == set(atom_keys(cgr))

@@ -48,13 +48,6 @@ def to_inchi(rdm, options='', with_aux_info=False):
     return ret
 
 
-def formula(rdm):
-    """ molecular formula from an rdkit molecule object
-    """
-    frm = _rd_chem.rdMolDescriptors.CalcMolFormula(rdm)
-    return frm
-
-
 def geometry(rdm):
     """ cartesian geometry from an rdkit molecule object
     """

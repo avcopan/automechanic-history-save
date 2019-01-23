@@ -34,13 +34,12 @@ class FMT():
         """ _ """
         NA_KEY = 'na'
         NB_KEY = 'nb'
-        CHI_KEY = 'chiral'
         LINE = (_V3_PFX + 'COUNTS' +
                 _SPACE + _ENTRY(key=NA_KEY, fmt='d') +   # atom count
                 _SPACE + _ENTRY(key=NB_KEY, fmt='d') +   # bond count
                 _SPACE + _ZERO +                         # no Sgroups
                 _SPACE + _ZERO +                         # no 3d constraints
-                _SPACE + _ENTRY(key=CHI_KEY, fmt='d') +  # is chiral?
+                _SPACE + _ZERO +                         # is chiral?
                 _NEWLINE).format
 
     class ATOM():
@@ -79,7 +78,7 @@ class FMT():
 
 
 def from_data(atm_keys, bnd_keys, atm_syms, atm_bnd_vlcs, atm_rad_vlcs,
-              bnd_ords, is_chi=False, atm_xyzs=None):
+              bnd_ords, atm_xyzs=None):
     """ MOLFile string from data
     """
     natms = len(atm_keys)
@@ -91,8 +90,7 @@ def from_data(atm_keys, bnd_keys, atm_syms, atm_bnd_vlcs, atm_rad_vlcs,
 
     counts_line = FMT.COUNTS.LINE(
         **{FMT.COUNTS.NA_KEY: natms,
-           FMT.COUNTS.NB_KEY: nbnds,
-           FMT.COUNTS.CHI_KEY: is_chi})
+           FMT.COUNTS.NB_KEY: nbnds})
 
     atom_block = ''.join((
         FMT.ATOM.LINE(**{FMT.ATOM.I_KEY: key_map[key],

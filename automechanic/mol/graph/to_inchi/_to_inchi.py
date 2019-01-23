@@ -20,7 +20,7 @@ from .._dict import values_by_key as _values_by_key
 from .._dict import keys_sorted_by_value as _keys_sorted_by_value
 
 
-def with_numbering(cgr, is_chi=False, atm_xyz_dct=None):
+def with_atom_inchi_numbers(cgr, atm_xyz_dct=None):
     """ InChI string with numbering from a connectivity graph
 
     For stereo InChIs, pass cartesian coordinates and set the chirality flag.
@@ -28,7 +28,7 @@ def with_numbering(cgr, is_chi=False, atm_xyz_dct=None):
     ich, bbn_ich_num_dct = _catch_hardcoded(cgr)
     if ich is None:
         ich, bbn_ich_num_dct = _with_backbone_inchi_numbers(
-            cgr, is_chi=is_chi, atm_xyz_dct=atm_xyz_dct)
+            cgr, atm_xyz_dct=atm_xyz_dct)
 
     atm_ich_num_dct = _fill_atom_inchi_numbers(cgr, bbn_ich_num_dct)
     return ich, atm_ich_num_dct
@@ -56,7 +56,7 @@ def _catch_hardcoded(cgr):
     return ich, bbn_ich_num_dct
 
 
-def _with_backbone_inchi_numbers(cgr, is_chi=False, atm_xyz_dct=None):
+def _with_backbone_inchi_numbers(cgr, atm_xyz_dct=None):
     rgr = lowspin_resonance(cgr)
     atm_keys = atom_keys(rgr)
     bnd_keys = bond_keys(rgr)
@@ -68,7 +68,7 @@ def _with_backbone_inchi_numbers(cgr, is_chi=False, atm_xyz_dct=None):
     bnd_ords = _values_by_key(bond_orders(rgr), bnd_keys)
     mlf, mlf_atm_key_dct = _mlf_from_data(atm_keys, bnd_keys, atm_syms,
                                           atm_bnd_vlcs, atm_rad_vlcs, bnd_ords,
-                                          is_chi=is_chi, atm_xyzs=atm_xyzs)
+                                          atm_xyzs=atm_xyzs)
     rdm = _rdm_from_molfile(mlf)
     ich, ich_aux = _rdm_to_inchi_with_aux_info(rdm)
 

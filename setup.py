@@ -8,6 +8,8 @@ setup(name="automechanic",
       packages=["automechanic",
                 "automechanic.cli", "automechanic.task", "automechanic.mol",
                 "automechanic.mol.inchi", "automechanic.mol.graph",
+                "automechanic.mol.graph._stereo",
+                "automechanic.mol.graph.to_inchi",
                 "automechanic.parse", "automechanic.rere", "automechanic.fs",
                 "automechanic.fslib",
                 # deprecated:
